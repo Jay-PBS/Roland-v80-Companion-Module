@@ -1,0 +1,21 @@
+{
+	"id": "roland-v80hd",
+	"name": "roland-v80hd",
+	"shortname": "v80hd",
+	"description": "Control the Roland V-80HD Direct Streaming Video Switcher",
+	"version": "0.4.0",
+	"license": "MIT",
+	"repository": "https://github.com/Jay-PBS/Roland-v80-Companion-Module",
+	"bugs": "https://github.com/Jay-PBS/Roland-v80-Companion-Module/issues",
+	"maintainers": [{ "name": "Jay", "email": "projects@purplebadgersolutions.co.uk" }],
+	"runtime": {
+		"type": "node22",
+		"api": "nodejs-ipc",
+		"apiVersion": "0.0.0",
+		"entrypoint": "../dist/main.js"
+	},
+	"legacyIds": [],
+	"manufacturer": "Roland",
+	"products": ["V-80HD"],
+	"keywords": ["Video Switcher", "Vision Mixer", "Streaming"]
+}

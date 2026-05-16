@@ -1,0 +1,4 @@
+{
+	"extends": "@companion-module/tools/tsconfig/node22/recommended",
+	"include": ["src/**/*.ts"]
+}
