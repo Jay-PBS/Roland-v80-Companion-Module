@@ -1,5 +1,8 @@
-// src/variables.ts — Roland V-80HD v0.3.1
+// src/variables.ts — Roland V-80HD
 import type { ModuleInstance } from './main.js'
+import { AUDIO_CH, INPUT_FREEZE_IDX } from './api.js'
+
+const pretty = (k: string): string => k.replace(/_/g, ' ')
 
 export function UpdateVariableDefinitions(self: ModuleInstance): void {
 	self.setVariableDefinitions([
@@ -30,5 +33,7 @@ export function UpdateVariableDefinitions(self: ModuleInstance): void {
 		{ variableId: 'ftb',             name: 'Fade To Black – active (ON/OFF)' },
 		{ variableId: 'freeze',          name: 'Freeze – active (ON/OFF)' },
 		{ variableId: 'test_pattern',    name: 'Test pattern – active pattern name' },
+		...Object.keys(AUDIO_CH).map(k => ({ variableId: `mute_${k}`, name: `Audio mute – ${pretty(k)} (ON/OFF)` })),
+		...Object.keys(INPUT_FREEZE_IDX).map(k => ({ variableId: `freeze_${k}`, name: `Input freeze – ${pretty(k)} (ON/OFF)` })),
 	])
 }

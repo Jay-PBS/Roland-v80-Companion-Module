@@ -1,4 +1,4 @@
-// src/actions.ts — Roland V-80HD v0.3.1
+// src/actions.ts — Roland V-80HD
 import type { ModuleInstance } from './main.js'
 import { TEST_PATTERNS, SOURCE_CHOICES, INPUT_ASSIGN_SOURCE_CHOICES } from './api.js'
 

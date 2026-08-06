@@ -1,4 +1,4 @@
-// src/upgrades.ts — Roland V-80HD v0.2.7.5
+// src/upgrades.ts — Roland V-80HD
 import type { CompanionStaticUpgradeScript } from '@companion-module/base'
 import type { ModuleConfig } from './config.js'
 

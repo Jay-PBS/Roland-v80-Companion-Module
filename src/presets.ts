@@ -1,4 +1,4 @@
-// src/presets.ts — Roland V-80HD v0.2.7
+// src/presets.ts — Roland V-80HD
 import type { ModuleInstance } from './main.js'
 import { CompanionPresetDefinitions, combineRgb } from '@companion-module/base'
 import { TEST_PATTERNS } from './api.js'
@@ -47,7 +47,7 @@ export function UpdatePresets(self: ModuleInstance): void {
 	// ── Transitions ────────────────────────────────────────────────────────────
 	presets['cut']        = { type: 'button', category: 'Transitions', name: 'CUT',  style: { text: 'CUT',  size: sz, color: c.white, bgcolor: c.pgm,   show_topbar: false }, steps: [{ down: [{ actionId: 'cut',  options: {} }], up: [] }], feedbacks: [] }
 	presets['auto']       = { type: 'button', category: 'Transitions', name: 'AUTO', style: { text: 'AUTO', size: sz, color: c.white, bgcolor: c.pgm,   show_topbar: false }, steps: [{ down: [{ actionId: 'auto', options: {} }], up: [] }], feedbacks: [] }
-	presets['ftb'] = { type: 'button', category: 'Transitions', name: 'FTB $(v80hd:ftb)', style: { text: 'FTB\n$(v80hd:ftb)', size: sz, color: c.black, bgcolor: c.tp, show_topbar: false }, steps: [{ down: [{ actionId: 'fade_to_black', options: {} }], up: [] }], feedbacks: [] }
+	presets['ftb'] = { type: 'button', category: 'Transitions', name: 'FTB', style: { text: 'FTB', size: sz, color: c.white, bgcolor: c.pgm, show_topbar: false }, steps: [{ down: [{ actionId: 'fade_to_black', options: {} }], up: [] }], feedbacks: [{ feedbackId: 'ftb_active', options: {}, style: { bgcolor: c.pgm_on } }] }
 	presets['trans_mix']  = { type: 'button', category: 'Transitions', name: 'MIX',  style: { text: 'MIX',  size: sz, color: c.white, bgcolor: c.trans, show_topbar: false }, steps: [{ down: [{ actionId: 'set_transition_type', options: { type: 'mix'  } }], up: [] }], feedbacks: [{ feedbackId: 'transition_type_active', options: { type: 'mix'  }, style: { bgcolor: c.trans_on } }] }
 	presets['trans_wipe'] = { type: 'button', category: 'Transitions', name: 'WIPE', style: { text: 'WIPE', size: sz, color: c.white, bgcolor: c.trans, show_topbar: false }, steps: [{ down: [{ actionId: 'set_transition_type', options: { type: 'wipe' } }], up: [] }], feedbacks: [{ feedbackId: 'transition_type_active', options: { type: 'wipe' }, style: { bgcolor: c.trans_on } }] }
 

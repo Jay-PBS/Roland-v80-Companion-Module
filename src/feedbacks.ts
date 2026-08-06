@@ -1,7 +1,7 @@
-// src/feedbacks.ts — Roland V-80HD v0.2.7
+// src/feedbacks.ts — Roland V-80HD
 import { combineRgb } from '@companion-module/base'
 import type { ModuleInstance } from './main.js'
-import { AUDIO_CH, TEST_PATTERNS } from './api.js'
+import { AUDIO_CH, TEST_PATTERNS, INPUT_FREEZE_IDX } from './api.js'
 
 // Corporate colour palette — bright = active, deep = inactive default
 const RED_BRIGHT    = combineRgb(0xEF, 0x44, 0x44)  // #EF4444
@@ -21,11 +21,15 @@ const FREEZE_INPUTS = [
 	{ id: 'sdi_1',  label: 'SDI In 1'  }, { id: 'sdi_2',  label: 'SDI In 2'  },
 	{ id: 'sdi_3',  label: 'SDI In 3'  }, { id: 'sdi_4',  label: 'SDI In 4'  },
 ]
-const INPUT_FREEZE_IDX: Record<string, number> = {
-	'hdmi_1': 0x02, 'hdmi_2': 0x03, 'hdmi_3': 0x04, 'hdmi_4': 0x05,
-	'sdi_1':  0x06, 'sdi_2':  0x07, 'sdi_3':  0x08, 'sdi_4':  0x09,
-}
 const AUX_LAYER_DD = [{ id: '1', label: 'PinP & Key 1' }, { id: '2', label: 'PinP & Key 2' }]
+const WIPE_TYPES = [
+	{ id: '0', label: 'Horizontal' }, { id: '1', label: 'Vertical' },
+	{ id: '2', label: 'Upper Left' }, { id: '3', label: 'Upper Right' },
+	{ id: '4', label: 'Lower Left' }, { id: '5', label: 'Lower Right' },
+	{ id: '6', label: 'H-Center' },  { id: '7', label: 'V-Center' },
+]
+const WIPE_DIRS = [{ id: '0', label: 'Normal' }, { id: '1', label: 'Reverse' }, { id: '2', label: 'Round Trip' }]
+const AUX_LINK_MODES = [{ id: '0', label: 'Off' }, { id: '1', label: 'Auto Link' }, { id: '2', label: 'Manual Link' }]
 const AUX_DD       = [{ id: '1', label: 'AUX 1' }, { id: '2', label: 'AUX 2' }]
 
 export function UpdateFeedbacks(self: ModuleInstance): void {
@@ -71,6 +75,30 @@ export function UpdateFeedbacks(self: ModuleInstance): void {
 			defaultStyle: { bgcolor: PURPLE_BRIGHT, color: WHITE },
 			options: [{ id: 'type', type: 'dropdown', label: 'Type', default: 'mix', choices: [{ id: 'mix', label: 'Mix' }, { id: 'wipe', label: 'Wipe' }] }],
 			callback: (fb) => self.transitionType === fb.options.type,
+		},
+		ftb_active: {
+			name: 'Fade To Black – active', type: 'boolean',
+			defaultStyle: { bgcolor: RED_BRIGHT, color: WHITE },
+			options: [],
+			callback: () => self.ftbActive,
+		},
+		wipe_type_active: {
+			name: 'Wipe pattern active', type: 'boolean',
+			defaultStyle: { bgcolor: PURPLE_BRIGHT, color: WHITE },
+			options: [{ id: 'type', type: 'dropdown', label: 'Pattern', default: '0', choices: WIPE_TYPES }],
+			callback: (fb) => self.wipeType === Number(fb.options.type),
+		},
+		wipe_direction_active: {
+			name: 'Wipe direction active', type: 'boolean',
+			defaultStyle: { bgcolor: PURPLE_BRIGHT, color: WHITE },
+			options: [{ id: 'dir', type: 'dropdown', label: 'Direction', default: '0', choices: WIPE_DIRS }],
+			callback: (fb) => self.wipeDirection === Number(fb.options.dir),
+		},
+		aux_linked_pgm_active: {
+			name: 'AUX Linked PGM mode active', type: 'boolean',
+			defaultStyle: { bgcolor: BLUE_BRIGHT, color: WHITE },
+			options: [{ id: 'mode', type: 'dropdown', label: 'Mode', default: '1', choices: AUX_LINK_MODES }],
+			callback: (fb) => self.auxLinkedPgm === Number(fb.options.mode),
 		},
 
 		// ── PinP & Key ───────────────────────────────────────────────────────────

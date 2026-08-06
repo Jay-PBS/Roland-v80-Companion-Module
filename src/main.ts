@@ -1,4 +1,4 @@
-// src/main.ts — Roland V-80HD v0.3.1
+// src/main.ts — Roland V-80HD
 import { InstanceBase, runEntrypoint, type SomeCompanionConfigField } from '@companion-module/base'
 import { GetConfigFields, type ModuleConfig } from './config.js'
 import { UpdateVariableDefinitions } from './variables.js'
@@ -6,7 +6,7 @@ import { UpgradeScripts } from './upgrades.js'
 import { UpdateActions } from './actions.js'
 import { UpdateFeedbacks } from './feedbacks.js'
 import { UpdatePresets } from './presets.js'
-import { V80Api, type AuxId, type LayerId } from './api.js'
+import { V80Api, AUDIO_CH, INPUT_FREEZE_IDX, type AuxId, type LayerId } from './api.js'
 
 export class ModuleInstance extends InstanceBase<ModuleConfig> {
 	public config!: ModuleConfig
@@ -88,6 +88,8 @@ export class ModuleInstance extends InstanceBase<ModuleConfig> {
 			ftb:     this.ftbActive    ? 'ON' : 'OFF',
 			freeze:  this.freezeActive ? 'ON' : 'OFF',
 			test_pattern: tpName,
+			...Object.fromEntries(Object.entries(AUDIO_CH).map(([k, ch]) => [`mute_${k}`, this.audioInputMute[ch] ? 'ON' : 'OFF'])),
+			...Object.fromEntries(Object.entries(INPUT_FREEZE_IDX).map(([k, idx]) => [`freeze_${k}`, this.inputFreezeEnabled[idx] ? 'ON' : 'OFF'])),
 		})
 	}
 

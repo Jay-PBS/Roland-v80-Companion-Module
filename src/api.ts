@@ -1,4 +1,4 @@
-// src/api.ts — Roland V-80HD v0.3.2
+// src/api.ts — Roland V-80HD
 import { InstanceStatus, TCPHelper } from '@companion-module/base'
 import type { ModuleInstance } from './main.js'
 import { POLL_INTERVAL_MS } from './config.js'
@@ -12,6 +12,11 @@ export const SRC_STILL32 = 0x27
 export const SRC_VPLAYER = 0x28
 export const SRC_INPUT1  = 0x29
 export const SRC_INPUT16 = 0x38
+
+export const INPUT_FREEZE_IDX: Record<string, number> = {
+	'hdmi_1': 0x02, 'hdmi_2': 0x03, 'hdmi_3': 0x04, 'hdmi_4': 0x05,
+	'sdi_1':  0x06, 'sdi_2':  0x07, 'sdi_3':  0x08, 'sdi_4':  0x09,
+}
 
 export const AUDIO_CH: Record<string, number> = {
 	'audio_in_1': 0x01, 'audio_in_2': 0x02, 'audio_in_34': 0x03,
@@ -106,7 +111,14 @@ export class V80Api {
 	private rxBuffer = ''
 	private pollingTimer?: NodeJS.Timeout
 	private debounceTimer?: NodeJS.Timeout
+	private authTimer?: NodeJS.Timeout
+	private watchdogTimer?: NodeJS.Timeout
+	private authSent = false
+	private authFailed = false
 	private isConnected = false
+	private isAuthenticated = false
+	private lastRxTime = 0
+	private cycleStartTime = 0
 
 	constructor(self: ModuleInstance) { this.self = self }
 
@@ -115,12 +127,14 @@ export class V80Api {
 			this.self.updateStatus(InstanceStatus.BadConfig, 'Missing host/port'); return
 		}
 		this.self.updateStatus(InstanceStatus.Connecting)
-		this.isConnected = false; this.rxBuffer = ''
+		this.isConnected = false; this.isAuthenticated = false; this.rxBuffer = ''
+		this.cycleStartTime = Date.now()
 		this.tcp = new TCPHelper(this.self.config.host, this.self.config.port, { reconnect: true })
 		this.tcp.on('status_change', (status, message) => {
 			this.self.updateStatus(status, message)
 			if (status !== InstanceStatus.Ok) {
 				this.isConnected = false
+				this.isAuthenticated = false
 				this.stopPolling()
 			}
 		})
@@ -131,34 +145,117 @@ export class V80Api {
 		})
 		this.tcp.on('connect', () => {
 			this.self.log('info', `Connected to ${this.self.config.host}:${this.self.config.port}`)
-			this.isConnected = true; this.rxBuffer = ''
+			this.isConnected = true; this.rxBuffer = ''; this.authSent = false
+			this.isAuthenticated = false; this.lastRxTime = Date.now(); this.cycleStartTime = Date.now()
 			const pw = (this.self.config.password ?? '').trim()
 			if (pw) {
-				this.tcp?.send(pw + '\r\n')
 				this.self.updateStatus(InstanceStatus.Connecting, 'Authenticating')
+				// The device prompts "Enter password:" ~10ms after connect. Wait for it so the
+				// password is only sent once — sending it unprompted too leaves a stray line the
+				// device parses as a command (observed ERR:0 on the wire). Fallback covers
+				// firmware that opens the session without prompting.
+				this.authTimer = setTimeout(() => { if (!this.authSent && this.isConnected) this.sendPassword() }, 1500)
 			} else {
 				this.onAuthenticated()
 			}
 		})
 		this.tcp.on('data', (data: Buffer) => this.handleIncoming(data))
+		this.startWatchdog()
+	}
+
+	// TCPHelper only reconnects on socket 'error'/'end'. A network path that dies without a
+	// FIN/RST (Wi-Fi drop, cable pull, switch power-cycle) fires neither, and Windows TCP
+	// keepalive would take ~2h to notice — so the connection looks Ok forever while dead.
+	// The device answers every query within ms, so prolonged RX silence is a reliable death
+	// signal; rebuild the connection from scratch when we see it.
+	private startWatchdog(): void {
+		this.stopWatchdog()
+		this.watchdogTimer = setInterval(() => this.watchdogTick(), 2500)
+	}
+	private stopWatchdog(): void {
+		if (this.watchdogTimer) { clearInterval(this.watchdogTimer); this.watchdogTimer = undefined }
+	}
+
+	private watchdogTick(): void {
+		if (!this.tcp || this.authFailed) return
+		const now = Date.now()
+		if (this.isConnected && this.isAuthenticated) {
+			// Nudge the device if quiet (only matters with polling off), then give up at 8s
+			if (now - this.lastRxTime > 4000) this.sendCmd(this.rqh('001500', '000001'))
+			if (now - this.lastRxTime > 8000) this.forceReconnect('No response from device for 8s')
+		} else if (this.isConnected) {
+			// TCP is up but auth never completed — e.g. the device silently ignores a second
+			// control session (observed: it accepts the connection and sends nothing at all).
+			// A fresh connection is the only way to retry.
+			if (now - this.lastRxTime > 10000) this.forceReconnect('Authentication stalled')
+		} else {
+			// Not connected: TCPHelper retries every 2s, but a connect attempt to an
+			// unreachable host takes ~21s to time out on Windows. Recycling the socket every
+			// 20s keeps attempts fresh without stacking timers.
+			if (now - Math.max(this.lastRxTime, this.cycleStartTime) > 20000) {
+				this.forceReconnect('Still unreachable – retrying with a fresh connection')
+			}
+		}
+	}
+
+	private forceReconnect(reason: string): void {
+		this.self.log('warn', `Reconnecting: ${reason}`)
+		this.destroyTcp()
+		this.initTcp()
 	}
 
 	public destroyTcp(): void {
 		this.stopPolling()
 		this.stopDebounce()
+		this.stopAuthTimer()
+		this.stopWatchdog()
 		try { this.tcp?.destroy() } catch { /* ignore */ }
-		this.tcp = undefined; this.rxBuffer = ''; this.isConnected = false
+		this.tcp = undefined; this.rxBuffer = ''
+		this.isConnected = false; this.isAuthenticated = false; this.authSent = false
+	}
+
+	private stopAuthTimer(): void {
+		if (this.authTimer) { clearTimeout(this.authTimer); this.authTimer = undefined }
+	}
+
+	private sendPassword(): void {
+		this.authSent = true
+		this.tcp?.send((this.self.config.password ?? '').trim() + '\r\n')
+			.catch((err: Error) => this.self.log('debug', `TX failed: ${err.message}`))
+	}
+
+	private onPasswordPrompt(): void {
+		this.stopAuthTimer()
+		if (this.authSent) {
+			// Re-prompt after we already answered means the password was rejected. Do not
+			// resend — answering every prompt with the same password loops until the device
+			// locks out ("Wait a moment"), which then rejects even correct passwords.
+			this.self.log('error', 'Authentication failed – device rejected the password')
+			this.authFailed = true
+			this.stopPolling()
+			this.self.updateStatus(InstanceStatus.ConnectionFailure, 'Authentication failed – check password')
+			return
+		}
+		const pw = (this.self.config.password ?? '').trim()
+		if (!pw) {
+			this.self.updateStatus(InstanceStatus.BadConfig, 'Device requires a password but none is configured')
+			return
+		}
+		this.sendPassword()
 	}
 
 	private handleIncoming(data: Buffer): void {
+		this.lastRxTime = Date.now()
 		if (this.self.config.debug) {
 			this.self.log('debug', `RX RAW [${data.length}b]: ${[...data].map(b => b.toString(16).padStart(2,'0')).join(' ')}`)
 		}
 		this.rxBuffer += data.toString('binary')
 
+		// The prompt has no terminator (";" or newline), so it must be matched on the raw
+		// buffer — the line splitter below would never emit it.
 		if (/enter password/i.test(this.rxBuffer)) {
 			this.rxBuffer = ''
-			this.tcp?.send((this.self.config.password ?? '') + '\r\n')
+			this.onPasswordPrompt()
 			return
 		}
 
@@ -183,18 +280,27 @@ export class V80Api {
 
 	private handleTextLine(line: string): void {
 		if (!line) return
-		if (/enter password/i.test(line))        { this.tcp?.send((this.self.config.password ?? '') + '\r\n'); return }
+		if (/enter password/i.test(line))        { this.onPasswordPrompt(); return }
 		if (/^Authentication error/i.test(line)) {
 			this.self.log('error', 'Authentication failed')
+			this.authFailed = true
 			this.isConnected = false; this.stopPolling()
 			this.self.updateStatus(InstanceStatus.ConnectionFailure, 'Authentication failed'); return
 		}
-		if (/^Wait a moment/i.test(line)) return
+		if (/^Wait a moment/i.test(line)) {
+			// Device brute-force lockout — it will reject even the correct password until it
+			// clears. Surface it instead of silently retrying.
+			this.self.log('error', 'Device auth lockout active ("Wait a moment") – pause before retrying')
+			this.self.updateStatus(InstanceStatus.ConnectionFailure, 'Device auth lockout – wait and retry')
+			return
+		}
 		if (/^Welcome to /i.test(line))   { this.onAuthenticated(); return }
 		if (/^VER:/i.test(line))          { this.self.log('info', `Device: ${line}`); this.onAuthenticated(); return }
 	}
 
 	private onAuthenticated(): void {
+		this.stopAuthTimer()
+		this.isAuthenticated = true; this.authFailed = false
 		this.self.log('info', 'Connection ready – requesting initial state')
 		this.self.updateStatus(InstanceStatus.Ok)
 		this.requestCoreState(); this.startPolling()
@@ -245,8 +351,9 @@ export class V80Api {
 			case '000023': this.self.aux2Pinp1Layer = val; break
 			case '000024': this.self.aux2Pinp2Layer = val; break
 		}
-		if (addr.startsWith('01') && addr.endsWith('06')) {
-			this.self.audioInputMute[parseInt(addr.slice(2,4),16)] = val === 1
+		const audioMute = /^01(0[1-9A-F])06$/.exec(addr)
+		if (audioMute) {
+			this.self.audioInputMute[parseInt(audioMute[1], 16)] = val === 1
 		}
 		if (addr.startsWith('0209') && addr.length === 6) {
 			const idx = parseInt(addr.slice(4,6),16)
@@ -265,6 +372,7 @@ export class V80Api {
 
 	public requestCoreState(): void {
 		if (!this.isConnected) return
+		const cmds: string[] = []
 		// Core state addresses — all polled every 500ms
 		for (const a of [
 			'001500', '001501',         // Program, Preview source
@@ -283,15 +391,25 @@ export class V80Api {
 			'02015E',                   // Test pattern
 			'000020', '000021',         // AUX 1 PinP layer 1, 2
 			'000023', '000024',         // AUX 2 PinP layer 1, 2
-		]) this.sendCmd(this.rqh(a, '000001'))
+		]) cmds.push(this.rqh(a, '000001'))
 		// Audio input mutes — all 15 channels
 		for (let ch = 0x01; ch <= 0x0F; ch++) {
-			this.sendCmd(this.rqh(`01${ch.toString(16).toUpperCase().padStart(2,'0')}06`, '000001'))
+			cmds.push(this.rqh(`01${ch.toString(16).toUpperCase().padStart(2,'0')}06`, '000001'))
 		}
 		// Per-input freeze states — HDMI 1-4, SDI 1-4
 		for (let i = 0x02; i <= 0x09; i++) {
-			this.sendCmd(this.rqh(`0209${i.toString(16).toUpperCase().padStart(2,'0')}`, '000001'))
+			cmds.push(this.rqh(`0209${i.toString(16).toUpperCase().padStart(2,'0')}`, '000001'))
 		}
+		// One TCP write for the whole cycle (~1kB) instead of 52 separate packets —
+		// halves wire traffic and lightens the load on the device's network stack.
+		this.sendCmdBatch(cmds)
+	}
+
+	private sendCmdBatch(cmds: string[]): void {
+		if (!this.tcp || cmds.length === 0) return
+		if (this.self.config.debug) this.self.log('debug', `TX BATCH: ${cmds.length} commands`)
+		this.tcp.send(cmds.join('\r\n') + '\r\n')
+			.catch((err: Error) => this.self.log('debug', `TX failed: ${err.message}`))
 	}
 
 	private startPolling(): void {
@@ -304,6 +422,7 @@ export class V80Api {
 		if (!this.tcp) { this.self.log('warn', 'Not connected'); return }
 		if (this.self.config.debug) this.self.log('debug', `TX: ${cmd}`)
 		this.tcp.send(cmd.endsWith('\r\n') ? cmd : cmd + '\r\n')
+			.catch((err: Error) => this.self.log('debug', `TX failed: ${err.message}`))
 	}
 
 	private dth(addr: string, v: string): string { return `DTH:${addr},${v};` }
@@ -315,10 +434,10 @@ export class V80Api {
 	}
 
 	public sourceToInput(source: number): number {
+		// Only numbered crosspoint inputs map to 1-8. Direct HDMI/SDI, stills and the video
+		// player return 0 so "Input N" feedbacks don't light for a source that isn't Input N.
 		if (source >= SRC_INPUT1 && source <= SRC_INPUT16) return source - SRC_INPUT1 + 1
-		if (source >= SRC_HDMI1  && source <= SRC_HDMI4)  return source + 1
-		if (source >= SRC_SDI1   && source <= SRC_SDI4)   return source - SRC_SDI1 + 1
-		return 1
+		return 0
 	}
 
 	public cmdCut():  void { this.sendCmd(this.dth('0B001B','01')); this.sendCmd(this.dth('0B001B','00')) }
@@ -435,20 +554,13 @@ export class V80Api {
 	public cmdFreezeToggle(): void { const n=!this.self.freezeActive; this.cmdSetFreeze(n); this.self.freezeActive=n; this.self.changedState() }
 
 	public cmdSetInputFreeze(inputKey: string, on: boolean): void {
-		const map: Record<string,string> = {
-			'hdmi_1':'020902','hdmi_2':'020903','hdmi_3':'020904','hdmi_4':'020905',
-			'sdi_1': '020906','sdi_2': '020907','sdi_3': '020908','sdi_4': '020909',
-		}
-		const addr = map[inputKey]; if (!addr){this.self.log('warn',`Unknown freeze input: ${inputKey}`);return}
-		this.sendCmd(this.dth(addr, on?'01':'00'))
-		this.self.inputFreezeEnabled[parseInt(addr.slice(4,6),16)]=on; this.self.changedState()
+		const idx = INPUT_FREEZE_IDX[inputKey]
+		if (idx===undefined){this.self.log('warn',`Unknown freeze input: ${inputKey}`);return}
+		this.sendCmd(this.dth(`0209${idx.toString(16).toUpperCase().padStart(2,'0')}`, on?'01':'00'))
+		this.self.inputFreezeEnabled[idx]=on; this.self.changedState()
 	}
 	public cmdSetInputFreezeToggle(inputKey: string): void {
-		const map: Record<string,number> = {
-			'hdmi_1':0x02,'hdmi_2':0x03,'hdmi_3':0x04,'hdmi_4':0x05,
-			'sdi_1': 0x06,'sdi_2': 0x07,'sdi_3': 0x08,'sdi_4': 0x09,
-		}
-		const idx = map[inputKey]; if (idx===undefined) return
+		const idx = INPUT_FREEZE_IDX[inputKey]; if (idx===undefined) return
 		this.cmdSetInputFreeze(inputKey, !this.self.inputFreezeEnabled[idx])
 	}
 

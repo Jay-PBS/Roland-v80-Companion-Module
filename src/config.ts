@@ -1,4 +1,4 @@
-// src/config.ts — Roland V-80HD v0.3.1
+// src/config.ts — Roland V-80HD
 import { type SomeCompanionConfigField } from '@companion-module/base'
 
 export interface ModuleConfig {
