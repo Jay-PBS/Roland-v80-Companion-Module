@@ -1,6 +1,6 @@
 // src/main.ts — Roland V-80HD
 import { InstanceBase, runEntrypoint, type SomeCompanionConfigField } from '@companion-module/base'
-import { GetConfigFields, type ModuleConfig } from './config.js'
+import { GetConfigFields, type ModuleConfig, type ModuleSecrets } from './config.js'
 import { UpdateVariableDefinitions } from './variables.js'
 import { UpgradeScripts } from './upgrades.js'
 import { UpdateActions } from './actions.js'
@@ -16,8 +16,9 @@ import {
 	AUX_LINK_MODE_NAMES,
 } from './api.js'
 
-export class ModuleInstance extends InstanceBase<ModuleConfig> {
+export class ModuleInstance extends InstanceBase<ModuleConfig, ModuleSecrets> {
 	public config!: ModuleConfig
+	public secrets!: ModuleSecrets
 	public api!: V80Api
 
 	public programSource = 0x29
@@ -72,8 +73,9 @@ export class ModuleInstance extends InstanceBase<ModuleConfig> {
 
 	// The api is built before the definitions are registered, because the action callbacks
 	// reach through to it directly and `api` is declared with a definite assignment.
-	async init(config: ModuleConfig): Promise<void> {
+	async init(config: ModuleConfig, _isFirstInit: boolean, secrets: ModuleSecrets): Promise<void> {
 		this.config = config
+		this.secrets = secrets ?? { password: '' }
 		this.api = new V80Api(this)
 		this.setupModule()
 		this.api.initTcp()
@@ -81,8 +83,9 @@ export class ModuleInstance extends InstanceBase<ModuleConfig> {
 	async destroy(): Promise<void> {
 		this.api.destroyTcp()
 	}
-	async configUpdated(config: ModuleConfig): Promise<void> {
+	async configUpdated(config: ModuleConfig, secrets: ModuleSecrets): Promise<void> {
 		this.config = config
+		this.secrets = secrets ?? { password: '' }
 		this.api.destroyTcp()
 		this.api = new V80Api(this)
 		this.setupModule()

@@ -218,6 +218,13 @@ export class V80Api {
 		this.self = self
 	}
 
+	// The password lives in the secrets store from 0.7.0 on. The config fallback covers a
+	// connection whose upgrade script has not run yet, so an existing setup keeps
+	// authenticating instead of silently failing on the first connect after the update.
+	private get password(): string {
+		return (this.self.secrets?.password || this.self.config.password || '').trim()
+	}
+
 	public initTcp(): void {
 		if (!this.self.config.host || !this.self.config.port) {
 			this.self.updateStatus(InstanceStatus.BadConfig, 'Missing host/port')
@@ -250,7 +257,7 @@ export class V80Api {
 			this.isAuthenticated = false
 			this.lastRxTime = Date.now()
 			this.cycleStartTime = Date.now()
-			const pw = (this.self.config.password ?? '').trim()
+			const pw = this.password
 			if (pw) {
 				this.self.updateStatus(InstanceStatus.Connecting, 'Authenticating')
 				// The device prompts "Enter password:" ~10ms after connect. Wait for it so the
@@ -341,9 +348,7 @@ export class V80Api {
 
 	private sendPassword(): void {
 		this.authSent = true
-		this.tcp
-			?.send((this.self.config.password ?? '').trim() + '\r\n')
-			.catch((err: Error) => this.self.log('debug', `TX failed: ${err.message}`))
+		this.tcp?.send(this.password + '\r\n').catch((err: Error) => this.self.log('debug', `TX failed: ${err.message}`))
 	}
 
 	private onPasswordPrompt(): void {
@@ -358,7 +363,7 @@ export class V80Api {
 			this.self.updateStatus(InstanceStatus.ConnectionFailure, 'Authentication failed – check password')
 			return
 		}
-		const pw = (this.self.config.password ?? '').trim()
+		const pw = this.password
 		if (!pw) {
 			this.self.updateStatus(InstanceStatus.BadConfig, 'Device requires a password but none is configured')
 			return

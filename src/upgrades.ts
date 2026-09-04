@@ -7,14 +7,14 @@ import type {
 	CompanionStaticUpgradeScript,
 	CompanionUpgradeContext,
 } from '@companion-module/base'
-import type { ModuleConfig } from './config.js'
+import type { ModuleConfig, ModuleSecrets } from './config.js'
 
-export const UpgradeScripts: CompanionStaticUpgradeScript<ModuleConfig>[] = [
+export const UpgradeScripts: CompanionStaticUpgradeScript<ModuleConfig, ModuleSecrets>[] = [
 	// v0.2.4+: Remap old split action IDs to consolidated source actions
 	function (
 		_context: CompanionUpgradeContext<ModuleConfig>,
-		props: CompanionStaticUpgradeProps<ModuleConfig>,
-	): CompanionStaticUpgradeResult<ModuleConfig> {
+		props: CompanionStaticUpgradeProps<ModuleConfig, ModuleSecrets>,
+	): CompanionStaticUpgradeResult<ModuleConfig, ModuleSecrets> {
 		const changes: CompanionMigrationAction[] = []
 		for (const action of props.actions) {
 			if (action.actionId === 'set_program_input') {
@@ -126,8 +126,8 @@ export const UpgradeScripts: CompanionStaticUpgradeScript<ModuleConfig>[] = [
 	// "Record" naming was wrong as well as pointing at the wrong address (03020F).
 	function (
 		_context: CompanionUpgradeContext<ModuleConfig>,
-		props: CompanionStaticUpgradeProps<ModuleConfig>,
-	): CompanionStaticUpgradeResult<ModuleConfig> {
+		props: CompanionStaticUpgradeProps<ModuleConfig, ModuleSecrets>,
+	): CompanionStaticUpgradeResult<ModuleConfig, ModuleSecrets> {
 		// record_toggle is deliberately absent: the toggle action was removed, so an old
 		// record_toggle button has nothing sensible to migrate to. Start and Stop remain.
 		const actionMap: Record<string, string> = {
@@ -150,5 +150,27 @@ export const UpgradeScripts: CompanionStaticUpgradeScript<ModuleConfig>[] = [
 			}
 		}
 		return { updatedConfig: null, updatedActions: changedActions, updatedFeedbacks: changedFeedbacks }
+	},
+
+	// 0.7.0: move the device password out of the config store and into the secrets store.
+	// Before this the password was a plain textinput, so it was persisted alongside the IP
+	// address and round-tripped to the web UI in the clear. Copy it across and blank the old
+	// field, so an existing connection keeps working without the user re-entering anything.
+	function (
+		_context: CompanionUpgradeContext<ModuleConfig>,
+		props: CompanionStaticUpgradeProps<ModuleConfig, ModuleSecrets>,
+	): CompanionStaticUpgradeResult<ModuleConfig, ModuleSecrets> {
+		const legacy = props.config?.password
+		if (!props.config || !legacy) {
+			return { updatedConfig: null, updatedActions: [], updatedFeedbacks: [] }
+		}
+		// Anything already in the secrets store wins - it is the newer of the two.
+		const password = props.secrets?.password || legacy
+		return {
+			updatedConfig: { ...props.config, password: '' },
+			updatedSecrets: { ...props.secrets, password },
+			updatedActions: [],
+			updatedFeedbacks: [],
+		}
 	},
 ]
