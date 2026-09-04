@@ -14,8 +14,6 @@ import {
 	WIPE_TYPE_NAMES,
 	WIPE_DIRECTION_NAMES,
 	AUX_LINK_MODE_NAMES,
-	type AuxId,
-	type LayerId,
 } from './api.js'
 
 export class ModuleInstance extends InstanceBase<ModuleConfig> {
@@ -72,20 +70,22 @@ export class ModuleInstance extends InstanceBase<ModuleConfig> {
 		super(internal)
 	}
 
+	// The api is built before the definitions are registered, because the action callbacks
+	// reach through to it directly and `api` is declared with a definite assignment.
 	async init(config: ModuleConfig): Promise<void> {
 		this.config = config
-		this.setupModule()
 		this.api = new V80Api(this)
+		this.setupModule()
 		this.api.initTcp()
 	}
 	async destroy(): Promise<void> {
-		this.api?.destroyTcp()
+		this.api.destroyTcp()
 	}
 	async configUpdated(config: ModuleConfig): Promise<void> {
 		this.config = config
-		this.setupModule()
-		this.api?.destroyTcp()
+		this.api.destroyTcp()
 		this.api = new V80Api(this)
+		this.setupModule()
 		this.api.initTcp()
 	}
 	getConfigFields(): SomeCompanionConfigField[] {
@@ -183,181 +183,6 @@ export class ModuleInstance extends InstanceBase<ModuleConfig> {
 				]),
 			),
 		})
-	}
-
-	public requestCoreState(): void {
-		this.api?.requestCoreState()
-	}
-	public cmdCut(): void {
-		this.api?.cmdCut()
-	}
-	public cmdAuto(): void {
-		this.api?.cmdAuto()
-	}
-	public cmdFadeToBlack(): void {
-		this.api?.cmdFadeToBlack()
-	}
-	public cmdSetTransitionType(t: 'mix' | 'wipe'): void {
-		this.api?.cmdSetTransitionType(t)
-	}
-	public cmdSetMixTime(tenths: number): void {
-		this.api?.cmdSetMixTime(tenths)
-	}
-	public cmdSetWipeType(type: number): void {
-		this.api?.cmdSetWipeType(type)
-	}
-	public cmdSetWipeDirection(dir: number): void {
-		this.api?.cmdSetWipeDirection(dir)
-	}
-	public cmdSetProgramSource(sourceId: string): void {
-		this.api?.cmdSetProgramSource(sourceId)
-	}
-	public cmdSetPreviewSource(sourceId: string): void {
-		this.api?.cmdSetPreviewSource(sourceId)
-	}
-	public cmdSetInputAssignSource(slot: number, sourceId: string): void {
-		this.api?.cmdSetInputAssignSource(slot, sourceId)
-	}
-	public cmdSetAuxSource(aux: AuxId, sourceId: string): void {
-		this.api?.cmdSetAuxSource(aux, sourceId)
-	}
-	public cmdSetAuxLinkedPgm(mode: 0 | 1 | 2): void {
-		this.api?.cmdSetAuxLinkedPgm(mode)
-	}
-	public cmdSetAuxLayerPinp(aux: AuxId, layer: LayerId, mode: 0 | 1 | 2): void {
-		this.api?.cmdSetAuxLayerPinp(aux, layer, mode)
-	}
-	public cmdToggleAuxLayerPinp(aux: AuxId, layer: LayerId): void {
-		this.api?.cmdToggleAuxLayerPinp(aux, layer)
-	}
-	public cmdToggleAuxLayerPinpAlwaysOn(aux: AuxId, layer: LayerId): void {
-		this.api?.cmdToggleAuxLayerPinpAlwaysOn(aux, layer)
-	}
-	public cmdSplit1(on: boolean): void {
-		this.api?.cmdSplit1(on)
-	}
-	public cmdSplit2(on: boolean): void {
-		this.api?.cmdSplit2(on)
-	}
-	public cmdSplit1Toggle(): void {
-		this.api?.cmdSplit1Toggle()
-	}
-	public cmdSplit2Toggle(): void {
-		this.api?.cmdSplit2Toggle()
-	}
-	public cmdPinpSetSource(layer: LayerId, sourceId: string): void {
-		this.api?.cmdPinpSetSource(layer, sourceId)
-	}
-	public cmdPinpPgm(layer: LayerId, on: boolean): void {
-		this.api?.cmdPinpPgm(layer, on)
-	}
-	public cmdPinpPvw(layer: LayerId, on: boolean): void {
-		this.api?.cmdPinpPvw(layer, on)
-	}
-	public cmdPinpPgmToggle(layer: LayerId): void {
-		this.api?.cmdPinpPgmToggle(layer)
-	}
-	public cmdPinpPvwToggle(layer: LayerId): void {
-		this.api?.cmdPinpPvwToggle(layer)
-	}
-	public cmdPinpPositionH(layer: LayerId, pct: number): void {
-		this.api?.cmdPinpPositionH(layer, pct)
-	}
-	public cmdPinpPositionV(layer: LayerId, pct: number): void {
-		this.api?.cmdPinpPositionV(layer, pct)
-	}
-	public cmdPinpSize(layer: LayerId, pct: number): void {
-		this.api?.cmdPinpSize(layer, pct)
-	}
-	public cmdPinpCroppingH(layer: LayerId, pct: number): void {
-		this.api?.cmdPinpCroppingH(layer, pct)
-	}
-	public cmdPinpCroppingV(layer: LayerId, pct: number): void {
-		this.api?.cmdPinpCroppingV(layer, pct)
-	}
-	public cmdPinpViewPositionH(layer: LayerId, pct: number): void {
-		this.api?.cmdPinpViewPositionH(layer, pct)
-	}
-	public cmdPinpViewPositionV(layer: LayerId, pct: number): void {
-		this.api?.cmdPinpViewPositionV(layer, pct)
-	}
-	public cmdPinpViewZoom(layer: LayerId, pct: number): void {
-		this.api?.cmdPinpViewZoom(layer, pct)
-	}
-	public cmdDskSetSource(sourceId: string): void {
-		this.api?.cmdDskSetSource(sourceId)
-	}
-	public cmdDskPgm(on: boolean): void {
-		this.api?.cmdDskPgm(on)
-	}
-	public cmdDskPvw(on: boolean): void {
-		this.api?.cmdDskPvw(on)
-	}
-	public cmdDskPgmToggle(): void {
-		this.api?.cmdDskPgmToggle()
-	}
-	public cmdDskPvwToggle(): void {
-		this.api?.cmdDskPvwToggle()
-	}
-	public cmdAudioInputMute(ch: string, on: boolean): void {
-		this.api?.cmdAudioInputMute(ch, on)
-	}
-	public cmdAudioInputMuteToggle(ch: string): void {
-		this.api?.cmdAudioInputMuteToggle(ch)
-	}
-	public cmdMainBusMute(on: boolean): void {
-		this.api?.cmdMainBusMute(on)
-	}
-	public cmdMainBusMuteToggle(): void {
-		this.api?.cmdMainBusMuteToggle()
-	}
-	public cmdAuxBusMute(aux: AuxId, on: boolean): void {
-		this.api?.cmdAuxBusMute(aux, on)
-	}
-	public cmdAuxBusMuteToggle(aux: AuxId): void {
-		this.api?.cmdAuxBusMuteToggle(aux)
-	}
-	public cmdFreezeOn(): void {
-		this.api?.cmdFreezeOn()
-	}
-	public cmdFreezeOff(): void {
-		this.api?.cmdFreezeOff()
-	}
-	public cmdFreezeToggle(): void {
-		this.api?.cmdFreezeToggle()
-	}
-	public cmdSetInputFreeze(key: string, on: boolean): void {
-		this.api?.cmdSetInputFreeze(key, on)
-	}
-	public cmdSetInputFreezeToggle(key: string): void {
-		this.api?.cmdSetInputFreezeToggle(key)
-	}
-	public cmdTestPattern(id: string): void {
-		this.api?.cmdTestPattern(id)
-	}
-	public cmdTestPatternOff(): void {
-		this.api?.cmdTestPatternOff()
-	}
-	public cmdToggleAuxLinkedPgmMode(mode: 1 | 2): void {
-		this.api?.cmdToggleAuxLinkedPgmMode(mode)
-	}
-	public cmdSetAuxLinkedPgmBus(aux: AuxId, on: boolean): void {
-		this.api?.cmdSetAuxLinkedPgmBus(aux, on)
-	}
-	public cmdToggleAuxLinkedPgmBus(aux: AuxId): void {
-		this.api?.cmdToggleAuxLinkedPgmBus(aux)
-	}
-	public cmdStreamRecordStart(): void {
-		this.api?.cmdStreamRecordStart()
-	}
-	public cmdStreamRecordStop(): void {
-		this.api?.cmdStreamRecordStop()
-	}
-	public async cmdCaptureImage(slot: number, source: string): Promise<void> {
-		await this.api?.cmdCaptureImage(slot, source)
-	}
-	public cmdRaw(cmd: string): void {
-		this.api?.cmdRaw(cmd)
 	}
 }
 
