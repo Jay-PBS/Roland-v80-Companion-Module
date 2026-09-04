@@ -14,8 +14,8 @@
 		"lint": "yarn lint:raw ."
 	},
 	"license": "MIT",
-	"repository": "https://github.com/Jay-PBS/companion-module-roland-v80hd",
-	"bugs": "https://github.com/Jay-PBS/companion-module-roland-v80hd/issues",
+	"repository": "https://github.com/Jay-PBS/Roland-v80-Companion-Module",
+	"bugs": "https://github.com/Jay-PBS/Roland-v80-Companion-Module/issues",
 	"engines": {
 		"node": "^22.20",
 		"yarn": "^4"

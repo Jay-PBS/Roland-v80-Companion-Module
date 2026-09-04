@@ -4,7 +4,7 @@ Bitfocus Companion module for the Roland V-80HD Direct Streaming Video Switcher.
 
 Developed and maintained by Purple Badger Solutions.
 Contact: projects@purplebadgersolutions.co.uk
-Repository: https://github.com/Jay-PBS/companion-module-roland-v80hd
+Repository: https://github.com/Jay-PBS/Roland-v80-Companion-Module
 
 This module is currently in beta. It has been tested on physical hardware and is provided for evaluation. Use in production environments is at the operator's own discretion and risk.
 
@@ -133,7 +133,7 @@ Scene Memory control is not provided and is not planned.
 
 Audio control is limited to mute on purpose. The V-80HD exposes full audio control over LAN — input levels, bus levels and the rest — and it does work, but the front-panel level knobs are not motorised, so a level set from Companion cannot be reflected on the unit and the two will silently disagree. Mute is the only audio control the module surfaces.
 
-If you want the advanced audio controls, please raise an issue on GitHub (https://github.com/Jay-PBS/companion-module-roland-v80hd/issues). They are not planned otherwise, as the effort is hard to justify without someone who actually needs them.
+If you want the advanced audio controls, please raise an issue on GitHub (https://github.com/Jay-PBS/Roland-v80-Companion-Module/issues). They are not planned otherwise, as the effort is hard to justify without someone who actually needs them.
 
 ---
 
