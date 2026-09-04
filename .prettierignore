@@ -1,2 +1,4 @@
 package.json
 /LICENSE.md
+.github/
+.yarnrc.yml

@@ -14,53 +14,53 @@ Current version: 0.6.0
 
 ## Supported Hardware
 
-| Hardware | Firmware Tested |
-|---|---|
-| Roland V-80HD | v1.20.201 |
+| Hardware      | Firmware Tested |
+| ------------- | --------------- |
+| Roland V-80HD | v1.20.201       |
 
 ---
 
 ## Feature Status
 
-| Feature | Status |
-|---|---|
-| CUT, AUTO, Fade To Black | Confirmed working |
-| Transition Type Mix and Wipe | Confirmed working |
-| Mix and Wipe Time | Confirmed working |
-| Wipe Pattern and Direction | Confirmed working |
-| Program Source routing | Confirmed working |
-| Preview Source routing | Confirmed working |
-| Input Assign slots 1 to 8 | Confirmed working |
-| AUX 1 and 2 Source routing | Confirmed working |
-| AUX Linked PGM | Confirmed working |
-| AUX Layer PinP and Key control | Confirmed working |
-| Split 1 and 2 | Confirmed working |
-| PinP and Key Source | Confirmed working |
-| PinP PGM and PVW On, Off, Toggle | Confirmed working |
-| PinP Window Position H and V | Confirmed working |
-| PinP Window Size | Confirmed working |
-| PinP Window Cropping H and V | Confirmed working |
-| PinP View Position H and V | Confirmed working |
-| PinP View Zoom | Confirmed working |
-| DSK Source, PGM, PVW | Confirmed working |
-| Audio Input Mute all channels | Confirmed working |
-| Main Bus Mute | Confirmed working |
-| AUX Bus Mute | Confirmed working |
-| Feedback for all polled state | Confirmed working |
-| Test Patterns 12 patterns | Confirmed working |
-| Fade To Black feedback | Confirmed working — added in 0.6.0 |
-| Wipe Pattern and Direction feedback | Confirmed working — added in 0.6.0 |
-| AUX Linked PGM feedback | Confirmed working — added in 0.6.0 |
-| Per-channel audio mute variables | Confirmed working — added in 0.6.0 |
-| Per-input freeze variables | Confirmed working — added in 0.6.0 |
-| Audio mute feedback via panel | Confirmed working |
-| Transition type feedback via panel | Partial |
-| Record | Planned — pending hardware testing |
-| Image Capture to Still | Planned — pending investigation |
-| Scene Memory Load and Save | Planned — future version |
-| Tally feedbacks | Planned — requires hardware tally output for testing |
-| Stream Start and Stop | Planned — requires further protocol analysis |
-| Audio level control | Planned |
+| Feature                             | Status                                               |
+| ----------------------------------- | ---------------------------------------------------- |
+| CUT, AUTO, Fade To Black            | Confirmed working                                    |
+| Transition Type Mix and Wipe        | Confirmed working                                    |
+| Mix and Wipe Time                   | Confirmed working                                    |
+| Wipe Pattern and Direction          | Confirmed working                                    |
+| Program Source routing              | Confirmed working                                    |
+| Preview Source routing              | Confirmed working                                    |
+| Input Assign slots 1 to 8           | Confirmed working                                    |
+| AUX 1 and 2 Source routing          | Confirmed working                                    |
+| AUX Linked PGM                      | Confirmed working                                    |
+| AUX Layer PinP and Key control      | Confirmed working                                    |
+| Split 1 and 2                       | Confirmed working                                    |
+| PinP and Key Source                 | Confirmed working                                    |
+| PinP PGM and PVW On, Off, Toggle    | Confirmed working                                    |
+| PinP Window Position H and V        | Confirmed working                                    |
+| PinP Window Size                    | Confirmed working                                    |
+| PinP Window Cropping H and V        | Confirmed working                                    |
+| PinP View Position H and V          | Confirmed working                                    |
+| PinP View Zoom                      | Confirmed working                                    |
+| DSK Source, PGM, PVW                | Confirmed working                                    |
+| Audio Input Mute all channels       | Confirmed working                                    |
+| Main Bus Mute                       | Confirmed working                                    |
+| AUX Bus Mute                        | Confirmed working                                    |
+| Feedback for all polled state       | Confirmed working                                    |
+| Test Patterns 12 patterns           | Confirmed working                                    |
+| Fade To Black feedback              | Confirmed working — added in 0.6.0                   |
+| Wipe Pattern and Direction feedback | Confirmed working — added in 0.6.0                   |
+| AUX Linked PGM feedback             | Confirmed working — added in 0.6.0                   |
+| Per-channel audio mute variables    | Confirmed working — added in 0.6.0                   |
+| Per-input freeze variables          | Confirmed working — added in 0.6.0                   |
+| Audio mute feedback via panel       | Confirmed working                                    |
+| Transition type feedback via panel  | Partial                                              |
+| Record                              | Planned — pending hardware testing                   |
+| Image Capture to Still              | Planned — pending investigation                      |
+| Scene Memory Load and Save          | Planned — future version                             |
+| Tally feedbacks                     | Planned — requires hardware tally output for testing |
+| Stream Start and Stop               | Planned — requires further protocol analysis         |
+| Audio level control                 | Planned                                              |
 
 ---
 
@@ -84,11 +84,11 @@ From 0.6.0 each poll cycle is sent as a single batched TCP write rather than one
 
 A connection watchdog runs every 2.5s and recovers the link automatically:
 
-| Condition | Action |
-|---|---|
+| Condition                               | Action                 |
+| --------------------------------------- | ---------------------- |
 | No data received for 8s while connected | Rebuild the connection |
-| Authentication stalled for 10s | Retry authentication |
-| Socket unreachable for 20s | Recycle the socket |
+| Authentication stalled for 10s          | Retry authentication   |
+| Socket unreachable for 20s              | Recycle the socket     |
 
 This handles silent network loss, where the socket stays open but the device is no longer reachable. If the module still does not reconnect, disable and re-enable it in Companion.
 
@@ -131,6 +131,7 @@ Scene Memory Load and Save are implemented in code but not exposed in the curren
 ## Changelog
 
 ### 0.6.0
+
 - Password is sent once on the device prompt instead of twice, removing a stray ERR:0 and a retry loop that could trigger the device auth lockout
 - Rejected passwords are now detected and reported as a device lockout instead of looping
 - Connection watchdog added — rebuilds dead connections after 8s of receive silence, retries stalled authentication after 10s, and recycles unreachable sockets after 20s
@@ -143,6 +144,7 @@ Scene Memory Load and Save are implemented in code but not exposed in the curren
 - Stricter audio mute address matching and a shared input freeze address map
 
 ### 0.4.0
+
 - First tagged release. Baseline feature set as listed above.
 
 Note: versions 0.4.1 and 0.4.2 were local test builds only and were never tagged or published. There was no 0.5 release.

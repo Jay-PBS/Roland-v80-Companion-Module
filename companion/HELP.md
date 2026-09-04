@@ -35,6 +35,7 @@ The V-80HD applies a brute-force lockout after repeated failed password attempts
 ## Supported Actions
 
 ### Transitions
+
 - CUT, AUTO, Fade To Black
 - Set Transition Type (Mix or Wipe)
 - Set Mix and Wipe Time (0.0 to 4.0 seconds)
@@ -42,13 +43,16 @@ The V-80HD applies a brute-force lockout after repeated failed password attempts
 - Set Wipe Direction (Normal, Reverse, Round Trip)
 
 ### Program and Preview
+
 - Set Source — Inputs 1 to 8, HDMI 1 to 4, SDI 1 to 4, Stills 1 to 32, Video Player
 
 ### Input Assign
+
 - Assign physical sources to crosspoint slots 1 to 8
 - Available sources: HDMI 1 to 4, SDI 1 to 4, Stills 1 to 32, Video Player
 
 ### AUX
+
 - Set AUX 1 and AUX 2 Source — full source list
 - Set AUX Linked PGM (Off, Auto Link, Manual Link)
 - Set AUX Layer PinP and Key — Disable, Enable, Always On, per layer per bus
@@ -56,9 +60,11 @@ The V-80HD applies a brute-force lockout after repeated failed password attempts
 - Toggle AUX Layer PinP and Key between Disable and Always On
 
 ### Split
+
 - Split 1 and Split 2 — On, Off, Toggle
 
 ### PinP and Key
+
 - Set Source per layer — full source list
 - PGM On, Off, Toggle per layer
 - PVW On, Off, Toggle per layer
@@ -69,23 +75,28 @@ The V-80HD applies a brute-force lockout after repeated failed password attempts
 - View Zoom (100 to 400%)
 
 ### DSK
+
 - Set Source — full source list
 - PGM On, Off, Toggle
 - PVW On, Off, Toggle
 
 ### Audio
+
 - Input Mute On, Off, Toggle per channel
 - Main Bus Mute On, Off, Toggle
 - AUX Bus Mute On, Off, Toggle
 
 ### Freeze
+
 - Global Freeze On, Off, Toggle
 - Per-input Freeze On, Off, Toggle (HDMI 1 to 4, SDI 1 to 4)
 
 ### Test Pattern
+
 - All outputs — 12 patterns available plus Test Pattern Off
 
 ### Utility
+
 - Sync state now — forces an immediate poll
 - Send raw LAN command — visible when Show advanced actions is enabled
 
@@ -118,56 +129,56 @@ Fade To Black, wipe pattern, wipe direction and AUX Linked PGM feedbacks were ad
 
 The following variables are available for use in button labels and expressions:
 
-| Variable | Description |
-|---|---|
-| program_input | Active program input number |
-| preview_input | Active preview input number |
-| program_source | Program source byte in hex |
-| preview_source | Preview source byte in hex |
-| aux1_input | AUX 1 active input number |
-| aux2_input | AUX 2 active input number |
-| aux1_source | AUX 1 source byte in hex |
-| aux2_source | AUX 2 source byte in hex |
-| transition_type | MIX or WIPE |
-| mix_time | Transition time in milliseconds |
-| wipe_type | Active wipe pattern name |
-| wipe_direction | Wipe direction name |
-| pinp1_pgm | PinP 1 PGM state (ON or OFF) |
-| pinp1_pvw | PinP 1 PVW state (ON or OFF) |
-| pinp2_pgm | PinP 2 PGM state (ON or OFF) |
-| pinp2_pvw | PinP 2 PVW state (ON or OFF) |
-| dsk_pgm | DSK PGM state (ON or OFF) |
-| dsk_pvw | DSK PVW state (ON or OFF) |
-| split1 | Split 1 state (ON or OFF) |
-| split2 | Split 2 state (ON or OFF) |
-| aux_linked_pgm | AUX Linked PGM mode |
-| main_bus_mute | Main bus mute state (ON or OFF) |
-| aux1_bus_mute | AUX 1 bus mute state (ON or OFF) |
-| aux2_bus_mute | AUX 2 bus mute state (ON or OFF) |
-| ftb | Fade To Black state (ON or OFF) |
-| freeze | Global freeze state (ON or OFF) |
-| test_pattern | Active test pattern name |
+| Variable        | Description                      |
+| --------------- | -------------------------------- |
+| program_input   | Active program input number      |
+| preview_input   | Active preview input number      |
+| program_source  | Program source byte in hex       |
+| preview_source  | Preview source byte in hex       |
+| aux1_input      | AUX 1 active input number        |
+| aux2_input      | AUX 2 active input number        |
+| aux1_source     | AUX 1 source byte in hex         |
+| aux2_source     | AUX 2 source byte in hex         |
+| transition_type | MIX or WIPE                      |
+| mix_time        | Transition time in milliseconds  |
+| wipe_type       | Active wipe pattern name         |
+| wipe_direction  | Wipe direction name              |
+| pinp1_pgm       | PinP 1 PGM state (ON or OFF)     |
+| pinp1_pvw       | PinP 1 PVW state (ON or OFF)     |
+| pinp2_pgm       | PinP 2 PGM state (ON or OFF)     |
+| pinp2_pvw       | PinP 2 PVW state (ON or OFF)     |
+| dsk_pgm         | DSK PGM state (ON or OFF)        |
+| dsk_pvw         | DSK PVW state (ON or OFF)        |
+| split1          | Split 1 state (ON or OFF)        |
+| split2          | Split 2 state (ON or OFF)        |
+| aux_linked_pgm  | AUX Linked PGM mode              |
+| main_bus_mute   | Main bus mute state (ON or OFF)  |
+| aux1_bus_mute   | AUX 1 bus mute state (ON or OFF) |
+| aux2_bus_mute   | AUX 2 bus mute state (ON or OFF) |
+| ftb             | Fade To Black state (ON or OFF)  |
+| freeze          | Global freeze state (ON or OFF)  |
+| test_pattern    | Active test pattern name         |
 
 Per-channel audio mute variables, added in 0.6.0. Each reports ON or OFF:
 
-| Variable | Channel |
-|---|---|
-| mute_audio_in_1 | Audio In 1 |
-| mute_audio_in_2 | Audio In 2 |
-| mute_audio_in_34 | Audio In 3/4 |
-| mute_usb_in | USB In |
-| mute_bluetooth_in | Bluetooth In |
-| mute_audio_player | Audio Player |
+| Variable                         | Channel        |
+| -------------------------------- | -------------- |
+| mute_audio_in_1                  | Audio In 1     |
+| mute_audio_in_2                  | Audio In 2     |
+| mute_audio_in_34                 | Audio In 3/4   |
+| mute_usb_in                      | USB In         |
+| mute_bluetooth_in                | Bluetooth In   |
+| mute_audio_player                | Audio Player   |
 | mute_hdmi_in_1 to mute_hdmi_in_4 | HDMI In 1 to 4 |
-| mute_sdi_in_1 to mute_sdi_in_4 | SDI In 1 to 4 |
-| mute_video_player | Video Player |
+| mute_sdi_in_1 to mute_sdi_in_4   | SDI In 1 to 4  |
+| mute_video_player                | Video Player   |
 
 Per-input freeze variables, added in 0.6.0. Each reports ON or OFF:
 
-| Variable | Input |
-|---|---|
+| Variable                       | Input       |
+| ------------------------------ | ----------- |
 | freeze_hdmi_1 to freeze_hdmi_4 | HDMI 1 to 4 |
-| freeze_sdi_1 to freeze_sdi_4 | SDI 1 to 4 |
+| freeze_sdi_1 to freeze_sdi_4   | SDI 1 to 4  |
 
 Variables are accessed as $(instance_label:variable_id), for example $(v80hd:program_input).
 
