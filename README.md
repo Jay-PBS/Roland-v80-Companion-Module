@@ -121,6 +121,14 @@ yarn build
 yarn package
 ```
 
+`companion/manifest.json` carries `"version": "0.0.0"` deliberately. `yarn package` injects the real
+version from `package.json` into the packaged manifest and names the `.tgz` from it, so `package.json`
+is the single place a release number is set.
+
+The git pre-commit hook runs `lint-staged`. `.yarnrc.yml` sets `enableScripts: false`, inherited from
+upstream, which stops the `postinstall: husky` script from installing the hook automatically — so
+after a fresh clone run `yarn husky` once to enable it. Without that step commits are not linted.
+
 ---
 
 ## Known Issues

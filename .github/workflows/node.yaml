@@ -1,0 +1,48 @@
+name: Node CI
+
+on:
+  push:
+    branches:
+      - '**'
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
+  pull_request:
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v7
+      - name: Use Node.js 22.x
+        # Matches the runtime declared in companion/manifest.json. Local development
+        # currently runs Node 24, so this job is the only check that the module still
+        # builds on the version Companion actually ships.
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22.x
+      - name: Prepare Environment
+        run: |
+          corepack enable
+      - name: Prepare module
+        run: |
+          yarn install
+        env:
+          CI: true
+      - name: Build and check types
+        run: |
+          yarn build
+        env:
+          CI: true
+      - name: Run lint
+        run: |
+          yarn lint
+        env:
+          CI: true
+      - name: Check formatting
+        run: |
+          yarn prettier --check .
+        env:
+          CI: true
