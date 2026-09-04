@@ -71,11 +71,24 @@ While Wireshark is up and the rig is live, also capture: still output cut direct
 
 ## CI
 
-The `companion-module-checks` workflow arrived with the upstream sync and had never run. The 2026-09-04 push to `main` is the first thing that could trigger it — check the result.
+The `companion-module-checks` workflow ran once, on the 2026-09-04 push to `main`, and failed at the
+first step:
 
-- It runs install → build → package → launch test. It does **not** run lint.
-- It validates repository naming against the module ID. This repo is `Roland-v80-Companion-Module`, not `companion-module-roland-v80hd`, so **the naming check may fail on this fork**. Unconfirmed until a push happens. Not a code fault if it does.
-- Manifest and package versions match at 0.6.5, so that check should pass.
+```
+Unknown repository name format: Roland-v80-Companion-Module.
+Repository name must start with companion-module- or companion-surface-
+Error: Process completed with exit code 99.
+```
+
+Not a code fault — it never reached build or package. Resolved by renaming the GitHub repository to
+`companion-module-roland-v80hd` and removing the workflow from this fork, since it is an upstream
+gate rather than something needed here. `repository` and `bugs` URLs in `package.json`,
+`companion/manifest.json` and README were updated to match.
+
+**Note what was given up:** that workflow also ran install, build, package and a launch test. Nothing
+now catches a broken package before it reaches hardware, so `yarn build`, `yarn lint`,
+`prettier --check` and `yarn package` all passing locally is the only gate. If the module is ever
+submitted upstream, bitfocus runs these checks on their own repository anyway.
 
 ## Open issues
 

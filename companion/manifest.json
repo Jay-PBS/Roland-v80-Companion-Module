@@ -5,8 +5,8 @@
 	"description": "Control the Roland V-80HD Direct Streaming Video Switcher",
 	"version": "0.6.5",
 	"license": "MIT",
-	"repository": "https://github.com/Jay-PBS/Roland-v80-Companion-Module",
-	"bugs": "https://github.com/Jay-PBS/Roland-v80-Companion-Module/issues",
+	"repository": "https://github.com/Jay-PBS/companion-module-roland-v80hd",
+	"bugs": "https://github.com/Jay-PBS/companion-module-roland-v80hd/issues",
 	"maintainers": [{ "name": "Jay", "email": "projects@purplebadgersolutions.co.uk" }],
 	"runtime": {
 		"type": "node22",
