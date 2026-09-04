@@ -30,7 +30,7 @@ export function GetConfigFields(): SomeCompanionConfigField[] {
 		{
 			type: 'checkbox',
 			id: 'showAdvanced',
-			label: 'Show advanced actions (raw LAN command)',
+			label: 'Allow advanced actions (raw LAN command)',
 			width: 12,
 			default: false,
 		},

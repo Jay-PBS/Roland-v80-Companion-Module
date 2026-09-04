@@ -831,8 +831,12 @@ export class V80Api {
 		this.cmdSetAuxLinkedPgmBus(aux, !(aux === 1 ? this.self.aux1LinkedPgm : this.self.aux2LinkedPgm))
 	}
 	public cmdSetAuxLayerPinp(aux: AuxId, layer: LayerId, mode: 0 | 1 | 2): void {
-		const addr = ({ 1: { 1: '000020', 2: '000021' }, 2: { 1: '000023', 2: '000024' } } as any)[aux][layer]
-		if (!addr) return
+		// AuxId and LayerId are both 1 | 2, so this lookup is total - no undefined guard needed.
+		const addrs: Record<AuxId, Record<LayerId, string>> = {
+			1: { 1: '000020', 2: '000021' },
+			2: { 1: '000023', 2: '000024' },
+		}
+		const addr = addrs[aux][layer]
 		this.sendCmd(this.dth(addr, this.hb(mode)))
 		if (aux === 1 && layer === 1) this.self.aux1Pinp1Layer = mode
 		else if (aux === 1 && layer === 2) this.self.aux1Pinp2Layer = mode

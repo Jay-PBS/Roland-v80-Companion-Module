@@ -388,19 +388,26 @@ export function UpdateActions(self: ModuleInstance): void {
 		},
 
 		sync_now: { name: 'Sync state now', options: [], callback: async () => self.api.requestCoreState() },
-	}
 
-	if (self.config.showAdvanced) {
-		actions['raw_command'] = {
+		// Always defined, never conditionally registered. Registering this only when
+		// showAdvanced was on meant turning the checkbox back off removed the definition
+		// while existing buttons still referenced it, leaving them in an unknown-action
+		// state. The checkbox now gates execution instead, so the safety catch remains and
+		// a button that was already built keeps its identity either way.
+		raw_command: {
 			name: 'Send raw LAN command',
 			description:
-				'Expert use only. Incorrect commands can overwrite mixer state. Example: DTH:001500,29; sets Program to Input 1.',
+				'Expert use only. Requires "Show advanced actions" in the connection config. Incorrect commands can overwrite mixer state. Example: DTH:001500,29; sets Program to Input 1.',
 			options: [{ id: 'cmd', type: 'textinput', label: 'Command string', default: '' }],
 			callback: async (e) => {
+				if (!self.config.showAdvanced) {
+					self.log('warn', 'Raw LAN command ignored - enable "Show advanced actions" in the connection config')
+					return
+				}
 				const cmd = String(e.options.cmd ?? '').trim()
 				if (cmd) self.api.cmdRaw(cmd)
 			},
-		}
+		},
 	}
 
 	self.setActionDefinitions(actions)

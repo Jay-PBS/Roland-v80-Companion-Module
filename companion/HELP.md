@@ -12,7 +12,7 @@ Tested firmware: v1.20.201
 2. A network password must be configured on the device before LAN control will function. This is set via Menu, Network, Network Password on the unit itself.
 3. In Companion, enter the device IP address, port 8023, and the password configured on the device.
 4. Leave polling enabled. It is what keeps feedbacks in sync — see Network Behaviour for what turning it off costs.
-5. Enable Show advanced actions to reveal the raw LAN command action.
+5. Enable Show advanced actions if you need the raw LAN command action. The action is always listed, but it refuses to send and logs a warning unless this is ticked.
 
 ---
 
