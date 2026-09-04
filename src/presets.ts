@@ -258,14 +258,6 @@ export function UpdatePresets(self: ModuleInstance): void {
 	}
 
 	// ── AUX Link ──────────────────────────────────────────────────────────────
-	// Two things, in order. The MODE (020114) gates everything: with it Off there is no AUX
-	// link at all and the FOLLOW buttons do nothing. Set the mode first, then choose which
-	// buses follow with 020115 / 020116.
-	//
-	// Auto Link and Manual Link behave identically until the link is broken by selecting an
-	// AUX source by hand. Auto restores the link at the next transition; Manual keeps your
-	// selection until you re-select it. Manual is usually what you want when Companion is
-	// ── AUX Link ──────────────────────────────────────────────────────────────
 	// Two things, in order. The MODE (020114) gates everything: with it Off there is no
 	// AUX link at all and the FOLLOW buttons do nothing. Set a mode first, then choose
 	// which buses follow with 020115 / 020116.
@@ -447,9 +439,7 @@ export function UpdatePresets(self: ModuleInstance): void {
 		}
 	}
 
-	// ── Stream & Record ───────────────────────────────────────────────────────
-	// One trigger drives livestreaming and recording together on this unit, so a single
-	// toggle is the honest control. Amber marks the brief Starting/Stopping states the
+	// ── Test Patterns ─────────────────────────────────────────────────────────
 	presets['tp_off'] = {
 		type: 'button',
 		category: 'Test Patterns',
@@ -469,10 +459,11 @@ export function UpdatePresets(self: ModuleInstance): void {
 		}
 	}
 
-	// ── Image Capture — suspended ─────────────────────────────────────────────
-	// presets['capture_...'] = { ... }
-
-	// device reports before it settles.
+	// ── Stream & Record ───────────────────────────────────────────────────────
+	// One trigger (0A0800) drives livestreaming and recording together on this unit, so
+	// Start and Stop each act on whichever of Live Streaming, Video Rec and Audio Rec are
+	// enabled on the device. Both buttons light from the device's own reported state
+	// rather than from what was sent, so they also track the panel and the RCS software.
 	presets['stream_record_start'] = {
 		type: 'button',
 		category: 'Stream & Record',

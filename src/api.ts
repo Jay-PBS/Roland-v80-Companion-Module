@@ -188,15 +188,15 @@ export function sourceIdToByte(id: string): number | undefined {
 	}
 	if (id.startsWith('hdmi_')) {
 		const n = parseInt(id.slice(5))
-		if (n >= 1 && n <= 4) return n - 1
+		if (n >= 1 && n <= SRC_HDMI4 - SRC_HDMI1 + 1) return SRC_HDMI1 + n - 1
 	}
 	if (id.startsWith('sdi_')) {
 		const n = parseInt(id.slice(4))
-		if (n >= 1 && n <= 4) return SRC_SDI1 + n - 1
+		if (n >= 1 && n <= SRC_SDI4 - SRC_SDI1 + 1) return SRC_SDI1 + n - 1
 	}
 	if (id.startsWith('still_')) {
 		const n = parseInt(id.slice(6))
-		if (n >= 1 && n <= 32) return SRC_STILL1 + n - 1
+		if (n >= 1 && n <= SRC_STILL32 - SRC_STILL1 + 1) return SRC_STILL1 + n - 1
 	}
 	if (id === 'video_player') return SRC_VPLAYER
 	return undefined
