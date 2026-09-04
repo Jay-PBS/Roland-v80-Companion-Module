@@ -1,79 +1,33 @@
 // src/actions.ts — Roland V-80HD
 import type { ModuleInstance } from './main.js'
-import { TEST_PATTERNS, SOURCE_CHOICES, INPUT_ASSIGN_SOURCE_CHOICES, CAPTURE_SRC } from './api.js'
+import {
+	TEST_PATTERNS,
+	SOURCE_CHOICES,
+	INPUT_ASSIGN_SOURCE_CHOICES,
+	CAPTURE_SOURCE_CHOICES,
+	AUDIO_CHANNEL_CHOICES,
+	PHYSICAL_INPUT_CHOICES,
+	WIPE_TYPE_CHOICES,
+	WIPE_DIRECTION_CHOICES,
+	AUX_LINK_MODE_CHOICES,
+	AUX_CHOICES,
+	AUX_LAYER_CHOICES,
+	type LayerId,
+	type AuxId,
+} from './api.js'
 
 const STREAM_RECORD_WARNING =
 	"On the V-80HD livestreaming, video recording and audio recording share one trigger and cannot be started separately. Whichever of Live Streaming, Video Rec and Audio Rec are enabled in the unit's menu will start, so this WILL begin a livestream — including to YouTube, Facebook or Twitch — if Live Streaming is on. Check Stream&Record settings on the device before assigning this to a button."
 
-const AUDIO_CHANNELS = [
-	{ id: 'audio_in_1', label: 'Audio In 1' },
-	{ id: 'audio_in_2', label: 'Audio In 2' },
-	{ id: 'audio_in_34', label: 'Audio In 3/4' },
-	{ id: 'usb_in', label: 'USB In' },
-	{ id: 'bluetooth_in', label: 'Bluetooth In' },
-	{ id: 'audio_player', label: 'Audio Player' },
-	{ id: 'hdmi_in_1', label: 'HDMI In 1' },
-	{ id: 'hdmi_in_2', label: 'HDMI In 2' },
-	{ id: 'hdmi_in_3', label: 'HDMI In 3' },
-	{ id: 'hdmi_in_4', label: 'HDMI In 4' },
-	{ id: 'sdi_in_1', label: 'SDI In 1' },
-	{ id: 'sdi_in_2', label: 'SDI In 2' },
-	{ id: 'sdi_in_3', label: 'SDI In 3' },
-	{ id: 'sdi_in_4', label: 'SDI In 4' },
-	{ id: 'video_player', label: 'Video Player / SRT In' },
-]
-const WIPE_TYPES = [
-	{ id: '0', label: 'Horizontal' },
-	{ id: '1', label: 'Vertical' },
-	{ id: '2', label: 'Upper Left' },
-	{ id: '3', label: 'Upper Right' },
-	{ id: '4', label: 'Lower Left' },
-	{ id: '5', label: 'Lower Right' },
-	{ id: '6', label: 'H-Center' },
-	{ id: '7', label: 'V-Center' },
-]
-const WIPE_DIRS = [
-	{ id: '0', label: 'Normal' },
-	{ id: '1', label: 'Reverse' },
-	{ id: '2', label: 'Round Trip' },
-]
-const CAPTURE_SOURCES = [
-	{ id: 'hdmi_1', label: 'HDMI In 1' },
-	{ id: 'hdmi_2', label: 'HDMI In 2' },
-	{ id: 'hdmi_3', label: 'HDMI In 3' },
-	{ id: 'hdmi_4', label: 'HDMI In 4' },
-	{ id: 'sdi_1', label: 'SDI In 1' },
-	{ id: 'sdi_2', label: 'SDI In 2' },
-	{ id: 'sdi_3', label: 'SDI In 3' },
-	{ id: 'sdi_4', label: 'SDI In 4' },
-	{ id: 'video_player', label: 'Video Player / SRT In' },
-].filter((c) => CAPTURE_SRC[c.id] !== undefined)
-
-const FREEZE_INPUTS = [
-	{ id: 'hdmi_1', label: 'HDMI In 1' },
-	{ id: 'hdmi_2', label: 'HDMI In 2' },
-	{ id: 'hdmi_3', label: 'HDMI In 3' },
-	{ id: 'hdmi_4', label: 'HDMI In 4' },
-	{ id: 'sdi_1', label: 'SDI In 1' },
-	{ id: 'sdi_2', label: 'SDI In 2' },
-	{ id: 'sdi_3', label: 'SDI In 3' },
-	{ id: 'sdi_4', label: 'SDI In 4' },
-]
-const AUX_CHOICES = [
-	{ id: '1', label: 'AUX 1' },
-	{ id: '2', label: 'AUX 2' },
-]
 const LAYER_OPT = { id: 'layer', type: 'number' as const, label: 'Layer (1 or 2)', default: 1, min: 1, max: 2 }
 const AUX_LAYER_MODE = [
 	{ id: '0', label: 'Disable' },
 	{ id: '1', label: 'Enable' },
 	{ id: '2', label: 'Always On' },
 ]
-const AUX_LAYER_DD = [
-	{ id: '1', label: 'PinP & Key 1' },
-	{ id: '2', label: 'PinP & Key 2' },
-]
-const L = (e: any): 1 | 2 => (Number(e.options.layer) === 2 ? 2 : 1)
+// The AUX and layer dropdowns are 1/2 strings, so every callback narrows the same way.
+const L = (e: { options: Record<string, unknown> }): LayerId => (Number(e.options.layer) === 2 ? 2 : 1)
+const A = (e: { options: Record<string, unknown> }): AuxId => (Number(e.options.aux) === 2 ? 2 : 1)
 
 export function UpdateActions(self: ModuleInstance): void {
 	const actions: Parameters<typeof self.setActionDefinitions>[0] = {
@@ -104,12 +58,12 @@ export function UpdateActions(self: ModuleInstance): void {
 		},
 		set_wipe_type: {
 			name: 'Set Wipe Pattern',
-			options: [{ id: 'type', type: 'dropdown', label: 'Pattern', default: '0', choices: WIPE_TYPES }],
+			options: [{ id: 'type', type: 'dropdown', label: 'Pattern', default: '0', choices: WIPE_TYPE_CHOICES }],
 			callback: async (e) => self.cmdSetWipeType(Number(e.options.type)),
 		},
 		set_wipe_direction: {
 			name: 'Set Wipe Direction',
-			options: [{ id: 'dir', type: 'dropdown', label: 'Direction', default: '0', choices: WIPE_DIRS }],
+			options: [{ id: 'dir', type: 'dropdown', label: 'Direction', default: '0', choices: WIPE_DIRECTION_CHOICES }],
 			callback: async (e) => self.cmdSetWipeDirection(Number(e.options.dir)),
 		},
 
@@ -139,7 +93,7 @@ export function UpdateActions(self: ModuleInstance): void {
 				{ id: 'aux', type: 'dropdown', label: 'AUX Bus', default: '1', choices: AUX_CHOICES },
 				{ id: 'source', type: 'dropdown', label: 'Source', default: 'input_1', choices: SOURCE_CHOICES },
 			],
-			callback: async (e) => self.cmdSetAuxSource(Number(e.options.aux) === 2 ? 2 : 1, String(e.options.source)),
+			callback: async (e) => self.cmdSetAuxSource(A(e), String(e.options.source)),
 		},
 		set_aux_linked_pgm: {
 			name: 'Set AUX Linked PGM',
@@ -149,11 +103,7 @@ export function UpdateActions(self: ModuleInstance): void {
 					type: 'dropdown',
 					label: 'Mode',
 					default: '0',
-					choices: [
-						{ id: '0', label: 'Off' },
-						{ id: '1', label: 'Auto Link' },
-						{ id: '2', label: 'Manual Link' },
-					],
+					choices: AUX_LINK_MODE_CHOICES,
 				},
 			],
 			callback: async (e) => self.cmdSetAuxLinkedPgm(Number(e.options.mode) as 0 | 1 | 2),
@@ -168,10 +118,8 @@ export function UpdateActions(self: ModuleInstance): void {
 					type: 'dropdown',
 					label: 'Mode',
 					default: '1',
-					choices: [
-						{ id: '1', label: 'Auto Link' },
-						{ id: '2', label: 'Manual Link' },
-					],
+					// Off is not offered here: this action toggles a mode back to Off by itself.
+					choices: AUX_LINK_MODE_CHOICES.filter((m) => m.id !== '0'),
 				},
 			],
 			callback: async (e) => self.cmdToggleAuxLinkedPgmMode(Number(e.options.mode) === 2 ? 2 : 1),
@@ -192,46 +140,38 @@ export function UpdateActions(self: ModuleInstance): void {
 					],
 				},
 			],
-			callback: async (e) =>
-				self.cmdSetAuxLinkedPgmBus(Number(e.options.aux) === 2 ? 2 : 1, String(e.options.state) === '1'),
+			callback: async (e) => self.cmdSetAuxLinkedPgmBus(A(e), String(e.options.state) === '1'),
 		},
 		toggle_aux_linked_pgm_bus: {
 			name: 'Toggle AUX Linked PGM – bus follow',
 			options: [{ id: 'aux', type: 'dropdown', label: 'AUX Bus', default: '1', choices: AUX_CHOICES }],
-			callback: async (e) => self.cmdToggleAuxLinkedPgmBus(Number(e.options.aux) === 2 ? 2 : 1),
+			callback: async (e) => self.cmdToggleAuxLinkedPgmBus(A(e)),
 		},
 		set_aux_layer_pinp: {
 			name: 'Set AUX Layer – PinP and Key',
 			description: 'Controls PinP overlay on the AUX bus output independently from PGM',
 			options: [
 				{ id: 'aux', type: 'dropdown', label: 'AUX Bus', default: '1', choices: AUX_CHOICES },
-				{ id: 'layer', type: 'dropdown', label: 'PinP Layer', default: '1', choices: AUX_LAYER_DD },
+				{ id: 'layer', type: 'dropdown', label: 'PinP Layer', default: '1', choices: AUX_LAYER_CHOICES },
 				{ id: 'mode', type: 'dropdown', label: 'Mode', default: '1', choices: AUX_LAYER_MODE },
 			],
-			callback: async (e) =>
-				self.cmdSetAuxLayerPinp(
-					Number(e.options.aux) === 2 ? 2 : 1,
-					Number(e.options.layer) === 2 ? 2 : 1,
-					Number(e.options.mode) as 0 | 1 | 2,
-				),
+			callback: async (e) => self.cmdSetAuxLayerPinp(A(e), L(e), Number(e.options.mode) as 0 | 1 | 2),
 		},
 		toggle_aux_layer_pinp: {
 			name: 'Toggle AUX Layer – PinP and Key (Disable / Enable)',
 			options: [
 				{ id: 'aux', type: 'dropdown', label: 'AUX Bus', default: '1', choices: AUX_CHOICES },
-				{ id: 'layer', type: 'dropdown', label: 'PinP Layer', default: '1', choices: AUX_LAYER_DD },
+				{ id: 'layer', type: 'dropdown', label: 'PinP Layer', default: '1', choices: AUX_LAYER_CHOICES },
 			],
-			callback: async (e) =>
-				self.cmdToggleAuxLayerPinp(Number(e.options.aux) === 2 ? 2 : 1, Number(e.options.layer) === 2 ? 2 : 1),
+			callback: async (e) => self.cmdToggleAuxLayerPinp(A(e), L(e)),
 		},
 		toggle_aux_layer_pinp_always_on: {
 			name: 'Toggle AUX Layer – PinP and Key (Disable / Always On)',
 			options: [
 				{ id: 'aux', type: 'dropdown', label: 'AUX Bus', default: '1', choices: AUX_CHOICES },
-				{ id: 'layer', type: 'dropdown', label: 'PinP Layer', default: '1', choices: AUX_LAYER_DD },
+				{ id: 'layer', type: 'dropdown', label: 'PinP Layer', default: '1', choices: AUX_LAYER_CHOICES },
 			],
-			callback: async (e) =>
-				self.cmdToggleAuxLayerPinpAlwaysOn(Number(e.options.aux) === 2 ? 2 : 1, Number(e.options.layer) === 2 ? 2 : 1),
+			callback: async (e) => self.cmdToggleAuxLayerPinpAlwaysOn(A(e), L(e)),
 		},
 
 		split1_on: { name: 'Split 1 – On', options: [], callback: async () => self.cmdSplit1(true) },
@@ -337,17 +277,23 @@ export function UpdateActions(self: ModuleInstance): void {
 
 		audio_input_mute_on: {
 			name: 'Audio Input – Mute On',
-			options: [{ id: 'ch', type: 'dropdown', label: 'Channel', default: 'audio_in_1', choices: AUDIO_CHANNELS }],
+			options: [
+				{ id: 'ch', type: 'dropdown', label: 'Channel', default: 'audio_in_1', choices: AUDIO_CHANNEL_CHOICES },
+			],
 			callback: async (e) => self.cmdAudioInputMute(String(e.options.ch), true),
 		},
 		audio_input_mute_off: {
 			name: 'Audio Input – Mute Off',
-			options: [{ id: 'ch', type: 'dropdown', label: 'Channel', default: 'audio_in_1', choices: AUDIO_CHANNELS }],
+			options: [
+				{ id: 'ch', type: 'dropdown', label: 'Channel', default: 'audio_in_1', choices: AUDIO_CHANNEL_CHOICES },
+			],
 			callback: async (e) => self.cmdAudioInputMute(String(e.options.ch), false),
 		},
 		audio_input_mute_toggle: {
 			name: 'Audio Input – Mute Toggle',
-			options: [{ id: 'ch', type: 'dropdown', label: 'Channel', default: 'audio_in_1', choices: AUDIO_CHANNELS }],
+			options: [
+				{ id: 'ch', type: 'dropdown', label: 'Channel', default: 'audio_in_1', choices: AUDIO_CHANNEL_CHOICES },
+			],
 			callback: async (e) => self.cmdAudioInputMuteToggle(String(e.options.ch)),
 		},
 		main_bus_mute_on: { name: 'Main Bus – Mute On', options: [], callback: async () => self.cmdMainBusMute(true) },
@@ -360,17 +306,17 @@ export function UpdateActions(self: ModuleInstance): void {
 		aux_bus_mute_on: {
 			name: 'AUX Bus – Mute On',
 			options: [{ id: 'aux', type: 'dropdown', label: 'AUX Bus', default: '1', choices: AUX_CHOICES }],
-			callback: async (e) => self.cmdAuxBusMute(Number(e.options.aux) === 2 ? 2 : 1, true),
+			callback: async (e) => self.cmdAuxBusMute(A(e), true),
 		},
 		aux_bus_mute_off: {
 			name: 'AUX Bus – Mute Off',
 			options: [{ id: 'aux', type: 'dropdown', label: 'AUX Bus', default: '1', choices: AUX_CHOICES }],
-			callback: async (e) => self.cmdAuxBusMute(Number(e.options.aux) === 2 ? 2 : 1, false),
+			callback: async (e) => self.cmdAuxBusMute(A(e), false),
 		},
 		aux_bus_mute_toggle: {
 			name: 'AUX Bus – Mute Toggle',
 			options: [{ id: 'aux', type: 'dropdown', label: 'AUX Bus', default: '1', choices: AUX_CHOICES }],
-			callback: async (e) => self.cmdAuxBusMuteToggle(Number(e.options.aux) === 2 ? 2 : 1),
+			callback: async (e) => self.cmdAuxBusMuteToggle(A(e)),
 		},
 
 		freeze_on: { name: 'Freeze – On', options: [], callback: async () => self.cmdFreezeOn() },
@@ -378,17 +324,17 @@ export function UpdateActions(self: ModuleInstance): void {
 		freeze_toggle: { name: 'Freeze – Toggle', options: [], callback: async () => self.cmdFreezeToggle() },
 		input_freeze_on: {
 			name: 'Input Freeze – On',
-			options: [{ id: 'input', type: 'dropdown', label: 'Input', default: 'hdmi_1', choices: FREEZE_INPUTS }],
+			options: [{ id: 'input', type: 'dropdown', label: 'Input', default: 'hdmi_1', choices: PHYSICAL_INPUT_CHOICES }],
 			callback: async (e) => self.cmdSetInputFreeze(String(e.options.input), true),
 		},
 		input_freeze_off: {
 			name: 'Input Freeze – Off',
-			options: [{ id: 'input', type: 'dropdown', label: 'Input', default: 'hdmi_1', choices: FREEZE_INPUTS }],
+			options: [{ id: 'input', type: 'dropdown', label: 'Input', default: 'hdmi_1', choices: PHYSICAL_INPUT_CHOICES }],
 			callback: async (e) => self.cmdSetInputFreeze(String(e.options.input), false),
 		},
 		input_freeze_toggle: {
 			name: 'Input Freeze – Toggle',
-			options: [{ id: 'input', type: 'dropdown', label: 'Input', default: 'hdmi_1', choices: FREEZE_INPUTS }],
+			options: [{ id: 'input', type: 'dropdown', label: 'Input', default: 'hdmi_1', choices: PHYSICAL_INPUT_CHOICES }],
 			callback: async (e) => self.cmdSetInputFreezeToggle(String(e.options.input)),
 		},
 
@@ -431,7 +377,7 @@ export function UpdateActions(self: ModuleInstance): void {
 					type: 'dropdown',
 					label: 'Source',
 					default: 'hdmi_1',
-					choices: CAPTURE_SOURCES,
+					choices: CAPTURE_SOURCE_CHOICES,
 				},
 			],
 			callback: async (e) => await self.cmdCaptureImage(Number(e.options.slot), String(e.options.source)),

@@ -1,18 +1,7 @@
 // src/presets.ts — Roland V-80HD
 import type { ModuleInstance } from './main.js'
 import { CompanionPresetDefinitions, combineRgb } from '@companion-module/base'
-import { TEST_PATTERNS } from './api.js'
-
-const TALLY_PRESET_INPUTS = [
-	{ id: 'hdmi_1', label: 'HDMI In 1', short: 'HDMI\n1' },
-	{ id: 'hdmi_2', label: 'HDMI In 2', short: 'HDMI\n2' },
-	{ id: 'hdmi_3', label: 'HDMI In 3', short: 'HDMI\n3' },
-	{ id: 'hdmi_4', label: 'HDMI In 4', short: 'HDMI\n4' },
-	{ id: 'sdi_1', label: 'SDI In 1', short: 'SDI\n1' },
-	{ id: 'sdi_2', label: 'SDI In 2', short: 'SDI\n2' },
-	{ id: 'sdi_3', label: 'SDI In 3', short: 'SDI\n3' },
-	{ id: 'sdi_4', label: 'SDI In 4', short: 'SDI\n4' },
-]
+import { TEST_PATTERNS, PHYSICAL_INPUTS } from './api.js'
 
 export function UpdatePresets(self: ModuleInstance): void {
 	const presets: CompanionPresetDefinitions = {}
@@ -418,24 +407,14 @@ export function UpdatePresets(self: ModuleInstance): void {
 		steps: [{ down: [{ actionId: 'freeze_toggle', options: {} }], up: [] }],
 		feedbacks: [{ feedbackId: 'freeze_active', options: {}, style: { bgcolor: c.aux_on } }],
 	}
-	const freezeInputs = [
-		{ key: 'hdmi_1', label: 'HDMI 1' },
-		{ key: 'hdmi_2', label: 'HDMI 2' },
-		{ key: 'hdmi_3', label: 'HDMI 3' },
-		{ key: 'hdmi_4', label: 'HDMI 4' },
-		{ key: 'sdi_1', label: 'SDI 1' },
-		{ key: 'sdi_2', label: 'SDI 2' },
-		{ key: 'sdi_3', label: 'SDI 3' },
-		{ key: 'sdi_4', label: 'SDI 4' },
-	]
-	for (const fi of freezeInputs) {
-		presets[`freeze_${fi.key}`] = {
+	for (const fi of PHYSICAL_INPUTS) {
+		presets[`freeze_${fi.id}`] = {
 			type: 'button',
 			category: 'Freeze',
-			name: `Freeze ${fi.label}`,
-			style: { text: `FRZ\n${fi.label}`, size: sz, color: c.white, bgcolor: c.util, show_topbar: false },
-			steps: [{ down: [{ actionId: 'input_freeze_toggle', options: { input: fi.key } }], up: [] }],
-			feedbacks: [{ feedbackId: 'input_freeze_active', options: { input: fi.key }, style: { bgcolor: c.teal_on } }],
+			name: `Freeze ${fi.short}`,
+			style: { text: `FRZ\n${fi.short}`, size: sz, color: c.white, bgcolor: c.util, show_topbar: false },
+			steps: [{ down: [{ actionId: 'input_freeze_toggle', options: { input: fi.id } }], up: [] }],
+			feedbacks: [{ feedbackId: 'input_freeze_active', options: { input: fi.id }, style: { bgcolor: c.teal_on } }],
 		}
 	}
 
@@ -498,12 +477,12 @@ export function UpdatePresets(self: ModuleInstance): void {
 	// ── Tally ─────────────────────────────────────────────────────────────────
 	// One button per physical input, reporting what the switcher itself says is on air.
 	// Red for PGM, green for PST. Needs no tally cable.
-	for (const ti of TALLY_PRESET_INPUTS) {
+	for (const ti of PHYSICAL_INPUTS) {
 		presets[`tally_${ti.id}`] = {
 			type: 'button',
 			category: 'Tally',
 			name: `Tally ${ti.label}`,
-			style: { text: ti.short, size: sz, color: c.white, bgcolor: c.util, show_topbar: false },
+			style: { text: ti.short.replace(' ', '\n'), size: sz, color: c.white, bgcolor: c.util, show_topbar: false },
 			steps: [{ down: [], up: [] }],
 			feedbacks: [
 				{ feedbackId: 'tally_pgm', options: { input: ti.id }, style: { bgcolor: c.pgm_on, color: c.white } },

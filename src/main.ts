@@ -6,7 +6,17 @@ import { UpgradeScripts } from './upgrades.js'
 import { UpdateActions } from './actions.js'
 import { UpdateFeedbacks } from './feedbacks.js'
 import { UpdatePresets } from './presets.js'
-import { V80Api, AUDIO_CH, INPUT_FREEZE_IDX, TALLY_IDX, type AuxId, type LayerId } from './api.js'
+import {
+	V80Api,
+	AUDIO_CH,
+	INPUT_FREEZE_IDX,
+	TALLY_IDX,
+	WIPE_TYPE_NAMES,
+	WIPE_DIRECTION_NAMES,
+	AUX_LINK_MODE_NAMES,
+	type AuxId,
+	type LayerId,
+} from './api.js'
 
 export class ModuleInstance extends InstanceBase<ModuleConfig> {
 	public config!: ModuleConfig
@@ -107,18 +117,6 @@ export class ModuleInstance extends InstanceBase<ModuleConfig> {
 	}
 
 	public updateAllVariables(): void {
-		const wipeTypes = [
-			'Horizontal',
-			'Vertical',
-			'Upper Left',
-			'Upper Right',
-			'Lower Left',
-			'Lower Right',
-			'H-Center',
-			'V-Center',
-		]
-		const wipeDirs = ['Normal', 'Reverse', 'Round Trip']
-		const auxLinks = ['Off', 'Auto Link', 'Manual Link']
 		const tpName =
 			[
 				'Off',
@@ -146,8 +144,8 @@ export class ModuleInstance extends InstanceBase<ModuleConfig> {
 			aux2_source: this.aux2Source.toString(16).toUpperCase().padStart(2, '0'),
 			transition_type: this.transitionType.toUpperCase(),
 			mix_time: `${this.mixTime * 100}ms`,
-			wipe_type: wipeTypes[this.wipeType] ?? `${this.wipeType}`,
-			wipe_direction: wipeDirs[this.wipeDirection] ?? `${this.wipeDirection}`,
+			wipe_type: WIPE_TYPE_NAMES[this.wipeType] ?? `${this.wipeType}`,
+			wipe_direction: WIPE_DIRECTION_NAMES[this.wipeDirection] ?? `${this.wipeDirection}`,
 			pinp1_pgm: this.pinp1Pgm ? 'ON' : 'OFF',
 			pinp1_pvw: this.pinp1Pvw ? 'ON' : 'OFF',
 			pinp2_pgm: this.pinp2Pgm ? 'ON' : 'OFF',
@@ -156,7 +154,7 @@ export class ModuleInstance extends InstanceBase<ModuleConfig> {
 			dsk_pvw: this.dskPvw ? 'ON' : 'OFF',
 			split1: this.split1Active ? 'ON' : 'OFF',
 			split2: this.split2Active ? 'ON' : 'OFF',
-			aux_linked_pgm: auxLinks[this.auxLinkedPgm] ?? 'Off',
+			aux_linked_pgm: AUX_LINK_MODE_NAMES[this.auxLinkedPgm] ?? 'Off',
 			aux1_linked_pgm: this.aux1LinkedPgm ? 'ON' : 'OFF',
 			aux2_linked_pgm: this.aux2LinkedPgm ? 'ON' : 'OFF',
 			main_bus_mute: this.mainBusMute ? 'ON' : 'OFF',

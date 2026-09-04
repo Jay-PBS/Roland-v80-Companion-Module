@@ -13,6 +13,26 @@ export const SRC_VPLAYER = 0x28
 export const SRC_INPUT1 = 0x29
 export const SRC_INPUT16 = 0x38
 
+// The eight physical inputs in panel order. Canonical: the freeze and tally address maps, the
+// freeze and tally dropdowns, the capture source list and the freeze and tally presets all key
+// off this one list. `short` is the button-label form used by the presets.
+export const PHYSICAL_INPUTS = [
+	{ id: 'hdmi_1', label: 'HDMI In 1', short: 'HDMI 1' },
+	{ id: 'hdmi_2', label: 'HDMI In 2', short: 'HDMI 2' },
+	{ id: 'hdmi_3', label: 'HDMI In 3', short: 'HDMI 3' },
+	{ id: 'hdmi_4', label: 'HDMI In 4', short: 'HDMI 4' },
+	{ id: 'sdi_1', label: 'SDI In 1', short: 'SDI 1' },
+	{ id: 'sdi_2', label: 'SDI In 2', short: 'SDI 2' },
+	{ id: 'sdi_3', label: 'SDI In 3', short: 'SDI 3' },
+	{ id: 'sdi_4', label: 'SDI In 4', short: 'SDI 4' },
+] as const
+export type PhysicalInputId = (typeof PHYSICAL_INPUTS)[number]['id']
+export const PHYSICAL_INPUT_CHOICES = PHYSICAL_INPUTS.map(({ id, label }) => ({ id, label }))
+
+// The address maps below are written out rather than generated: these are protocol constants
+// and they need to stay readable against the control specification. The `satisfies` clause is
+// what removes the duplication risk - miss an input, or add one to PHYSICAL_INPUTS without an
+// address here, and the build fails rather than the feature silently going missing.
 export const INPUT_FREEZE_IDX: Record<string, number> = {
 	hdmi_1: 0x02,
 	hdmi_2: 0x03,
@@ -22,7 +42,7 @@ export const INPUT_FREEZE_IDX: Record<string, number> = {
 	sdi_2: 0x07,
 	sdi_3: 0x08,
 	sdi_4: 0x09,
-}
+} satisfies Record<PhysicalInputId, number>
 
 // Tally Parameter Area. Read-only: the switcher reports its own on-air state here, which is
 // unrelated to the physical tally port. Values are 0 = Off, 1 = PGM, 2 = PST.
@@ -35,7 +55,31 @@ export const TALLY_IDX: Record<string, number> = {
 	sdi_2: 0x05,
 	sdi_3: 0x06,
 	sdi_4: 0x07,
-}
+} satisfies Record<PhysicalInputId, number>
+
+const VIDEO_PLAYER_LABEL = 'Video Player / SRT In'
+
+// The 15 mixer input channels, with the labels the user sees. Actions and feedbacks both read
+// this list, so the same channel cannot end up named two different ways in the two dropdowns.
+const AUDIO_CHANNEL_DEFS = [
+	{ id: 'audio_in_1', label: 'Audio In 1' },
+	{ id: 'audio_in_2', label: 'Audio In 2' },
+	{ id: 'audio_in_34', label: 'Audio In 3/4' },
+	{ id: 'usb_in', label: 'USB In' },
+	{ id: 'bluetooth_in', label: 'Bluetooth In' },
+	{ id: 'audio_player', label: 'Audio Player' },
+	{ id: 'hdmi_in_1', label: 'HDMI In 1' },
+	{ id: 'hdmi_in_2', label: 'HDMI In 2' },
+	{ id: 'hdmi_in_3', label: 'HDMI In 3' },
+	{ id: 'hdmi_in_4', label: 'HDMI In 4' },
+	{ id: 'sdi_in_1', label: 'SDI In 1' },
+	{ id: 'sdi_in_2', label: 'SDI In 2' },
+	{ id: 'sdi_in_3', label: 'SDI In 3' },
+	{ id: 'sdi_in_4', label: 'SDI In 4' },
+	{ id: 'video_player', label: VIDEO_PLAYER_LABEL },
+] as const
+export type AudioChannelId = (typeof AUDIO_CHANNEL_DEFS)[number]['id']
+export const AUDIO_CHANNEL_CHOICES = AUDIO_CHANNEL_DEFS.map(({ id, label }) => ({ id, label }))
 
 export const AUDIO_CH: Record<string, number> = {
 	audio_in_1: 0x01,
@@ -53,7 +97,11 @@ export const AUDIO_CH: Record<string, number> = {
 	sdi_in_3: 0x0d,
 	sdi_in_4: 0x0e,
 	video_player: 0x0f,
-}
+} satisfies Record<AudioChannelId, number>
+
+// Image capture can take any physical input, plus the video player.
+export const CAPTURE_SOURCE_CHOICES = [...PHYSICAL_INPUT_CHOICES, { id: 'video_player', label: VIDEO_PLAYER_LABEL }]
+type CaptureSourceId = PhysicalInputId | 'video_player'
 
 export const CAPTURE_SRC: Record<string, number> = {
 	hdmi_1: 0x00,
@@ -65,7 +113,7 @@ export const CAPTURE_SRC: Record<string, number> = {
 	sdi_3: 0x06,
 	sdi_4: 0x07,
 	video_player: 0x08,
-}
+} satisfies Record<CaptureSourceId, number>
 
 export const TEST_PATTERNS: { id: string; label: string; value: number }[] = [
 	{ id: 'bars75', label: 'Color Bars 75%', value: 0x01 },
@@ -82,101 +130,50 @@ export const TEST_PATTERNS: { id: string; label: string; value: number }[] = [
 	{ id: 'hatchsp', label: 'Hatch-SP', value: 0x0c },
 ]
 
-export const SOURCE_CHOICES = [
-	{ id: 'input_1', label: 'Input 1' },
-	{ id: 'input_2', label: 'Input 2' },
-	{ id: 'input_3', label: 'Input 3' },
-	{ id: 'input_4', label: 'Input 4' },
-	{ id: 'input_5', label: 'Input 5' },
-	{ id: 'input_6', label: 'Input 6' },
-	{ id: 'input_7', label: 'Input 7' },
-	{ id: 'input_8', label: 'Input 8' },
-	{ id: 'hdmi_1', label: 'HDMI In 1' },
-	{ id: 'hdmi_2', label: 'HDMI In 2' },
-	{ id: 'hdmi_3', label: 'HDMI In 3' },
-	{ id: 'hdmi_4', label: 'HDMI In 4' },
-	{ id: 'sdi_1', label: 'SDI In 1' },
-	{ id: 'sdi_2', label: 'SDI In 2' },
-	{ id: 'sdi_3', label: 'SDI In 3' },
-	{ id: 'sdi_4', label: 'SDI In 4' },
-	{ id: 'still_1', label: 'Still 1' },
-	{ id: 'still_2', label: 'Still 2' },
-	{ id: 'still_3', label: 'Still 3' },
-	{ id: 'still_4', label: 'Still 4' },
-	{ id: 'still_5', label: 'Still 5' },
-	{ id: 'still_6', label: 'Still 6' },
-	{ id: 'still_7', label: 'Still 7' },
-	{ id: 'still_8', label: 'Still 8' },
-	{ id: 'still_9', label: 'Still 9' },
-	{ id: 'still_10', label: 'Still 10' },
-	{ id: 'still_11', label: 'Still 11' },
-	{ id: 'still_12', label: 'Still 12' },
-	{ id: 'still_13', label: 'Still 13' },
-	{ id: 'still_14', label: 'Still 14' },
-	{ id: 'still_15', label: 'Still 15' },
-	{ id: 'still_16', label: 'Still 16' },
-	{ id: 'still_17', label: 'Still 17' },
-	{ id: 'still_18', label: 'Still 18' },
-	{ id: 'still_19', label: 'Still 19' },
-	{ id: 'still_20', label: 'Still 20' },
-	{ id: 'still_21', label: 'Still 21' },
-	{ id: 'still_22', label: 'Still 22' },
-	{ id: 'still_23', label: 'Still 23' },
-	{ id: 'still_24', label: 'Still 24' },
-	{ id: 'still_25', label: 'Still 25' },
-	{ id: 'still_26', label: 'Still 26' },
-	{ id: 'still_27', label: 'Still 27' },
-	{ id: 'still_28', label: 'Still 28' },
-	{ id: 'still_29', label: 'Still 29' },
-	{ id: 'still_30', label: 'Still 30' },
-	{ id: 'still_31', label: 'Still 31' },
-	{ id: 'still_32', label: 'Still 32' },
-	{ id: 'video_player', label: 'Video Player / SRT In' },
+// Wipe patterns and directions. The names are indexed by the device's own byte value, so the
+// *_NAMES arrays double as the variable text and the *_CHOICES arrays as the dropdown options.
+export const WIPE_TYPE_NAMES = [
+	'Horizontal',
+	'Vertical',
+	'Upper Left',
+	'Upper Right',
+	'Lower Left',
+	'Lower Right',
+	'H-Center',
+	'V-Center',
+]
+export const WIPE_DIRECTION_NAMES = ['Normal', 'Reverse', 'Round Trip']
+export const AUX_LINK_MODE_NAMES = ['Off', 'Auto Link', 'Manual Link']
+
+const byIndex = (names: string[]) => names.map((label, i) => ({ id: String(i), label }))
+export const WIPE_TYPE_CHOICES = byIndex(WIPE_TYPE_NAMES)
+export const WIPE_DIRECTION_CHOICES = byIndex(WIPE_DIRECTION_NAMES)
+export const AUX_LINK_MODE_CHOICES = byIndex(AUX_LINK_MODE_NAMES)
+
+export const AUX_CHOICES = [
+	{ id: '1', label: 'AUX 1' },
+	{ id: '2', label: 'AUX 2' },
+]
+export const AUX_LAYER_CHOICES = [
+	{ id: '1', label: 'PinP & Key 1' },
+	{ id: '2', label: 'PinP & Key 2' },
 ]
 
-export const INPUT_ASSIGN_SOURCE_CHOICES = [
-	{ id: 'hdmi_1', label: 'HDMI In 1' },
-	{ id: 'hdmi_2', label: 'HDMI In 2' },
-	{ id: 'hdmi_3', label: 'HDMI In 3' },
-	{ id: 'hdmi_4', label: 'HDMI In 4' },
-	{ id: 'sdi_1', label: 'SDI In 1' },
-	{ id: 'sdi_2', label: 'SDI In 2' },
-	{ id: 'sdi_3', label: 'SDI In 3' },
-	{ id: 'sdi_4', label: 'SDI In 4' },
-	{ id: 'still_1', label: 'Still 1' },
-	{ id: 'still_2', label: 'Still 2' },
-	{ id: 'still_3', label: 'Still 3' },
-	{ id: 'still_4', label: 'Still 4' },
-	{ id: 'still_5', label: 'Still 5' },
-	{ id: 'still_6', label: 'Still 6' },
-	{ id: 'still_7', label: 'Still 7' },
-	{ id: 'still_8', label: 'Still 8' },
-	{ id: 'still_9', label: 'Still 9' },
-	{ id: 'still_10', label: 'Still 10' },
-	{ id: 'still_11', label: 'Still 11' },
-	{ id: 'still_12', label: 'Still 12' },
-	{ id: 'still_13', label: 'Still 13' },
-	{ id: 'still_14', label: 'Still 14' },
-	{ id: 'still_15', label: 'Still 15' },
-	{ id: 'still_16', label: 'Still 16' },
-	{ id: 'still_17', label: 'Still 17' },
-	{ id: 'still_18', label: 'Still 18' },
-	{ id: 'still_19', label: 'Still 19' },
-	{ id: 'still_20', label: 'Still 20' },
-	{ id: 'still_21', label: 'Still 21' },
-	{ id: 'still_22', label: 'Still 22' },
-	{ id: 'still_23', label: 'Still 23' },
-	{ id: 'still_24', label: 'Still 24' },
-	{ id: 'still_25', label: 'Still 25' },
-	{ id: 'still_26', label: 'Still 26' },
-	{ id: 'still_27', label: 'Still 27' },
-	{ id: 'still_28', label: 'Still 28' },
-	{ id: 'still_29', label: 'Still 29' },
-	{ id: 'still_30', label: 'Still 30' },
-	{ id: 'still_31', label: 'Still 31' },
-	{ id: 'still_32', label: 'Still 32' },
-	{ id: 'video_player', label: 'Video Player / SRT In' },
+const range = (n: number): number[] => Array.from({ length: n }, (_, i) => i + 1)
+const STILL_COUNT = SRC_STILL32 - SRC_STILL1 + 1
+const CROSSPOINT_COUNT = 8
+
+// Everything the PGM, PVW and AUX buses, PinP and DSK will accept, in panel order. The eight
+// crosspoint inputs come first because they are what most buttons select.
+export const SOURCE_CHOICES = [
+	...range(CROSSPOINT_COUNT).map((n) => ({ id: `input_${n}`, label: `Input ${n}` })),
+	...PHYSICAL_INPUT_CHOICES,
+	...range(STILL_COUNT).map((n) => ({ id: `still_${n}`, label: `Still ${n}` })),
+	{ id: 'video_player', label: VIDEO_PLAYER_LABEL },
 ]
+
+// Input Assign fills the crosspoints, so it offers everything except the crosspoints themselves.
+export const INPUT_ASSIGN_SOURCE_CHOICES = SOURCE_CHOICES.filter((c) => !c.id.startsWith('input_'))
 
 export type AuxId = 1 | 2
 export type LayerId = 1 | 2
@@ -184,7 +181,7 @@ export type LayerId = 1 | 2
 export function sourceIdToByte(id: string): number | undefined {
 	if (id.startsWith('input_')) {
 		const n = parseInt(id.slice(6))
-		if (n >= 1 && n <= 8) return SRC_INPUT1 + n - 1
+		if (n >= 1 && n <= CROSSPOINT_COUNT) return SRC_INPUT1 + n - 1
 	}
 	if (id.startsWith('hdmi_')) {
 		const n = parseInt(id.slice(5))

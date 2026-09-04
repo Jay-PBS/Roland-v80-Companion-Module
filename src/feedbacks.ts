@@ -1,7 +1,19 @@
 // src/feedbacks.ts — Roland V-80HD
 import { combineRgb } from '@companion-module/base'
 import type { ModuleInstance } from './main.js'
-import { AUDIO_CH, TEST_PATTERNS, INPUT_FREEZE_IDX, TALLY_IDX } from './api.js'
+import {
+	AUDIO_CH,
+	TEST_PATTERNS,
+	INPUT_FREEZE_IDX,
+	TALLY_IDX,
+	AUDIO_CHANNEL_CHOICES,
+	PHYSICAL_INPUT_CHOICES,
+	WIPE_TYPE_CHOICES,
+	WIPE_DIRECTION_CHOICES,
+	AUX_LINK_MODE_CHOICES,
+	AUX_CHOICES,
+	AUX_LAYER_CHOICES,
+} from './api.js'
 
 // Corporate colour palette — bright = active, deep = inactive default
 const RED_BRIGHT = combineRgb(0xef, 0x44, 0x44) // #EF4444
@@ -13,47 +25,6 @@ const PURPLE_BRIGHT = combineRgb(0xa8, 0x55, 0xf7) // #A855F7
 const CYAN_BRIGHT = combineRgb(0x06, 0xb6, 0xd4) // #06B6D4
 const WHITE = combineRgb(0xff, 0xff, 0xff)
 const BLACK = combineRgb(0x00, 0x00, 0x00)
-
-const AUDIO_CHANNELS = Object.keys(AUDIO_CH).map((id) => ({ id, label: id.replace(/_/g, ' ') }))
-// Shared by the freeze and tally feedbacks — the ids match both INPUT_FREEZE_IDX and TALLY_IDX
-const PHYSICAL_INPUTS = [
-	{ id: 'hdmi_1', label: 'HDMI In 1' },
-	{ id: 'hdmi_2', label: 'HDMI In 2' },
-	{ id: 'hdmi_3', label: 'HDMI In 3' },
-	{ id: 'hdmi_4', label: 'HDMI In 4' },
-	{ id: 'sdi_1', label: 'SDI In 1' },
-	{ id: 'sdi_2', label: 'SDI In 2' },
-	{ id: 'sdi_3', label: 'SDI In 3' },
-	{ id: 'sdi_4', label: 'SDI In 4' },
-]
-const AUX_LAYER_DD = [
-	{ id: '1', label: 'PinP & Key 1' },
-	{ id: '2', label: 'PinP & Key 2' },
-]
-const WIPE_TYPES = [
-	{ id: '0', label: 'Horizontal' },
-	{ id: '1', label: 'Vertical' },
-	{ id: '2', label: 'Upper Left' },
-	{ id: '3', label: 'Upper Right' },
-	{ id: '4', label: 'Lower Left' },
-	{ id: '5', label: 'Lower Right' },
-	{ id: '6', label: 'H-Center' },
-	{ id: '7', label: 'V-Center' },
-]
-const WIPE_DIRS = [
-	{ id: '0', label: 'Normal' },
-	{ id: '1', label: 'Reverse' },
-	{ id: '2', label: 'Round Trip' },
-]
-const AUX_LINK_MODES = [
-	{ id: '0', label: 'Off' },
-	{ id: '1', label: 'Auto Link' },
-	{ id: '2', label: 'Manual Link' },
-]
-const AUX_DD = [
-	{ id: '1', label: 'AUX 1' },
-	{ id: '2', label: 'AUX 2' },
-]
 
 export function UpdateFeedbacks(self: ModuleInstance): void {
 	self.setFeedbackDefinitions({
@@ -139,21 +110,21 @@ export function UpdateFeedbacks(self: ModuleInstance): void {
 			name: 'Wipe pattern active',
 			type: 'boolean',
 			defaultStyle: { bgcolor: PURPLE_BRIGHT, color: WHITE },
-			options: [{ id: 'type', type: 'dropdown', label: 'Pattern', default: '0', choices: WIPE_TYPES }],
+			options: [{ id: 'type', type: 'dropdown', label: 'Pattern', default: '0', choices: WIPE_TYPE_CHOICES }],
 			callback: (fb) => self.wipeType === Number(fb.options.type),
 		},
 		wipe_direction_active: {
 			name: 'Wipe direction active',
 			type: 'boolean',
 			defaultStyle: { bgcolor: PURPLE_BRIGHT, color: WHITE },
-			options: [{ id: 'dir', type: 'dropdown', label: 'Direction', default: '0', choices: WIPE_DIRS }],
+			options: [{ id: 'dir', type: 'dropdown', label: 'Direction', default: '0', choices: WIPE_DIRECTION_CHOICES }],
 			callback: (fb) => self.wipeDirection === Number(fb.options.dir),
 		},
 		aux_linked_pgm_active: {
 			name: 'AUX Linked PGM mode active',
 			type: 'boolean',
 			defaultStyle: { bgcolor: BLUE_BRIGHT, color: WHITE },
-			options: [{ id: 'mode', type: 'dropdown', label: 'Mode', default: '1', choices: AUX_LINK_MODES }],
+			options: [{ id: 'mode', type: 'dropdown', label: 'Mode', default: '1', choices: AUX_LINK_MODE_CHOICES }],
 			callback: (fb) => self.auxLinkedPgm === Number(fb.options.mode),
 		},
 		aux_linked_pgm_bus_active: {
@@ -161,7 +132,7 @@ export function UpdateFeedbacks(self: ModuleInstance): void {
 			description: 'Whether this AUX bus is selected to follow PGM. Independent of the link mode.',
 			type: 'boolean',
 			defaultStyle: { bgcolor: BLUE_BRIGHT, color: WHITE },
-			options: [{ id: 'aux', type: 'dropdown', label: 'AUX Bus', default: '1', choices: AUX_DD }],
+			options: [{ id: 'aux', type: 'dropdown', label: 'AUX Bus', default: '1', choices: AUX_CHOICES }],
 			callback: (fb) => (Number(fb.options.aux) === 2 ? self.aux2LinkedPgm : self.aux1LinkedPgm),
 		},
 
@@ -187,8 +158,8 @@ export function UpdateFeedbacks(self: ModuleInstance): void {
 			type: 'boolean',
 			defaultStyle: { bgcolor: ORANGE_BRIGHT, color: WHITE },
 			options: [
-				{ id: 'aux', type: 'dropdown', label: 'AUX Bus', default: '1', choices: AUX_DD },
-				{ id: 'layer', type: 'dropdown', label: 'PinP Layer', default: '1', choices: AUX_LAYER_DD },
+				{ id: 'aux', type: 'dropdown', label: 'AUX Bus', default: '1', choices: AUX_CHOICES },
+				{ id: 'layer', type: 'dropdown', label: 'PinP Layer', default: '1', choices: AUX_LAYER_CHOICES },
 			],
 			callback: (fb) => {
 				const aux = Number(fb.options.aux)
@@ -209,8 +180,8 @@ export function UpdateFeedbacks(self: ModuleInstance): void {
 			type: 'boolean',
 			defaultStyle: { bgcolor: CYAN_BRIGHT, color: BLACK },
 			options: [
-				{ id: 'aux', type: 'dropdown', label: 'AUX Bus', default: '1', choices: AUX_DD },
-				{ id: 'layer', type: 'dropdown', label: 'PinP Layer', default: '1', choices: AUX_LAYER_DD },
+				{ id: 'aux', type: 'dropdown', label: 'AUX Bus', default: '1', choices: AUX_CHOICES },
+				{ id: 'layer', type: 'dropdown', label: 'PinP Layer', default: '1', choices: AUX_LAYER_CHOICES },
 			],
 			callback: (fb) => {
 				const aux = Number(fb.options.aux)
@@ -264,7 +235,9 @@ export function UpdateFeedbacks(self: ModuleInstance): void {
 			name: 'Audio Input – Muted',
 			type: 'boolean',
 			defaultStyle: { bgcolor: AMBER_BRIGHT, color: BLACK },
-			options: [{ id: 'ch', type: 'dropdown', label: 'Channel', default: 'audio_in_1', choices: AUDIO_CHANNELS }],
+			options: [
+				{ id: 'ch', type: 'dropdown', label: 'Channel', default: 'audio_in_1', choices: AUDIO_CHANNEL_CHOICES },
+			],
 			callback: (fb) => {
 				const ch = AUDIO_CH[String(fb.options.ch)]
 				return ch !== undefined ? (self.audioInputMute[ch] ?? false) : false
@@ -297,7 +270,7 @@ export function UpdateFeedbacks(self: ModuleInstance): void {
 			name: 'Input Freeze – active',
 			type: 'boolean',
 			defaultStyle: { bgcolor: CYAN_BRIGHT, color: BLACK },
-			options: [{ id: 'input', type: 'dropdown', label: 'Input', default: 'hdmi_1', choices: PHYSICAL_INPUTS }],
+			options: [{ id: 'input', type: 'dropdown', label: 'Input', default: 'hdmi_1', choices: PHYSICAL_INPUT_CHOICES }],
 			callback: (fb) => {
 				const idx = INPUT_FREEZE_IDX[String(fb.options.input)]
 				return idx !== undefined ? (self.inputFreezeEnabled[idx] ?? false) : false
@@ -312,7 +285,7 @@ export function UpdateFeedbacks(self: ModuleInstance): void {
 			description: 'Reported by the switcher itself, not inferred from the PGM bus.',
 			type: 'boolean',
 			defaultStyle: { bgcolor: RED_BRIGHT, color: WHITE },
-			options: [{ id: 'input', type: 'dropdown', label: 'Input', default: 'hdmi_1', choices: PHYSICAL_INPUTS }],
+			options: [{ id: 'input', type: 'dropdown', label: 'Input', default: 'hdmi_1', choices: PHYSICAL_INPUT_CHOICES }],
 			callback: (fb) => {
 				const idx = TALLY_IDX[String(fb.options.input)]
 				return idx !== undefined && self.tallyState[idx] === 1
@@ -323,7 +296,7 @@ export function UpdateFeedbacks(self: ModuleInstance): void {
 			description: 'Reported by the switcher itself, not inferred from the PST bus.',
 			type: 'boolean',
 			defaultStyle: { bgcolor: GREEN_BRIGHT, color: BLACK },
-			options: [{ id: 'input', type: 'dropdown', label: 'Input', default: 'hdmi_1', choices: PHYSICAL_INPUTS }],
+			options: [{ id: 'input', type: 'dropdown', label: 'Input', default: 'hdmi_1', choices: PHYSICAL_INPUT_CHOICES }],
 			callback: (fb) => {
 				const idx = TALLY_IDX[String(fb.options.input)]
 				return idx !== undefined && self.tallyState[idx] === 2
