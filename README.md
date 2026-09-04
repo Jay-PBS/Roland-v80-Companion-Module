@@ -60,7 +60,7 @@ Current version: 0.6.5
 | Stream & Record start/stop          | Confirmed working — added in 0.6.4         |
 | Stream & Record state feedback      | Fixed in 0.6.5 — awaiting verification     |
 | Image Capture to Still              | Confirmed working — added in 0.6.4         |
-| Tally feedbacks                     | Confirmed working — added in 0.6.4         |
+| Tally feedbacks                     | Confirmed working — added in 0.6.3         |
 | Audio level control                 | Mute only by design — raise a GitHub issue |
 
 ---
@@ -80,6 +80,8 @@ Note: the V-80HD applies a brute-force lockout after repeated failed password at
 ## Polling and Feedback
 
 State is polled every 500ms. Feedback updates may lag up to 500ms behind operations performed on the panel.
+
+Polling is the module's only source of truth, so the "Enable polling" option costs more than lag when it is turned off. Actions that update their own feedback locally — mutes, splits, PinP and DSK on air, freeze, test patterns, AUX layer modes — keep working from Companion. The rest have nothing to update them: PGM, PVW and AUX source selection, PinP and DSK sources, PinP geometry, AUX link follow, tally and Stream & Record all freeze at their last value, and panel or RCS activity is not seen at all.
 
 Each polled address is requested as its own TCP write. 0.6.0 batched the whole cycle into a single write as a traffic optimisation; packet capture showed the device does not answer batched requests at all, which silently disabled every polled feedback. Batching was removed in 0.6.4.
 
@@ -193,4 +195,4 @@ Note: versions 0.4.1 and 0.4.2 were local test builds only and were never tagged
 
 ## Roadmap
 
-- Stream Start and Stop
+- Fade To Black engaged state. `030207` is a fade-in-progress flag, not the engaged state — confirmed by capture — so the FTB feedback lights only while a fade runs. The address holding the steady state has not been identified yet.

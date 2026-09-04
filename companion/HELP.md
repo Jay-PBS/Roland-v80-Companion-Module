@@ -11,7 +11,7 @@ Tested firmware: v1.20.201
 1. On the V-80HD, navigate to Menu, Network, LAN Setup and note the IP address.
 2. A network password must be configured on the device before LAN control will function. This is set via Menu, Network, Network Password on the unit itself.
 3. In Companion, enter the device IP address, port 8023, and the password configured on the device.
-4. Enable polling to keep feedbacks in sync with the device state.
+4. Leave polling enabled. It is what keeps feedbacks in sync — see Network Behaviour for what turning it off costs.
 5. Enable Show advanced actions to reveal the raw LAN command action.
 
 ---
@@ -19,6 +19,8 @@ Tested firmware: v1.20.201
 ## Network Behaviour
 
 State polling is fixed at 500ms. Feedback updates may lag up to 500ms behind operations performed directly on the panel. Each polled address is requested individually — the device does not answer batched requests.
+
+**Turning polling off does more than add lag.** Polling is the only thing that reads state back from the device, so with it disabled the module has no source of truth at all. Some actions update their own feedback locally when pressed — the mutes, the splits, PinP and DSK on air, freeze, test patterns, the AUX layer modes — and those keep working from Companion. Everything else has nothing to update it: PGM, PVW and AUX source selection, PinP and DSK sources, PinP geometry, AUX link follow, tally, and Stream & Record all freeze at whatever they last showed, and nothing done on the front panel or in RCS is seen at all. Disable polling only if you need the network traffic gone and can accept roughly half the feedbacks going stale.
 
 A connection watchdog runs every second and recovers the link automatically:
 
@@ -155,8 +157,11 @@ The following states are polled and drive feedbacks:
 - Tally state per input (HDMI 1 to 4, SDI 1 to 4)
 - Stream & Record active, and the specific state (Stopped, Starting, Running, Stopping)
 
-Stream & Record state is not polled — the device pushes it whenever it changes, so the feedback
-is correct regardless of what started or stopped it.
+Stream & Record state is polled with everything else. The device reports it on `030800`, but a
+packet capture on 2026-09-04 showed it pushes that status only to the Roland RCS session and never
+to ours, so the module asks for it on every cycle. The value still comes from the device's own
+report rather than from what the module sent, so the feedback stays correct whether the stream was
+started from Companion, the front panel or RCS.
 
 Fade To Black, wipe pattern, wipe direction and AUX Linked PGM feedbacks were added in 0.6.0.
 Tally feedbacks were added in 0.6.3, and Stream & Record state in 0.6.4.
@@ -229,7 +234,7 @@ The following variables are available for use in button labels and expressions:
 | main_bus_mute       | Main bus mute state (ON or OFF)        |
 | aux1_bus_mute       | AUX 1 bus mute state (ON or OFF)       |
 | aux2_bus_mute       | AUX 2 bus mute state (ON or OFF)       |
-| ftb                 | Fade To Black state (ON or OFF)        |
+| ftb                 | FADING while a fade runs, else IDLE    |
 | freeze              | Global freeze state (ON or OFF)        |
 | test_pattern        | Active test pattern name               |
 | stream_record       | Stream & Record active (ON/OFF)        |
@@ -271,7 +276,7 @@ Variables are accessed as $(instance_label:variable_id), for example $(v80hd:pro
 
 - Fade To Black feedback lights while the fade is running rather than while Fade To Black is engaged. Under investigation.
 - Polling is fixed at 500ms. Feedback updates may lag up to 500ms behind panel operations.
-- Stream Start and Stop are not implemented. The V-80HD's published control specification contains no address for them.
+- Livestreaming and recording cannot be started separately. The V-80HD drives both from one trigger (`0A0800`), so Stream & Record Start begins whichever of Live Streaming, Video Rec and Audio Rec are enabled in the unit's menu.
 - Audio control is limited to mute by design. The device supports full audio control over LAN, but the front-panel level knobs are not motorised, so a level set from Companion could not be reflected on the unit. If you need the advanced audio controls, raise an issue on the project's GitHub.
 - Scene Memory control is not provided.
 
