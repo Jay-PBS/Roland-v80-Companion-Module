@@ -23,8 +23,8 @@ Last reviewed: 2026-09-04 · Working version: 0.6.5
 
 ## Pending release decisions
 
-- **Branch `chore/upstream-sync-0.6.1` is not merged and not pushed.** It holds the bitfocus upstream sync, the doc rewrite and the prettier cleanup. `main` is still at `012569f`.
-- **No `v0.6.0` tag exists.** The only tag in the repo is `v0.4.0`. 0.6.0 was never tagged and 0.6.5 supersedes it, so the decision is now whether `v0.6.5` becomes the first tag since 0.4.0 — after today's testing.
+- **Merged and pushed 2026-09-04.** `main` is at `d080ed1` (0.6.5) on `origin`, fast-forwarded from `012569f`, bringing in the bitfocus upstream sync, the doc rewrite, the prettier cleanup and the whole 0.6.5 protocol correction. The `chore/upstream-sync-0.6.1` branch is now redundant and can be deleted whenever convenient.
+- **Still untagged.** The only tag in the repo is `v0.4.0`. 0.6.0, 0.6.2, 0.6.3 and 0.6.4 all went untagged. 0.6.5 is merged to `main` and is the most tested build the project has had, so it is the obvious candidate for the first tag since 0.4.0. Not done — waiting on a decision.
 - **Version numbering is discontinuous.** 0.4.2 went straight to 0.6.0, and 0.6.0 to 0.6.5. 0.4.1, 0.4.2 were local-only builds and 0.6.1 was never built — only the branch carries that name. Recorded in the README changelog so it does not cause confusion again.
 - Decide whether this file should ship in the repo at all. If the module is ever submitted upstream to bitfocus, consider gitignoring it.
 
@@ -71,7 +71,7 @@ While Wireshark is up and the rig is live, also capture: still output cut direct
 
 ## CI
 
-The `companion-module-checks` workflow arrived with the upstream sync and has never run, because nothing has been pushed since it was added.
+The `companion-module-checks` workflow arrived with the upstream sync and had never run. The 2026-09-04 push to `main` is the first thing that could trigger it — check the result.
 
 - It runs install → build → package → launch test. It does **not** run lint.
 - It validates repository naming against the module ID. This repo is `Roland-v80-Companion-Module`, not `companion-module-roland-v80hd`, so **the naming check may fail on this fork**. Unconfirmed until a push happens. Not a code fault if it does.
