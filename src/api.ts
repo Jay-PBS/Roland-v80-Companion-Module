@@ -382,11 +382,14 @@ export class V80Api {
 		this.rxBuffer += data.toString('binary')
 
 		// The prompt has no terminator (";" or newline), so it must be matched on the raw
-		// buffer — the line splitter below would never emit it.
-		if (/enter password/i.test(this.rxBuffer)) {
-			this.rxBuffer = ''
+		// buffer — the line splitter below would never emit it. Consume up to and including
+		// the prompt and keep the rest: clearing the whole buffer discarded any framed data
+		// that arrived in the same TCP segment behind the prompt, and would have destroyed
+		// the buffer outright if the phrase ever appeared inside payload data.
+		const prompt = /enter password:?[ \t]*/i.exec(this.rxBuffer)
+		if (prompt) {
+			this.rxBuffer = this.rxBuffer.slice(prompt.index + prompt[0].length)
 			this.onPasswordPrompt()
-			return
 		}
 
 		while (this.rxBuffer.length > 0) {
@@ -408,7 +411,14 @@ export class V80Api {
 			if (useSemi) this.parseFrame(part)
 			else this.handleTextLine(part)
 		}
-		if (this.rxBuffer.length > 8192) this.rxBuffer = this.rxBuffer.slice(-4096)
+		// Everything left here is an incomplete frame - the loop above consumed every complete
+		// one. Past 8KB it is not a frame at all, so keeping a 4KB tail would only hand the
+		// parser a fragment cut through the middle of a value and produce one silently wrong
+		// reading. Discard it and say so.
+		if (this.rxBuffer.length > 8192) {
+			this.self.log('warn', 'Receive buffer overflowed with no complete frame - discarding')
+			this.rxBuffer = ''
+		}
 	}
 
 	private handleTextLine(line: string): void {
@@ -626,7 +636,9 @@ export class V80Api {
 	}
 
 	public requestCoreState(): void {
-		if (!this.isConnected) return
+		// Reachable from the user-facing sync_now action, so it needs the same authentication
+		// gate as sendCmd rather than only checking the socket.
+		if (!this.isConnected || !this.isAuthenticated) return
 		const cmds: string[] = []
 		// Core state addresses — all polled every 500ms
 		for (const a of [
@@ -717,6 +729,20 @@ export class V80Api {
 	private sendCmd(cmd: string): void {
 		if (!this.tcp) {
 			this.self.log('warn', 'Not connected')
+			return
+		}
+		// The socket is open for the whole authentication window, so without this a button
+		// pressed while the status still reads "Connecting - Authenticating" would write a
+		// command line into a session that is waiting for a password. The device parses that
+		// as a command on an unauthenticated session - the same stray line that shows up as
+		// ERR:0 on the wire - and it is a candidate for being counted as a failed attempt
+		// toward the lockout that onPasswordPrompt works to avoid.
+		//
+		// Dropped rather than queued on purpose: this drives a live switcher, and replaying a
+		// button press from several seconds ago once the link comes up could cut to the wrong
+		// source mid-programme. Better to do nothing and say so.
+		if (!this.isAuthenticated) {
+			this.self.log('warn', `Not authenticated yet - command dropped: ${cmd}`)
 			return
 		}
 		if (this.self.config.debug) this.self.log('debug', `TX: ${cmd}`)
