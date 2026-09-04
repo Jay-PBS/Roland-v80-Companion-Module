@@ -1,4 +1,4 @@
-# Roland V-80HD — Companion Module v0.4.0
+# Roland V-80HD — Companion Module v0.6.0
 
 This module is currently in beta. It has been tested on physical hardware with firmware v1.20.201 and is provided for evaluation purposes. Use in production environments is at the operator's own discretion and risk.
 
@@ -18,9 +18,17 @@ Tested firmware: v1.20.201
 
 ## Network Behaviour
 
-The module will reconnect automatically if the network connection is briefly interrupted. This typically takes around 10 seconds. If the module does not reconnect, disable and re-enable it in Companion.
+State polling is fixed at 500ms. Feedback updates may lag up to 500ms behind operations performed directly on the panel. Each poll cycle is sent as a single batched TCP write.
 
-State polling is fixed at 500ms. Feedback updates may lag up to 500ms behind operations performed directly on the panel.
+A connection watchdog runs every 2.5s and recovers the link automatically:
+
+- No data received for 8s while connected — the connection is rebuilt
+- Authentication stalled for 10s — authentication is retried
+- Socket unreachable for 20s — the socket is recycled
+
+This covers silent network loss, where the socket remains open but the device is no longer reachable. If the module still does not reconnect, disable and re-enable it in Companion.
+
+The V-80HD applies a brute-force lockout after repeated failed password attempts, and will reject even the correct password while that lockout is active. The module detects this and reports "Device auth lockout — wait and retry" rather than continuing to retry. Wait for the device to clear the lockout before reconnecting.
 
 ---
 
@@ -89,17 +97,20 @@ The following states are polled and drive feedbacks:
 
 - Program and Preview source
 - AUX 1 and AUX 2 source
+- AUX Linked PGM mode
 - PinP 1 and 2 PGM and PVW state
 - DSK PGM and PVW state
 - Split 1 and 2 state
 - AUX Layer PinP state (Enable and Always On per layer per bus)
 - Global freeze state
 - Per-input freeze state (HDMI 1 to 4, SDI 1 to 4)
-- Audio mute state (main bus, AUX 1 bus, AUX 2 bus)
+- Audio mute state (per input channel, main bus, AUX 1 bus, AUX 2 bus)
 - Transition type (Mix or Wipe)
+- Fade To Black active
+- Wipe pattern and wipe direction
 - Test pattern active
 
-Note: Fade To Black does not have a feedback in this version. The FTB state is available as the variable $(instance_label:ftb) and can be displayed in a button label.
+Fade To Black, wipe pattern, wipe direction and AUX Linked PGM feedbacks were added in 0.6.0.
 
 ---
 
@@ -137,13 +148,33 @@ The following variables are available for use in button labels and expressions:
 | freeze | Global freeze state (ON or OFF) |
 | test_pattern | Active test pattern name |
 
+Per-channel audio mute variables, added in 0.6.0. Each reports ON or OFF:
+
+| Variable | Channel |
+|---|---|
+| mute_audio_in_1 | Audio In 1 |
+| mute_audio_in_2 | Audio In 2 |
+| mute_audio_in_34 | Audio In 3/4 |
+| mute_usb_in | USB In |
+| mute_bluetooth_in | Bluetooth In |
+| mute_audio_player | Audio Player |
+| mute_hdmi_in_1 to mute_hdmi_in_4 | HDMI In 1 to 4 |
+| mute_sdi_in_1 to mute_sdi_in_4 | SDI In 1 to 4 |
+| mute_video_player | Video Player |
+
+Per-input freeze variables, added in 0.6.0. Each reports ON or OFF:
+
+| Variable | Input |
+|---|---|
+| freeze_hdmi_1 to freeze_hdmi_4 | HDMI 1 to 4 |
+| freeze_sdi_1 to freeze_sdi_4 | SDI 1 to 4 |
+
 Variables are accessed as $(instance_label:variable_id), for example $(v80hd:program_input).
 
 ---
 
 ## Known Limitations
 
-- Fade To Black does not have a button feedback in this version. The state is available via the ftb variable.
 - Audio mute feedback does not update when mutes are changed directly on the panel. Changes made via Companion are reflected correctly.
 - Transition type feedback responds to panel activity but may display in an unexpected state when operated from the panel directly.
 - Polling is fixed at 500ms. Feedback updates may lag up to 500ms behind panel operations.
@@ -157,6 +188,8 @@ Variables are accessed as $(instance_label:variable_id), for example $(v80hd:pro
 ## Troubleshooting
 
 Module shows as disconnected — check the IP address, confirm port 8023, and ensure a network password has been set on the device via Menu, Network, Network Password.
+
+Module reports a device auth lockout — the V-80HD has locked out after repeated failed password attempts and will reject even a correct password until it clears. Confirm the password matches the one set on the device, then wait before retrying.
 
 Feedbacks not updating — confirm polling is enabled. Allow up to 500ms for the next poll cycle. If feedbacks remain static, disable and re-enable the module.
 
