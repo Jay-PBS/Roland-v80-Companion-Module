@@ -147,6 +147,29 @@ If you want the advanced audio controls, please raise an issue on GitHub (https:
 
 ## Changelog
 
+### 0.7.0 — experimental, awaiting hardware test
+
+Everything in this release comes from the code review in `CODE_REVIEW.md`. It has passed lint, types, formatting, the manifest check and a set of scripted behaviour comparisons against 0.6.5, but **it has not yet been tested against a V-80HD**.
+
+Behaviour changes to check on hardware:
+
+- **The device password now lives in Companion's secrets store** rather than the plaintext config store, where it was previously saved next to the IP address and sent back to the web UI in the clear. An upgrade script moves an existing password across automatically, so no re-entry should be needed. This is the change most worth watching on first connect
+- **Commands are refused until authentication completes.** Pressing a button during the "Connecting — Authenticating" window previously wrote a command into a session still waiting for the password, risking the device's brute-force lockout. Such presses are now dropped with a warning in the log
+- **Data arriving in the same packet as the password prompt is no longer thrown away**, and an overflowing receive buffer is discarded with a warning instead of being sliced through the middle of a frame
+- **Send raw LAN command is always listed.** It used to be registered only while "Show advanced actions" was ticked, so unticking it left any button using it in an unknown-action state. The checkbox now gates whether the command is sent, and is renamed "Allow advanced actions"
+- Audio channels are named consistently between actions and feedbacks. The feedback dropdown previously showed `audio in 34` where the action showed `Audio In 3/4`
+
+No behaviour change, but touched:
+
+- The 57-method pass-through layer in `main.ts` is gone; actions call the API directly. `main.ts` drops from 364 lines to 189
+- Every duplicated choice list has a single source in `api.ts`. The eight physical inputs were written out five times, wipe patterns and directions three times each, and the 41-entry Input Assign list is now derived from the source list rather than retyped. The protocol address maps stay written out but are now tied to the canonical list at compile time
+- `presets.ts` comment damage repaired — a duplicated and truncated AUX Link block, a Stream & Record header sitting above the Test Pattern presets, and a stale "Image Capture — suspended" note above the live implementation
+- Four documentation statements corrected that contradicted the code, including HELP.md claiming Stream & Record is not polled and that Stream Start/Stop is unimplemented
+- Both docs now state what disabling polling actually costs: roughly half the feedbacks stop updating rather than merely lagging
+- `tsconfig.json` now extends `tsconfig.build.json`, so the editor, linter and build agree on module resolution
+- `.github/workflows/node.yaml` and `.husky/pre-commit` restored. The commit hook had never run
+- `manifest.json` version returns to `0.0.0`; the build injects the real version from `package.json`
+
 ### 0.6.5
 
 - Stream & Record state feedback fixed. The `030800` status register is now polled; it had been parsed but never requested, and the device does not push status to our session even when we issue the command, so the feedback never lit
