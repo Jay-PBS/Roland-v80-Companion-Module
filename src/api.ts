@@ -24,6 +24,19 @@ export const INPUT_FREEZE_IDX: Record<string, number> = {
 	sdi_4: 0x09,
 }
 
+// Tally Parameter Area. Read-only: the switcher reports its own on-air state here, which is
+// unrelated to the physical tally port. Values are 0 = Off, 1 = PGM, 2 = PST.
+export const TALLY_IDX: Record<string, number> = {
+	hdmi_1: 0x00,
+	hdmi_2: 0x01,
+	hdmi_3: 0x02,
+	hdmi_4: 0x03,
+	sdi_1: 0x04,
+	sdi_2: 0x05,
+	sdi_3: 0x06,
+	sdi_4: 0x07,
+}
+
 export const AUDIO_CH: Record<string, number> = {
 	audio_in_1: 0x01,
 	audio_in_2: 0x02,
@@ -40,6 +53,18 @@ export const AUDIO_CH: Record<string, number> = {
 	sdi_in_3: 0x0d,
 	sdi_in_4: 0x0e,
 	video_player: 0x0f,
+}
+
+export const CAPTURE_SRC: Record<string, number> = {
+	hdmi_1: 0x00,
+	hdmi_2: 0x01,
+	hdmi_3: 0x02,
+	hdmi_4: 0x03,
+	sdi_1: 0x04,
+	sdi_2: 0x05,
+	sdi_3: 0x06,
+	sdi_4: 0x07,
+	video_player: 0x08,
 }
 
 export const TEST_PATTERNS: { id: string; label: string; value: number }[] = [
@@ -253,7 +278,7 @@ export class V80Api {
 	// signal; rebuild the connection from scratch when we see it.
 	private startWatchdog(): void {
 		this.stopWatchdog()
-		this.watchdogTimer = setInterval(() => this.watchdogTick(), 2500)
+		this.watchdogTimer = setInterval(() => this.watchdogTick(), 1000)
 	}
 	private stopWatchdog(): void {
 		if (this.watchdogTimer) {
@@ -266,19 +291,22 @@ export class V80Api {
 		if (!this.tcp || this.authFailed) return
 		const now = Date.now()
 		if (this.isConnected && this.isAuthenticated) {
-			// Nudge the device if quiet (only matters with polling off), then give up at 8s
-			if (now - this.lastRxTime > 4000) this.sendCmd(this.rqh('001500', '000001'))
-			if (now - this.lastRxTime > 8000) this.forceReconnect('No response from device for 8s')
+			// Nudge the device if quiet, then give up. With polling on, replies arrive every
+			// 500ms so neither branch is ever reached; with polling off the 1.5s nudge draws a
+			// reply that resets the clock. Only a genuinely dead link reaches 4s.
+			// Detection was 8s on a 2.5s tick (worst case 10.5s), which tested as too slow.
+			if (now - this.lastRxTime > 1500) this.sendCmd(this.rqh('001500', '000001'))
+			if (now - this.lastRxTime > 4000) this.forceReconnect('No response from device for 4s')
 		} else if (this.isConnected) {
 			// TCP is up but auth never completed — e.g. the device silently ignores a second
 			// control session (observed: it accepts the connection and sends nothing at all).
 			// A fresh connection is the only way to retry.
-			if (now - this.lastRxTime > 10000) this.forceReconnect('Authentication stalled')
+			if (now - this.lastRxTime > 6000) this.forceReconnect('Authentication stalled')
 		} else {
 			// Not connected: TCPHelper retries every 2s, but a connect attempt to an
 			// unreachable host takes ~21s to time out on Windows. Recycling the socket every
-			// 20s keeps attempts fresh without stacking timers.
-			if (now - Math.max(this.lastRxTime, this.cycleStartTime) > 20000) {
+			// 12s keeps attempts fresh without stacking timers.
+			if (now - Math.max(this.lastRxTime, this.cycleStartTime) > 12000) {
 				this.forceReconnect('Still unreachable – retrying with a fresh connection')
 			}
 		}
@@ -507,6 +535,25 @@ export class V80Api {
 			case '020114':
 				this.self.auxLinkedPgm = val
 				break
+			case '020115':
+				this.self.aux1LinkedPgm = val === 1
+				break
+			case '020116':
+				this.self.aux2LinkedPgm = val === 1
+				break
+			// Stream & Record status, pushed by the device without being asked.
+			// 02 stopped, 03 stopping, 04 starting, 05 running.
+			case '030800':
+				this.self.streamRecordState = val
+				this.self.streamRecordActive = val === 0x04 || val === 0x05
+				break
+			// Image capture progress, pushed by the device: 04 armed and ready,
+			// 08 capture done, 0A state refreshed. Logged rather than fed back, since a
+			// capture is a one-shot action with nothing to hold a button lit for.
+			case '0A0504':
+				if (val === 0x08) this.self.log('info', 'Image capture complete')
+				else if (this.self.config.debug) this.self.log('debug', `Capture state ${val}`)
+				break
 			case '012103':
 				this.self.mainBusMute = val === 1
 				break
@@ -519,8 +566,13 @@ export class V80Api {
 			case '020900':
 				this.self.freezeActive = val === 1
 				break
+			// 030207 is NOT the Fade To Black state. Capture 2026-09-04: six FTB presses
+			// produced twelve transitions of this byte, 00->01 while each fade ran and back to
+			// 00 once it finished, whether the result was black or live. It is a
+			// fade-in-progress flag. The steady FTB state is at an address not yet identified;
+			// it was the only polled byte that moved during that capture.
 			case '030207':
-				this.self.ftbActive = val === 1
+				this.self.ftbFading = val === 1
 				break
 			case '02015E':
 				this.self.testPattern = val
@@ -545,6 +597,11 @@ export class V80Api {
 		if (addr.startsWith('0209') && addr.length === 6) {
 			const idx = parseInt(addr.slice(4, 6), 16)
 			if (idx >= 0x02 && idx <= 0x09) this.self.inputFreezeEnabled[idx] = val === 1
+		}
+		if (addr.startsWith('0C00') && addr.length === 6) {
+			const idx = parseInt(addr.slice(4, 6), 16)
+			// 0 = Off, 1 = PGM, 2 = PST
+			if (idx >= 0x00 && idx <= 0x07) this.self.tallyState[idx] = val
 		}
 		this.scheduleDebounce()
 	}
@@ -590,13 +647,17 @@ export class V80Api {
 			'001402', // DSK source, PGM, PVW
 			'001000',
 			'001100', // Split 1, Split 2
-			'020114', // AUX Linked PGM
+			'020114',
+			'020115',
+			'020116', // AUX Linked PGM mode, and per-bus follow for AUX 1 / AUX 2
 			'012103',
 			'012203',
 			'012403', // Main, AUX1, AUX2 bus mute
 			'020900', // Global freeze
-			'030207', // Fade To Black
+			'030207', // Fade To Black - fade in progress, not the engaged state
 			'02015E', // Test pattern
+			'030800', // Stream & Record status. Pushed to the RCS session but not to ours,
+			//           so poll it like everything else rather than waiting for a push.
 			'000020',
 			'000021', // AUX 1 PinP layer 1, 2
 			'000023',
@@ -611,15 +672,31 @@ export class V80Api {
 		for (let i = 0x02; i <= 0x09; i++) {
 			cmds.push(this.rqh(`0209${i.toString(16).toUpperCase().padStart(2, '0')}`, '000001'))
 		}
-		// One TCP write for the whole cycle (~1kB) instead of 52 separate packets —
-		// halves wire traffic and lightens the load on the device's network stack.
+		// Tally — HDMI 1-4, SDI 1-4. Eight single-byte reads, not one block read: parseDth
+		// truncates every reply to its first byte, so a block reply would populate HDMI 1
+		// and silently drop the other seven.
+		for (let i = 0x00; i <= 0x07; i++) {
+			cmds.push(this.rqh(`0C00${i.toString(16).toUpperCase().padStart(2, '0')}`, '000001'))
+		}
 		this.sendCmdBatch(cmds)
 	}
 
+	// One command per TCP write. Batching the whole cycle into a single write was introduced
+	// in 0.6.0 as a traffic optimisation and silently broke every polled feedback: packet
+	// capture on 2026-09-04 showed 17,220 RQH sent as 273 batched writes of 63 commands
+	// returning 21 DTH replies in total - and all 21 were answers to the watchdog's separate
+	// single-command nudge. The device returned nothing at all for a batched write, not even
+	// an ACK. Single writes are answered normally.
+	//
+	// Do not reintroduce batching without capturing the result. If traffic ever needs
+	// reducing, test a small chunk size on hardware first and find where the device stops
+	// answering, rather than assuming it accepts an arbitrary number per packet.
 	private sendCmdBatch(cmds: string[]): void {
 		if (!this.tcp || cmds.length === 0) return
-		if (this.self.config.debug) this.self.log('debug', `TX BATCH: ${cmds.length} commands`)
-		this.tcp.send(cmds.join('\r\n') + '\r\n').catch((err: Error) => this.self.log('debug', `TX failed: ${err.message}`))
+		if (this.self.config.debug) this.self.log('debug', `TX POLL: ${cmds.length} commands`)
+		for (const cmd of cmds) {
+			this.tcp.send(cmd + '\r\n').catch((err: Error) => this.self.log('debug', `TX failed: ${err.message}`))
+		}
 	}
 
 	private startPolling(): void {
@@ -737,6 +814,24 @@ export class V80Api {
 		this.sendCmd(this.dth('020114', this.hb(mode)))
 		this.self.auxLinkedPgm = mode
 		this.self.changedState()
+	}
+	// 020115 / 020116 select which AUX buses follow PGM. These are what "Manual Link" mode
+	// on 020114 actually configures - without them the mode is set but nothing is chosen.
+	// Press the mode you want; press it again to go back to Off. Same idiom as the test
+	// pattern toggle. The mode gates the per-bus follow settings, so this has to be set to
+	// Auto or Manual before AUX 1/2 FOLLOW does anything at all.
+	public cmdToggleAuxLinkedPgmMode(mode: 1 | 2): void {
+		this.cmdSetAuxLinkedPgm(this.self.auxLinkedPgm === mode ? 0 : mode)
+	}
+	public cmdSetAuxLinkedPgmBus(aux: AuxId, on: boolean): void {
+		// Deliberately no optimistic local update. 020115/020116 are polled, and the manual
+		// describes AUX link as state the device changes on its own - selecting an AUX source
+		// breaks the link, a transition or a re-press restores it. Assuming the write stuck
+		// would make the feedback lie about a value the device may have ignored or overridden.
+		this.sendCmd(this.dth(aux === 2 ? '020116' : '020115', on ? '01' : '00'))
+	}
+	public cmdToggleAuxLinkedPgmBus(aux: AuxId): void {
+		this.cmdSetAuxLinkedPgmBus(aux, !(aux === 1 ? this.self.aux1LinkedPgm : this.self.aux2LinkedPgm))
 	}
 	public cmdSetAuxLayerPinp(aux: AuxId, layer: LayerId, mode: 0 | 1 | 2): void {
 		const addr = ({ 1: { 1: '000020', 2: '000021' }, 2: { 1: '000023', 2: '000024' } } as any)[aux][layer]
@@ -942,6 +1037,26 @@ export class V80Api {
 		this.cmdSetInputFreeze(inputKey, !this.self.inputFreezeEnabled[idx])
 	}
 
+	// Stream & Record. Confirmed by packet capture on 2026-09-04 against the Roland RCS
+	// software over four clean on/off cycles: the client writes 0A0800 (01 start, 00 stop)
+	// and the device reports 030800 status. It pushes that status to the RCS session, but not
+	// to ours, so 030800 is polled with everything else. The parse branch still handles a
+	// push if one ever arrives.
+	//
+	// This replaces 03020F, which earlier notes recorded as "record on/off". 03020F did not
+	// appear once in the 2026-09-04 capture, so it was either a different function or has
+	// changed with firmware. Do not reinstate it without a fresh capture.
+	//
+	// On this unit livestreaming and recording share one trigger and cannot be started
+	// separately (Reference manual p. 67), so 0A0800 starts whichever of Live Streaming,
+	// Video Rec and Audio Rec are enabled on the device.
+	public cmdStreamRecordStart(): void {
+		this.sendCmd(this.dth('0A0800', '01'))
+	}
+	public cmdStreamRecordStop(): void {
+		this.sendCmd(this.dth('0A0800', '00'))
+	}
+
 	public cmdTestPattern(patternId: string): void {
 		const p = TEST_PATTERNS.find((x) => x.id === patternId)
 		if (!p) return
@@ -958,6 +1073,44 @@ export class V80Api {
 		this.sendCmd(this.dth('02015E', '00'))
 		this.self.testPattern = 0
 		this.self.changedState()
+	}
+
+	private async delay(ms: number): Promise<void> {
+		return new Promise((resolve) => setTimeout(resolve, ms))
+	}
+
+	// Capture a live input into a still memory slot.
+	//
+	// Sequence confirmed 2026-09-04 by capturing the Roland RCS software over six captures
+	// (Still 3-8, HDMI 1 and SDI 1). RCS sends exactly four commands:
+	//
+	//   0A0501,<slot>   select still slot
+	//   0A0504,03       arm       -> device replies 0A0504,04 when ready, ~560ms later
+	//   0A0500,<source> select source
+	//   0A0504,07       execute   -> device replies 0A0504,08 done, then 0A0504,0A refreshed
+	//
+	// Everything else in the older 14-command version (04, 05, 08, 0A, 00) is the device
+	// talking back, not client commands. The original sequence was reconstructed from logs
+	// that mixed both directions, so the module was replaying the device's own status at it.
+	// Do not add those back.
+	public async cmdCaptureImage(stillSlot: number, sourceKey: string): Promise<void> {
+		const srcByte = CAPTURE_SRC[sourceKey]
+		if (srcByte === undefined) {
+			this.self.log('warn', `Unknown capture source: ${sourceKey}`)
+			return
+		}
+		const slotHex = this.hb(Math.max(0, Math.min(31, Math.round(stillSlot) - 1)))
+
+		this.sendCmd(this.dth('0A0501', slotHex))
+		await this.delay(250)
+		this.sendCmd(this.dth('0A0504', '03'))
+		// The device needs roughly 560ms to answer 04 (ready) after arming. Waiting longer
+		// than observed rather than racing it, since a premature execute is silent.
+		await this.delay(800)
+		this.sendCmd(this.dth('0A0500', this.hb(srcByte)))
+		await this.delay(250)
+		this.sendCmd(this.dth('0A0504', '07'))
+		this.self.log('info', `Capture requested: Still ${stillSlot} <- ${sourceKey}`)
 	}
 
 	public cmdRaw(cmd: string): void {

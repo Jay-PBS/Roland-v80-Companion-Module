@@ -1,6 +1,6 @@
 {
 	"name": "companion-module-roland-v80hd",
-	"version": "0.6.0",
+	"version": "0.6.5",
 	"main": "dist/main.js",
 	"type": "module",
 	"scripts": {

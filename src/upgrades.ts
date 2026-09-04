@@ -1,6 +1,7 @@
 // src/upgrades.ts — Roland V-80HD
 import type {
 	CompanionMigrationAction,
+	CompanionMigrationFeedback,
 	CompanionStaticUpgradeProps,
 	CompanionStaticUpgradeResult,
 	CompanionStaticUpgradeScript,
@@ -118,5 +119,36 @@ export const UpgradeScripts: CompanionStaticUpgradeScript<ModuleConfig>[] = [
 			}
 		}
 		return { updatedConfig: null, updatedActions: changes, updatedFeedbacks: [] }
+	},
+
+	// 0.6.4: record_* renamed to stream_record_*. The 2026-09-04 packet capture showed the
+	// trigger is 0A0800 and that it drives livestreaming and recording together, so the old
+	// "Record" naming was wrong as well as pointing at the wrong address (03020F).
+	function (
+		_context: CompanionUpgradeContext<ModuleConfig>,
+		props: CompanionStaticUpgradeProps<ModuleConfig>,
+	): CompanionStaticUpgradeResult<ModuleConfig> {
+		// record_toggle is deliberately absent: the toggle action was removed, so an old
+		// record_toggle button has nothing sensible to migrate to. Start and Stop remain.
+		const actionMap: Record<string, string> = {
+			record_on: 'stream_record_start',
+			record_off: 'stream_record_stop',
+		}
+		const changedActions: CompanionMigrationAction[] = []
+		for (const action of props.actions) {
+			const next = actionMap[action.actionId]
+			if (next) {
+				action.actionId = next
+				changedActions.push(action)
+			}
+		}
+		const changedFeedbacks: CompanionMigrationFeedback[] = []
+		for (const feedback of props.feedbacks) {
+			if (feedback.feedbackId === 'record_active') {
+				feedback.feedbackId = 'stream_record_active'
+				changedFeedbacks.push(feedback)
+			}
+		}
+		return { updatedConfig: null, updatedActions: changedActions, updatedFeedbacks: changedFeedbacks }
 	},
 ]

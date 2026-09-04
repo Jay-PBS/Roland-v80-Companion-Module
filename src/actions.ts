@@ -1,6 +1,9 @@
 // src/actions.ts — Roland V-80HD
 import type { ModuleInstance } from './main.js'
-import { TEST_PATTERNS, SOURCE_CHOICES, INPUT_ASSIGN_SOURCE_CHOICES } from './api.js'
+import { TEST_PATTERNS, SOURCE_CHOICES, INPUT_ASSIGN_SOURCE_CHOICES, CAPTURE_SRC } from './api.js'
+
+const STREAM_RECORD_WARNING =
+	"On the V-80HD livestreaming, video recording and audio recording share one trigger and cannot be started separately. Whichever of Live Streaming, Video Rec and Audio Rec are enabled in the unit's menu will start, so this WILL begin a livestream — including to YouTube, Facebook or Twitch — if Live Streaming is on. Check Stream&Record settings on the device before assigning this to a button."
 
 const AUDIO_CHANNELS = [
 	{ id: 'audio_in_1', label: 'Audio In 1' },
@@ -34,6 +37,18 @@ const WIPE_DIRS = [
 	{ id: '1', label: 'Reverse' },
 	{ id: '2', label: 'Round Trip' },
 ]
+const CAPTURE_SOURCES = [
+	{ id: 'hdmi_1', label: 'HDMI In 1' },
+	{ id: 'hdmi_2', label: 'HDMI In 2' },
+	{ id: 'hdmi_3', label: 'HDMI In 3' },
+	{ id: 'hdmi_4', label: 'HDMI In 4' },
+	{ id: 'sdi_1', label: 'SDI In 1' },
+	{ id: 'sdi_2', label: 'SDI In 2' },
+	{ id: 'sdi_3', label: 'SDI In 3' },
+	{ id: 'sdi_4', label: 'SDI In 4' },
+	{ id: 'video_player', label: 'Video Player / SRT In' },
+].filter((c) => CAPTURE_SRC[c.id] !== undefined)
+
 const FREEZE_INPUTS = [
 	{ id: 'hdmi_1', label: 'HDMI In 1' },
 	{ id: 'hdmi_2', label: 'HDMI In 2' },
@@ -142,6 +157,48 @@ export function UpdateActions(self: ModuleInstance): void {
 				},
 			],
 			callback: async (e) => self.cmdSetAuxLinkedPgm(Number(e.options.mode) as 0 | 1 | 2),
+		},
+		toggle_aux_linked_pgm_mode: {
+			name: 'AUX Linked PGM mode (toggle)',
+			description:
+				'Sets the chosen mode, or returns to Off if it is already active. The mode must not be Off for the bus follow settings to do anything.',
+			options: [
+				{
+					id: 'mode',
+					type: 'dropdown',
+					label: 'Mode',
+					default: '1',
+					choices: [
+						{ id: '1', label: 'Auto Link' },
+						{ id: '2', label: 'Manual Link' },
+					],
+				},
+			],
+			callback: async (e) => self.cmdToggleAuxLinkedPgmMode(Number(e.options.mode) === 2 ? 2 : 1),
+		},
+		set_aux_linked_pgm_bus: {
+			name: 'Set AUX Linked PGM – bus follow',
+			description: 'Chooses which AUX bus follows PGM. This is what Manual Link mode selects between.',
+			options: [
+				{ id: 'aux', type: 'dropdown', label: 'AUX Bus', default: '1', choices: AUX_CHOICES },
+				{
+					id: 'state',
+					type: 'dropdown',
+					label: 'Follow PGM',
+					default: '1',
+					choices: [
+						{ id: '1', label: 'On' },
+						{ id: '0', label: 'Off' },
+					],
+				},
+			],
+			callback: async (e) =>
+				self.cmdSetAuxLinkedPgmBus(Number(e.options.aux) === 2 ? 2 : 1, String(e.options.state) === '1'),
+		},
+		toggle_aux_linked_pgm_bus: {
+			name: 'Toggle AUX Linked PGM – bus follow',
+			options: [{ id: 'aux', type: 'dropdown', label: 'AUX Bus', default: '1', choices: AUX_CHOICES }],
+			callback: async (e) => self.cmdToggleAuxLinkedPgmBus(Number(e.options.aux) === 2 ? 2 : 1),
 		},
 		set_aux_layer_pinp: {
 			name: 'Set AUX Layer – PinP and Key',
@@ -350,6 +407,35 @@ export function UpdateActions(self: ModuleInstance): void {
 			callback: async (e) => self.cmdTestPattern(String(e.options.pattern)),
 		},
 		test_pattern_off: { name: 'Test Pattern Off', options: [], callback: async () => self.cmdTestPatternOff() },
+
+		stream_record_start: {
+			name: 'Stream & Record - Start',
+			description: STREAM_RECORD_WARNING,
+			options: [],
+			callback: async () => self.cmdStreamRecordStart(),
+		},
+		stream_record_stop: {
+			name: 'Stream & Record - Stop',
+			description: STREAM_RECORD_WARNING,
+			options: [],
+			callback: async () => self.cmdStreamRecordStop(),
+		},
+
+		capture_image: {
+			name: 'Capture Image to Still',
+			description: 'Captures the selected input into a still memory slot. Takes about 1.5s and overwrites the slot.',
+			options: [
+				{ id: 'slot', type: 'number', label: 'Still slot', default: 1, min: 1, max: 32 },
+				{
+					id: 'source',
+					type: 'dropdown',
+					label: 'Source',
+					default: 'hdmi_1',
+					choices: CAPTURE_SOURCES,
+				},
+			],
+			callback: async (e) => await self.cmdCaptureImage(Number(e.options.slot), String(e.options.source)),
+		},
 
 		sync_now: { name: 'Sync state now', options: [], callback: async () => self.requestCoreState() },
 	}

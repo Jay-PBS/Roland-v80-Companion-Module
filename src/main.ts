@@ -6,7 +6,7 @@ import { UpgradeScripts } from './upgrades.js'
 import { UpdateActions } from './actions.js'
 import { UpdateFeedbacks } from './feedbacks.js'
 import { UpdatePresets } from './presets.js'
-import { V80Api, AUDIO_CH, INPUT_FREEZE_IDX, type AuxId, type LayerId } from './api.js'
+import { V80Api, AUDIO_CH, INPUT_FREEZE_IDX, TALLY_IDX, type AuxId, type LayerId } from './api.js'
 
 export class ModuleInstance extends InstanceBase<ModuleConfig> {
 	public config!: ModuleConfig
@@ -40,14 +40,23 @@ export class ModuleInstance extends InstanceBase<ModuleConfig> {
 	public split1Active = false
 	public split2Active = false
 	public auxLinkedPgm = 0
+	public aux1LinkedPgm = false
+	public aux2LinkedPgm = false
 	public audioInputMute: Record<number, boolean> = {}
 	public mainBusMute = false
 	public aux1BusMute = false
 	public aux2BusMute = false
-	public ftbActive = false
+	// True only while a fade is running. The engaged state is not yet known - see working_doc.
+	public ftbFading = false
 	public freezeActive = false
+	// Stream & Record. streamRecordState is the raw 030800 byte the device pushes:
+	// 02 stopped, 03 stopping, 04 starting, 05 running. Defaults to stopped.
+	public streamRecordState = 0x02
+	public streamRecordActive = false
 	public testPattern = 0
 	public inputFreezeEnabled: Record<number, boolean> = {}
+	// Keyed by TALLY_IDX byte. 0 = Off, 1 = PGM, 2 = PST.
+	public tallyState: Record<number, number> = {}
 
 	constructor(internal: unknown) {
 		super(internal)
@@ -148,12 +157,18 @@ export class ModuleInstance extends InstanceBase<ModuleConfig> {
 			split1: this.split1Active ? 'ON' : 'OFF',
 			split2: this.split2Active ? 'ON' : 'OFF',
 			aux_linked_pgm: auxLinks[this.auxLinkedPgm] ?? 'Off',
+			aux1_linked_pgm: this.aux1LinkedPgm ? 'ON' : 'OFF',
+			aux2_linked_pgm: this.aux2LinkedPgm ? 'ON' : 'OFF',
 			main_bus_mute: this.mainBusMute ? 'ON' : 'OFF',
 			aux1_bus_mute: this.aux1BusMute ? 'ON' : 'OFF',
 			aux2_bus_mute: this.aux2BusMute ? 'ON' : 'OFF',
-			ftb: this.ftbActive ? 'ON' : 'OFF',
+			ftb: this.ftbFading ? 'FADING' : 'IDLE',
 			freeze: this.freezeActive ? 'ON' : 'OFF',
 			test_pattern: tpName,
+			stream_record: this.streamRecordActive ? 'ON' : 'OFF',
+			stream_record_state:
+				{ 0x02: 'Stopped', 0x03: 'Stopping', 0x04: 'Starting', 0x05: 'Running' }[this.streamRecordState] ??
+				`Unknown (${this.streamRecordState})`,
 			...Object.fromEntries(
 				Object.entries(AUDIO_CH).map(([k, ch]) => [`mute_${k}`, this.audioInputMute[ch] ? 'ON' : 'OFF']),
 			),
@@ -161,6 +176,12 @@ export class ModuleInstance extends InstanceBase<ModuleConfig> {
 				Object.entries(INPUT_FREEZE_IDX).map(([k, idx]) => [
 					`freeze_${k}`,
 					this.inputFreezeEnabled[idx] ? 'ON' : 'OFF',
+				]),
+			),
+			...Object.fromEntries(
+				Object.entries(TALLY_IDX).map(([k, idx]) => [
+					`tally_${k}`,
+					['OFF', 'PGM', 'PST'][this.tallyState[idx] ?? 0] ?? 'OFF',
 				]),
 			),
 		})
@@ -318,6 +339,24 @@ export class ModuleInstance extends InstanceBase<ModuleConfig> {
 	}
 	public cmdTestPatternOff(): void {
 		this.api?.cmdTestPatternOff()
+	}
+	public cmdToggleAuxLinkedPgmMode(mode: 1 | 2): void {
+		this.api?.cmdToggleAuxLinkedPgmMode(mode)
+	}
+	public cmdSetAuxLinkedPgmBus(aux: AuxId, on: boolean): void {
+		this.api?.cmdSetAuxLinkedPgmBus(aux, on)
+	}
+	public cmdToggleAuxLinkedPgmBus(aux: AuxId): void {
+		this.api?.cmdToggleAuxLinkedPgmBus(aux)
+	}
+	public cmdStreamRecordStart(): void {
+		this.api?.cmdStreamRecordStart()
+	}
+	public cmdStreamRecordStop(): void {
+		this.api?.cmdStreamRecordStop()
+	}
+	public async cmdCaptureImage(slot: number, source: string): Promise<void> {
+		await this.api?.cmdCaptureImage(slot, source)
 	}
 	public cmdRaw(cmd: string): void {
 		this.api?.cmdRaw(cmd)

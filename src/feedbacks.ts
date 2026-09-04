@@ -1,7 +1,7 @@
 // src/feedbacks.ts — Roland V-80HD
 import { combineRgb } from '@companion-module/base'
 import type { ModuleInstance } from './main.js'
-import { AUDIO_CH, TEST_PATTERNS, INPUT_FREEZE_IDX } from './api.js'
+import { AUDIO_CH, TEST_PATTERNS, INPUT_FREEZE_IDX, TALLY_IDX } from './api.js'
 
 // Corporate colour palette — bright = active, deep = inactive default
 const RED_BRIGHT = combineRgb(0xef, 0x44, 0x44) // #EF4444
@@ -15,7 +15,8 @@ const WHITE = combineRgb(0xff, 0xff, 0xff)
 const BLACK = combineRgb(0x00, 0x00, 0x00)
 
 const AUDIO_CHANNELS = Object.keys(AUDIO_CH).map((id) => ({ id, label: id.replace(/_/g, ' ') }))
-const FREEZE_INPUTS = [
+// Shared by the freeze and tally feedbacks — the ids match both INPUT_FREEZE_IDX and TALLY_IDX
+const PHYSICAL_INPUTS = [
 	{ id: 'hdmi_1', label: 'HDMI In 1' },
 	{ id: 'hdmi_2', label: 'HDMI In 2' },
 	{ id: 'hdmi_3', label: 'HDMI In 3' },
@@ -126,11 +127,13 @@ export function UpdateFeedbacks(self: ModuleInstance): void {
 			callback: (fb) => self.transitionType === fb.options.type,
 		},
 		ftb_active: {
-			name: 'Fade To Black – active',
+			name: 'Fade To Black – fade in progress',
+			description:
+				'Lights only while a fade is running, not while Fade To Black is engaged. The address for the engaged state has not been identified yet.',
 			type: 'boolean',
 			defaultStyle: { bgcolor: RED_BRIGHT, color: WHITE },
 			options: [],
-			callback: () => self.ftbActive,
+			callback: () => self.ftbFading,
 		},
 		wipe_type_active: {
 			name: 'Wipe pattern active',
@@ -152,6 +155,14 @@ export function UpdateFeedbacks(self: ModuleInstance): void {
 			defaultStyle: { bgcolor: BLUE_BRIGHT, color: WHITE },
 			options: [{ id: 'mode', type: 'dropdown', label: 'Mode', default: '1', choices: AUX_LINK_MODES }],
 			callback: (fb) => self.auxLinkedPgm === Number(fb.options.mode),
+		},
+		aux_linked_pgm_bus_active: {
+			name: 'AUX Linked PGM – bus follows PGM',
+			description: 'Whether this AUX bus is selected to follow PGM. Independent of the link mode.',
+			type: 'boolean',
+			defaultStyle: { bgcolor: BLUE_BRIGHT, color: WHITE },
+			options: [{ id: 'aux', type: 'dropdown', label: 'AUX Bus', default: '1', choices: AUX_DD }],
+			callback: (fb) => (Number(fb.options.aux) === 2 ? self.aux2LinkedPgm : self.aux1LinkedPgm),
 		},
 
 		// ── PinP & Key ───────────────────────────────────────────────────────────
@@ -286,11 +297,68 @@ export function UpdateFeedbacks(self: ModuleInstance): void {
 			name: 'Input Freeze – active',
 			type: 'boolean',
 			defaultStyle: { bgcolor: CYAN_BRIGHT, color: BLACK },
-			options: [{ id: 'input', type: 'dropdown', label: 'Input', default: 'hdmi_1', choices: FREEZE_INPUTS }],
+			options: [{ id: 'input', type: 'dropdown', label: 'Input', default: 'hdmi_1', choices: PHYSICAL_INPUTS }],
 			callback: (fb) => {
 				const idx = INPUT_FREEZE_IDX[String(fb.options.input)]
 				return idx !== undefined ? (self.inputFreezeEnabled[idx] ?? false) : false
 			},
+		},
+
+		// ── Tally ───────────────────────────────────────────────────────────────
+		// Read from the switcher's own tally register, not inferred from the PGM/PST
+		// bus. Needs no tally cable — see HELP.md.
+		tally_pgm: {
+			name: 'Tally – Input on air (PGM)',
+			description: 'Reported by the switcher itself, not inferred from the PGM bus.',
+			type: 'boolean',
+			defaultStyle: { bgcolor: RED_BRIGHT, color: WHITE },
+			options: [{ id: 'input', type: 'dropdown', label: 'Input', default: 'hdmi_1', choices: PHYSICAL_INPUTS }],
+			callback: (fb) => {
+				const idx = TALLY_IDX[String(fb.options.input)]
+				return idx !== undefined && self.tallyState[idx] === 1
+			},
+		},
+		tally_pvw: {
+			name: 'Tally – Input on preview (PST)',
+			description: 'Reported by the switcher itself, not inferred from the PST bus.',
+			type: 'boolean',
+			defaultStyle: { bgcolor: GREEN_BRIGHT, color: BLACK },
+			options: [{ id: 'input', type: 'dropdown', label: 'Input', default: 'hdmi_1', choices: PHYSICAL_INPUTS }],
+			callback: (fb) => {
+				const idx = TALLY_IDX[String(fb.options.input)]
+				return idx !== undefined && self.tallyState[idx] === 2
+			},
+		},
+
+		stream_record_active: {
+			name: 'Stream & Record - active',
+			description:
+				'Reported by the device, not inferred from what this module sent, so it also tracks the panel and the Roland RCS software. Covers livestreaming and recording together.',
+			type: 'boolean',
+			defaultStyle: { bgcolor: RED_BRIGHT, color: WHITE },
+			options: [],
+			callback: () => self.streamRecordActive,
+		},
+		stream_record_state: {
+			name: 'Stream & Record - specific state',
+			description: 'Starting and Stopping are brief transitional states the device reports before it settles.',
+			type: 'boolean',
+			defaultStyle: { bgcolor: RED_BRIGHT, color: WHITE },
+			options: [
+				{
+					id: 'state',
+					type: 'dropdown',
+					label: 'State',
+					default: '5',
+					choices: [
+						{ id: '2', label: 'Stopped' },
+						{ id: '3', label: 'Stopping' },
+						{ id: '4', label: 'Starting' },
+						{ id: '5', label: 'Running' },
+					],
+				},
+			],
+			callback: (fb) => self.streamRecordState === Number(fb.options.state),
 		},
 		test_pattern_active: {
 			name: 'Test Pattern – active',

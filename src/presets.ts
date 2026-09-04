@@ -3,6 +3,17 @@ import type { ModuleInstance } from './main.js'
 import { CompanionPresetDefinitions, combineRgb } from '@companion-module/base'
 import { TEST_PATTERNS } from './api.js'
 
+const TALLY_PRESET_INPUTS = [
+	{ id: 'hdmi_1', label: 'HDMI In 1', short: 'HDMI\n1' },
+	{ id: 'hdmi_2', label: 'HDMI In 2', short: 'HDMI\n2' },
+	{ id: 'hdmi_3', label: 'HDMI In 3', short: 'HDMI\n3' },
+	{ id: 'hdmi_4', label: 'HDMI In 4', short: 'HDMI\n4' },
+	{ id: 'sdi_1', label: 'SDI In 1', short: 'SDI\n1' },
+	{ id: 'sdi_2', label: 'SDI In 2', short: 'SDI\n2' },
+	{ id: 'sdi_3', label: 'SDI In 3', short: 'SDI\n3' },
+	{ id: 'sdi_4', label: 'SDI In 4', short: 'SDI\n4' },
+]
+
 export function UpdatePresets(self: ModuleInstance): void {
 	const presets: CompanionPresetDefinitions = {}
 	const sz = 16 // 16pt for review
@@ -246,6 +257,67 @@ export function UpdatePresets(self: ModuleInstance): void {
 		feedbacks: [],
 	}
 
+	// ── AUX Link ──────────────────────────────────────────────────────────────
+	// Two things, in order. The MODE (020114) gates everything: with it Off there is no AUX
+	// link at all and the FOLLOW buttons do nothing. Set the mode first, then choose which
+	// buses follow with 020115 / 020116.
+	//
+	// Auto Link and Manual Link behave identically until the link is broken by selecting an
+	// AUX source by hand. Auto restores the link at the next transition; Manual keeps your
+	// selection until you re-select it. Manual is usually what you want when Companion is
+	// ── AUX Link ──────────────────────────────────────────────────────────────
+	// Two things, in order. The MODE (020114) gates everything: with it Off there is no
+	// AUX link at all and the FOLLOW buttons do nothing. Set a mode first, then choose
+	// which buses follow with 020115 / 020116.
+	//
+	// AUTO and MANUAL each toggle: press to select, press again to return to Off. OFF is
+	// its own button so the mode can always be cleared in one press.
+	//
+	// Auto and Manual behave identically until the link is broken by selecting an AUX
+	// source by hand. Auto restores the link at the next transition; Manual keeps your
+	// selection until you re-select it. Manual is usually what you want when Companion is
+	// driving AUX sources.
+	presets['aux_link_off'] = {
+		type: 'button',
+		category: 'AUX Link',
+		name: 'AUX Link Off',
+		style: { text: 'AUX LINK\nOFF', size: sz, color: c.white, bgcolor: c.aux, show_topbar: false },
+		steps: [{ down: [{ actionId: 'set_aux_linked_pgm', options: { mode: '0' } }], up: [] }],
+		feedbacks: [{ feedbackId: 'aux_linked_pgm_active', options: { mode: '0' }, style: { bgcolor: c.util } }],
+	}
+	presets['aux_link_auto'] = {
+		type: 'button',
+		category: 'AUX Link',
+		name: 'AUX Link Auto (toggle)',
+		style: { text: 'AUX LINK\nAUTO', size: sz, color: c.white, bgcolor: c.aux, show_topbar: false },
+		steps: [{ down: [{ actionId: 'toggle_aux_linked_pgm_mode', options: { mode: '1' } }], up: [] }],
+		feedbacks: [{ feedbackId: 'aux_linked_pgm_active', options: { mode: '1' }, style: { bgcolor: c.aux_on } }],
+	}
+	presets['aux_link_manual'] = {
+		type: 'button',
+		category: 'AUX Link',
+		name: 'AUX Link Manual (toggle)',
+		style: { text: 'AUX LINK\nMANUAL', size: sz, color: c.white, bgcolor: c.aux, show_topbar: false },
+		steps: [{ down: [{ actionId: 'toggle_aux_linked_pgm_mode', options: { mode: '2' } }], up: [] }],
+		feedbacks: [{ feedbackId: 'aux_linked_pgm_active', options: { mode: '2' }, style: { bgcolor: c.teal_on } }],
+	}
+	for (const aux of [1, 2]) {
+		presets[`aux${aux}_link_follow`] = {
+			type: 'button',
+			category: 'AUX Link',
+			name: `AUX ${aux} follows PGM (toggle)`,
+			style: { text: `AUX ${aux}\nFOLLOW`, size: sz, color: c.white, bgcolor: c.aux, show_topbar: false },
+			steps: [{ down: [{ actionId: 'toggle_aux_linked_pgm_bus', options: { aux: String(aux) } }], up: [] }],
+			feedbacks: [
+				{
+					feedbackId: 'aux_linked_pgm_bus_active',
+					options: { aux: String(aux) },
+					style: { bgcolor: c.aux_on },
+				},
+			],
+		}
+	}
+
 	// ── PinP & Key ────────────────────────────────────────────────────────────
 	for (let layer = 1; layer <= 2; layer++) {
 		presets[`pinp${layer}_pgm`] = {
@@ -375,10 +447,9 @@ export function UpdatePresets(self: ModuleInstance): void {
 		}
 	}
 
-	// ── Record — suspended ─────────────────────────────────────────────────────
-	// presets['record'] = { ... }
-
-	// ── Test Patterns ─────────────────────────────────────────────────────────
+	// ── Stream & Record ───────────────────────────────────────────────────────
+	// One trigger drives livestreaming and recording together on this unit, so a single
+	// toggle is the honest control. Amber marks the brief Starting/Stopping states the
 	presets['tp_off'] = {
 		type: 'button',
 		category: 'Test Patterns',
@@ -400,6 +471,55 @@ export function UpdatePresets(self: ModuleInstance): void {
 
 	// ── Image Capture — suspended ─────────────────────────────────────────────
 	// presets['capture_...'] = { ... }
+
+	// device reports before it settles.
+	presets['stream_record_start'] = {
+		type: 'button',
+		category: 'Stream & Record',
+		name: 'Stream & Record Start',
+		style: { text: 'STREAM\nSTART', size: sz, color: c.white, bgcolor: c.pgm, show_topbar: false },
+		steps: [{ down: [{ actionId: 'stream_record_start', options: {} }], up: [] }],
+		feedbacks: [{ feedbackId: 'stream_record_active', options: {}, style: { bgcolor: c.pgm_on } }],
+	}
+	presets['stream_record_stop'] = {
+		type: 'button',
+		category: 'Stream & Record',
+		name: 'Stream & Record Stop',
+		style: { text: 'STREAM\nSTOP', size: sz, color: c.white, bgcolor: c.pgm, show_topbar: false },
+		steps: [{ down: [{ actionId: 'stream_record_stop', options: {} }], up: [] }],
+		feedbacks: [{ feedbackId: 'stream_record_active', options: {}, style: { bgcolor: c.pgm_on } }],
+	}
+
+	// ── Image Capture ─────────────────────────────────────────────────────────
+	// Still 1-8 from HDMI In 1 as a starting point; change the source on the button.
+	// A capture takes about 1.5s and overwrites the slot without asking.
+	for (let slot = 1; slot <= 8; slot++) {
+		presets[`capture_still_${slot}`] = {
+			type: 'button',
+			category: 'Image Capture',
+			name: `Capture to Still ${slot}`,
+			style: { text: `CAP\n${slot}`, size: sz, color: c.white, bgcolor: c.mem, show_topbar: false },
+			steps: [{ down: [{ actionId: 'capture_image', options: { slot, source: 'hdmi_1' } }], up: [] }],
+			feedbacks: [],
+		}
+	}
+
+	// ── Tally ─────────────────────────────────────────────────────────────────
+	// One button per physical input, reporting what the switcher itself says is on air.
+	// Red for PGM, green for PST. Needs no tally cable.
+	for (const ti of TALLY_PRESET_INPUTS) {
+		presets[`tally_${ti.id}`] = {
+			type: 'button',
+			category: 'Tally',
+			name: `Tally ${ti.label}`,
+			style: { text: ti.short, size: sz, color: c.white, bgcolor: c.util, show_topbar: false },
+			steps: [{ down: [], up: [] }],
+			feedbacks: [
+				{ feedbackId: 'tally_pgm', options: { input: ti.id }, style: { bgcolor: c.pgm_on, color: c.white } },
+				{ feedbackId: 'tally_pvw', options: { input: ti.id }, style: { bgcolor: c.pvw_on, color: c.black } },
+			],
+		}
+	}
 
 	// ── Input Assign ──────────────────────────────────────────────────────────
 	presets['input_assign_default'] = {
@@ -424,9 +544,6 @@ export function UpdatePresets(self: ModuleInstance): void {
 		],
 		feedbacks: [],
 	}
-
-	// ── Scene Memory — suspended, coming in a future version ─────────────────
-	// for (let m = 1; m <= 8; m++) { presets[`memory_${m}`] = { ... } }
 
 	self.setPresetDefinitions(presets)
 }
