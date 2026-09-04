@@ -125,8 +125,6 @@ yarn package
 
 Fade To Black feedback is unreliable. It lights while the fade is running rather than while Fade To Black is engaged, because it reads a transition-in-progress flag rather than the steady state. Under investigation.
 
-Audio mute feedback may not update when mutes are changed directly on the panel. This was previously documented as a device limitation; it is more likely to have been the polling fault fixed in 0.6.4 and needs re-testing.
-
 The Stream & Record actions may start a livestream, not only a recording. On the V-80HD the livestream, audio recording and video recording all start and stop together and cannot be triggered separately; only whether each one occurs is separately configurable, and only on the unit itself under Menu, Stream&Record. If Live Streaming is enabled there, the module's Start action begins a livestream — the unit supports RTMP and RTMPS to YouTube Live, Facebook Live and Twitch as well as custom RTMP and SRT destinations. Check the device's Stream&Record settings before assigning this to a button.
 
 Scene Memory control is not provided and is not planned.

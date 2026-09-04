@@ -199,8 +199,9 @@ unless the poll is returning data. That validates the batching fix directly.
 **Consequence: re-test the three long-standing "known issues" from the panel.** All three are
 consistent with polling never returning data, and may simply be gone:
 
-- Audio mute feedback "does not update when changed on the panel" — documented in README and HELP as
-  a device limitation. It probably never was one.
+- Audio mute feedback "does not update when changed on the panel" — **RESOLVED 2026-09-04.**
+  Confirmed working from the panel on 0.6.5. It was never a device limitation; both README and HELP
+  had documented it as one for months. Removed from both.
 - Transition type feedback "partial / lands in an unexpected state when driven from the panel" —
   **RESOLVED 2026-09-04.** Mix and wipe feedback confirmed working on 0.6.4. It was the dead poll,
   not device behaviour. Removed from README and HELP.

@@ -270,7 +270,6 @@ Variables are accessed as $(instance_label:variable_id), for example $(v80hd:pro
 ## Known Limitations
 
 - Fade To Black feedback lights while the fade is running rather than while Fade To Black is engaged. Under investigation.
-- Audio mute feedback may not update when mutes are changed directly on the panel. Under re-test following the polling fix in 0.6.4.
 - Polling is fixed at 500ms. Feedback updates may lag up to 500ms behind panel operations.
 - Stream Start and Stop are not implemented. The V-80HD's published control specification contains no address for them.
 - Audio control is limited to mute by design. The device supports full audio control over LAN, but the front-panel level knobs are not motorised, so a level set from Companion could not be reflected on the unit. If you need the advanced audio controls, raise an issue on the project's GitHub.
