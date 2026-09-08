@@ -822,6 +822,19 @@ export class V80Api {
 		this.sendCmd(this.dth(CAPTURE_MODE_SW, '01'))
 		this.sendCmd(this.dth(CAPTURE_MODE_SW, '00'))
 	}
+	// Two presses of [CAPTURE IMAGE], ungated, to back out of the capture function after a
+	// capture has run.
+	//
+	// Deliberately not gated on captureModeOpen. Our own capture sequence gets 04/08/0A back
+	// from the device, never the 00/01 the gate reads, so the gated close was almost
+	// certainly a no-op in 0.8.1 and 0.8.2 - which matches 1200ms and 7000ms behaving
+	// identically on hardware. One press was not enough either, so the post-capture screen
+	// is evidently not the same single toggle RCS drives when idle.
+	public async cmdExitCaptureFunction(): Promise<void> {
+		this.cmdToggleCaptureMode()
+		await this.delay(300)
+		this.cmdToggleCaptureMode()
+	}
 	public cmdSetTransitionType(t: 'mix' | 'wipe'): void {
 		this.sendCmd(this.dth('000F00', t === 'mix' ? '00' : '01'))
 	}
@@ -1186,7 +1199,10 @@ export class V80Api {
 		// the second capture's screen. Firing captures that fast is not a real workflow, and
 		// the gate keeps it to a closed screen rather than an opened one.
 		await this.delay(7000)
-		this.cmdCloseCaptureScreen()
+		// Logged so the next hardware run shows whether this fired and what the device
+		// thought the screen was doing, without needing another packet capture.
+		this.self.log('info', `Exiting capture function (screen reported ${this.self.captureModeOpen ? 'open' : 'closed'})`)
+		await this.cmdExitCaptureFunction()
 	}
 
 	public cmdRaw(cmd: string): void {

@@ -387,7 +387,7 @@ export function UpdateActions(self: ModuleInstance): void {
 
 		capture_image: {
 			name: 'Capture Image to Still',
-			description: 'Captures the selected input into a still memory slot. Takes about 1.5s and overwrites the slot.',
+			description: 'Captures the selected input into a still memory slot. Takes 10 seconds and overwrites the slot.',
 			options: [
 				{ id: 'slot', type: 'number', label: 'Still slot', default: 1, min: 1, max: 32 },
 				{

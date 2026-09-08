@@ -1,6 +1,6 @@
-# Hardware Test Sheet — 0.8.2
+# Hardware Test Sheet — 0.8.3
 
-**Build:** `roland-v80hd-0.8.2.tgz` · **Branch:** `exp/code-review-0.7.0` @ `8cf5d5e` + uncommitted 0.8.1 changes
+**Build:** `roland-v80hd-0.8.3.tgz` · **Branch:** `exp/code-review-0.7.0` @ `8cf5d5e` + uncommitted 0.8.1 changes
 **Base:** 0.6.5 (`main` @ `68787f8`)
 **Tester:** Jay · **Date:** 2026-09-08 · **Device firmware:** \***\*\_\_\_\*\*** · **Companion version:** \***\*\_\_\_\*\***
 
@@ -21,7 +21,7 @@ per the working-doc convention. Leave this file whole as the record of the run.
 
 **Setup before starting**
 
-1. Install `roland-v80hd-0.8.2.tgz` into Companion. Confirm the version shows **0.8.2**, not 0.6.5 —
+1. Install `roland-v80hd-0.8.3.tgz` into Companion. Confirm the version shows **0.8.3**, not 0.6.5 —
    Companion caches by version, and a stale 0.6.5 would make the whole sheet meaningless.
 2. Do **not** delete the existing connection. A1 depends on an existing 0.6.5 connection with a saved
    password being upgraded in place.
@@ -44,16 +44,16 @@ These ship in 0.8.1 and have never been tested on hardware. They are 0.7.0 work,
 
 If A1 fails, nothing else on the sheet is testable.
 
-| #   | Area                | What should happen                                                                                                                       | How to test                                                                                                                     | Result | Notes |
-| --- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------ | ----- |
-| A1  | Password migration  | The existing connection authenticates with **no password re-entry**. The upgrade script moves the saved password into the secrets store. | Install 0.8.2 over the existing 0.6.5 connection. Watch the status go Connecting → Authenticating → OK without touching config. |        |       |
-| A2  | Password field type | The config now shows the password as a **secret** field (masked, not echoed back after save).                                            | Open the connection config. Check the field is masked and the rest of the config (IP, port, checkboxes) is intact.              |        |       |
-| A3  | Password re-entry   | Clearing and retyping the password still works.                                                                                          | Blank the password, save (expect auth failure), retype it, save. Should reconnect cleanly.                                      |        |       |
-| A4  | Wrong password      | A wrong password reports "Authentication failed – check password" and does **not** retry into the device lockout.                        | Enter a deliberately wrong password. Watch the log. Then restore the correct one. _Do this once only._                          |        |       |
-| A5  | Auth gate           | A button pressed during the Connecting/Authenticating window is **dropped with a warning**, not sent.                                    | Disable/re-enable the connection and hammer a PGM button during the ~1s auth window. Log should show "Not authenticated yet".   |        |       |
-| A6  | Auth gate — no loss | Once connected, **nothing** is being dropped. This is the regression risk of A5.                                                         | With debug on, press 10 assorted buttons. Every one should show a `TX:` line and no "command dropped" warnings.                 |        |       |
-| A7  | Sync now gated      | `Sync state now` does nothing before auth, works after.                                                                                  | Press it mid-reconnect, then again once connected.                                                                              |        |       |
-| A8  | Auth still clean    | No stray `ERR:0` on the wire during connect. The prompt handling changed.                                                                | With debug on, watch a full connect. Look for `ERR:` in the RX lines.                                                           |        |       |
+| #   | Area                | What should happen                                                                                                                       | How to test                                                                                                                                                                                                    | Result | Notes |
+| --- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ----- | --------------------------------------------------------------- |
+| A1  | Password migration  | The existing connection authenticates with **no password re-entry**. The upgrade script moves the saved password into the secrets store. | Install 0.8.3 over the existing 0.6.5 connection. Watch the status go Connecting → Authenticating → OK without touching config.                                                                                |        |       | PASS                                                            |
+| A2  | Password field type | The config now shows the password as a **secret** field (masked, not echoed back after save).                                            | Open the connection config. Check the field is masked and the rest of the config (IP, port, checkboxes) is intact.                                                                                             |        |       | PASS                                                            |
+| A3  | Password re-entry   | Clearing and retyping the password still works.                                                                                          | Blank the password, save (expect auth failure), retype it, save. Should reconnect cleanly. PASS                                                                                                                |        |       |
+| A4  | Wrong password      | A wrong password reports "Authentication failed – check password" and does **not** retry into the device lockout.                        | Enter a deliberately wrong password. Watch the log. Then restore the correct one. _Do this once only._ PASS BUT HAVE TO TOGGLE CONNECTION OFF AND BACK ON TO ACCEPT NEW PW, JUST ENTER AND SAVE SITS AT FAILED |        |       |
+| A5  | Auth gate           | A button pressed during the Connecting/Authenticating window is **dropped with a warning**, not sent.                                    | Disable/re-enable the connection and hammer a PGM button during the ~1s auth window. Log should show "Not authenticated yet".                                                                                  |        |       | GREY - CONNECTION TO FAST TO SHOW AUTHENICATION WARNING <100mS> |
+| A6  | Auth gate — no loss | Once connected, **nothing** is being dropped. This is the regression risk of A5.                                                         | With debug on, press 10 assorted buttons. Every one should show a `TX:` line and no "command dropped" warnings. PASS                                                                                           |        |       |
+| A7  | Sync now gated      | `Sync state now` does nothing before auth, works after.                                                                                  | Press it mid-reconnect, then again once connected. CONNECTION TO FAST                                                                                                                                          |        |       |
+| A8  | Auth still clean    | No stray `ERR:0` on the wire during connect. The prompt handling changed.                                                                | With debug on, watch a full connect. Look for `ERR:` in the RX lines.                                                                                                                                          |        | PASS  |
 
 ---
 
@@ -61,14 +61,14 @@ If A1 fails, nothing else on the sheet is testable.
 
 | #   | Area                  | What should happen                                                                                                                                                             | How to test                                                                                                          | Result | Notes |
 | --- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------- | ------ | ----- |
-| B1  | Cold connect          | Status reaches OK and initial state populates within a second or two.                                                                                                          | Disable then enable the connection.                                                                                  |        |       |
-| B2  | Watchdog — dead link  | Link loss is detected in ~4s and the connection rebuilds itself.                                                                                                               | Pull the network cable with the connection up. Time the status change and recovery.                                  |        |       |
-| B3  | Watchdog — device off | Unreachable host recycles the socket every ~12s without stacking timers.                                                                                                       | Power the unit down with the connection up. Watch the log for repeated retries.                                      |        |       |
-| B4  | Reconnect state       | After recovery, feedbacks repopulate to match the device.                                                                                                                      | Change a source on the panel while disconnected, then let it reconnect.                                              |        |       |
-| B5  | Config change         | Changing the IP and changing it back reconnects cleanly, no duplicate sockets.                                                                                                 | Edit the IP to something wrong, save, then restore it.                                                               |        |       |
+| B1  | Cold connect          | Status reaches OK and initial state populates within a second or two.                                                                                                          | Disable then enable the connection. PASS                                                                             |        |       |
+| B2  | Watchdog — dead link  | Link loss is detected in ~4s and the connection rebuilds itself.                                                                                                               | Pull the network cable with the connection up. Time the status change and recovery. PASS                             |        |       |
+| B3  | Watchdog — device off | Unreachable host recycles the socket every ~12s without stacking timers.                                                                                                       | Power the unit down with the connection up. Watch the log for repeated retries. PASS AND AT 12S IN LOG               |        |       |
+| B4  | Reconnect state       | After recovery, feedbacks repopulate to match the device.                                                                                                                      | Change a source on the panel while disconnected, then let it reconnect. PASS                                         |        |       |
+| B5  | Config change         | Changing the IP and changing it back reconnects cleanly, no duplicate sockets.                                                                                                 | Edit the IP to something wrong, save, then restore it. PASS                                                          |        |       |
 | B6  | Polling off           | With polling disabled: mutes/splits/PinP-on-air/freeze/test patterns still track from Companion; PGM/PVW/AUX/tally/Stream & Record freeze. **This is expected** — see HELP.md. | Untick Enable polling. Press a mute (should update) then change PGM (feedback should not follow). Re-tick when done. |        |       |
 
----
+## PASS
 
 ## C. Actions
 
@@ -77,88 +77,93 @@ the option lists were verified identical to 0.6.5 in software.
 
 ### C1. Transitions
 
-| #   | Action id             | Name                | Result | Notes |
-| --- | --------------------- | ------------------- | ------ | ----- |
-| 1   | `cut`                 | CUT                 |        |       |
-| 2   | `auto`                | AUTO                |        |       |
-| 3   | `fade_to_black`       | Fade To Black (tap) |        |       |
-| 4   | `set_transition_type` | Set Transition Type |        |       |
-| 5   | `set_mix_time`        | Set Mix/Wipe Time   |        |       |
-| 6   | `set_wipe_type`       | Set Wipe Pattern    |        |       |
-| 7   | `set_wipe_direction`  | Set Wipe Direction  |        |       |
+| # | Action id | Name | Result | Notes |
+| --- | --------------------- | ------------------- | PASS | ----- |
+| 1 | `cut` | CUT | | |
+| 2 | `auto` | AUTO | | |
+| 3 | `fade_to_black` | Fade To Black (tap) | | |
+| 4 | `set_transition_type` | Set Transition Type | | |
+| 5 | `set_mix_time` | Set Mix/Wipe Time | | |
+| 6 | `set_wipe_type` | Set Wipe Pattern | | |
+| 7 | `set_wipe_direction` | Set Wipe Direction | | |
+ALL PASS
 
 ### C2. Program, Preview, Input Assign
 
-| #   | Action id             | Name                      | Result | Notes |
-| --- | --------------------- | ------------------------- | ------ | ----- |
-| 8   | `set_program_source`  | Set Program Source        |        |       |
-| 9   | `set_preview_source`  | Set Preview Source        |        |       |
-| 10  | `input_assign_source` | Input Assign – Set Source |        |       |
+| # | Action id | Name | Result | Notes |
+| --- | --------------------- | ------------------------- | PASS | ----- |
+| 8 | `set_program_source` | Set Program Source | | |
+| 9 | `set_preview_source` | Set Preview Source | | |
+| 10 | `input_assign_source` | Input Assign – Set Source |  
+ | |
+ALL PASS
 
 Check `set_program_source` against a spread: an Input (crosspoint), a direct HDMI, a direct SDI,
 a Still, and Video Player. The source list is 49 entries and was regenerated in this release.
 
 | #   | Source family tested   | Result | Notes |
 | --- | ---------------------- | ------ | ----- |
-| 10a | `input_1` … `input_8`  |        |       |
-| 10b | `hdmi_1` … `hdmi_4`    |        |       |
-| 10c | `sdi_1` … `sdi_4`      |        |       |
-| 10d | `still_1` … `still_32` |        |       |
-| 10e | `video_player`         |        |       |
+| 10a | `input_1` … `input_8`  | PASS   |       |
+| 10b | `hdmi_1` … `hdmi_4`    | PASS   |       |
+| 10c | `sdi_1` … `sdi_4`      | PASS   |       |
+| 10d | `still_1` … `still_32` | PASS   |       |
+| 10e | `video_player`         | PASS   |       |
 
 ### C3. AUX bus and AUX Link
 
-| #   | Action id                    | Name                                  | Result | Notes |
-| --- | ---------------------------- | ------------------------------------- | ------ | ----- |
-| 11  | `set_aux_source`             | Set AUX Source (test AUX 1 and AUX 2) |        |       |
-| 12  | `set_aux_linked_pgm`         | Set AUX Linked PGM (Off/Auto/Manual)  |        |       |
-| 13  | `toggle_aux_linked_pgm_mode` | AUX Linked PGM mode (toggle)          |        |       |
-| 14  | `set_aux_linked_pgm_bus`     | Set AUX Linked PGM – bus follow       |        |       |
-| 15  | `toggle_aux_linked_pgm_bus`  | Toggle AUX Linked PGM – bus follow    |        |       |
+| # | Action id | Name | Result | Notes |
+| --- | ---------------------------- | ------------------------------------- | PASS | ----- |
+| 11 | `set_aux_source` | Set AUX Source (test AUX 1 and AUX 2) | | |
+| 12 | `set_aux_linked_pgm` | Set AUX Linked PGM (Off/Auto/Manual) | | |
+| 13 | `toggle_aux_linked_pgm_mode` | AUX Linked PGM mode (toggle) | | |
+| 14 | `set_aux_linked_pgm_bus` | Set AUX Linked PGM – bus follow | | |
+| 15 | `toggle_aux_linked_pgm_bus` | Toggle AUX Linked PGM – bus follow | | |
 
 Reminder: the **mode gates the per-bus follow**. Set mode to Auto or Manual before expecting
 AUX 1/2 FOLLOW to do anything.
 
 ### C4. AUX layer PinP
 
-| #   | Action id                         | Name                                        | Result | Notes |
-| --- | --------------------------------- | ------------------------------------------- | ------ | ----- |
-| 16  | `set_aux_layer_pinp`              | Set AUX Layer – PinP and Key                |        |       |
-| 17  | `toggle_aux_layer_pinp`           | Toggle AUX Layer PinP (Disable / Enable)    |        |       |
-| 18  | `toggle_aux_layer_pinp_always_on` | Toggle AUX Layer PinP (Disable / Always On) |        |       |
+| # | Action id | Name | Result | Notes |
+| --- | --------------------------------- | ------------------------------------------- | PASS | ----- |
+| 16 | `set_aux_layer_pinp` | Set AUX Layer – PinP and Key | | |
+| 17 | `toggle_aux_layer_pinp` | Toggle AUX Layer PinP (Disable / Enable) | | |
+| 18 | `toggle_aux_layer_pinp_always_on` | Toggle AUX Layer PinP (Disable / Always On) | | |
 
 The address table here was rewritten (the `as any` removal). Test **all four** AUX/layer
 combinations — 1/1, 1/2, 2/1, 2/2 — they should hit `000020`, `000021`, `000023`, `000024`.
 
 | #   | Combination    | Result | Notes |
 | --- | -------------- | ------ | ----- |
-| 18a | AUX 1, layer 1 |        |       |
-| 18b | AUX 1, layer 2 |        |       |
-| 18c | AUX 2, layer 1 |        |       |
-| 18d | AUX 2, layer 2 |        |       |
+| 18a | AUX 1, layer 1 | PASS   |       |
+| 18b | AUX 1, layer 2 | PASS   |       |
+| 18c | AUX 2, layer 1 | PASS   |       |
+| 18d | AUX 2, layer 2 | PASS   |       |
 
 ### C5. Split
 
 | #   | Action id       | Name             | Result | Notes |
 | --- | --------------- | ---------------- | ------ | ----- |
-| 19  | `split1_on`     | Split 1 – On     |        |       |
-| 20  | `split1_off`    | Split 1 – Off    |        |       |
-| 21  | `split1_toggle` | Split 1 – Toggle |        |       |
-| 22  | `split2_on`     | Split 2 – On     |        |       |
-| 23  | `split2_off`    | Split 2 – Off    |        |       |
-| 24  | `split2_toggle` | Split 2 – Toggle |        |       |
+| 19  | `split1_on`     | Split 1 – On     | PASS   |       |
+| 20  | `split1_off`    | Split 1 – Off    | PASS   |       |
+| 21  | `split1_toggle` | Split 1 – Toggle | PASS   |       |
+| 22  | `split2_on`     | Split 2 – On     | PASS   |       |
+| 23  | `split2_off`    | Split 2 – Off    | PASS   |       |
+| 24  | `split2_toggle` | Split 2 – Toggle | PASS   |       |
+
+LOOK AT ORDER IN ACTIONS LIST, ODD ORDER
 
 ### C6. PinP & Key
 
-| #   | Action id         | Name                      | Result | Notes |
-| --- | ----------------- | ------------------------- | ------ | ----- |
-| 25  | `pinp_set_source` | PinP and Key – Set Source |        |       |
-| 26  | `pinp_pgm_on`     | PinP and Key – PGM On     |        |       |
-| 27  | `pinp_pgm_off`    | PinP and Key – PGM Off    |        |       |
-| 28  | `pinp_pgm_toggle` | PinP and Key – PGM Toggle |        |       |
-| 29  | `pinp_pvw_on`     | PinP and Key – PVW On     |        |       |
-| 30  | `pinp_pvw_off`    | PinP and Key – PVW Off    |        |       |
-| 31  | `pinp_pvw_toggle` | PinP and Key – PVW Toggle |        |       |
+| # | Action id | Name | Result | Notes |
+| --- | ----------------- | ------------------------- | PASS | ----- |
+| 25 | `pinp_set_source` | PinP and Key – Set Source | | |
+| 26 | `pinp_pgm_on` | PinP and Key – PGM On | | |
+| 27 | `pinp_pgm_off` | PinP and Key – PGM Off | | |
+| 28 | `pinp_pgm_toggle` | PinP and Key – PGM Toggle | | |
+| 29 | `pinp_pvw_on` | PinP and Key – PVW On | | |
+| 30 | `pinp_pvw_off` | PinP and Key – PVW Off | | |
+| 31 | `pinp_pvw_toggle` | PinP and Key – PVW Toggle | | |
 
 Test each against **layer 1 and layer 2**.
 
@@ -166,14 +171,14 @@ Test each against **layer 1 and layer 2**.
 
 | #   | Action id                | Name                             | Result | Notes |
 | --- | ------------------------ | -------------------------------- | ------ | ----- |
-| 32  | `pinp_window_position_h` | Window Position H (-100 to +100) |        |       |
-| 33  | `pinp_window_position_v` | Window Position V (-100 to +100) |        |       |
-| 34  | `pinp_window_size`       | Window Size (0 to 100)           |        |       |
-| 35  | `pinp_window_cropping_h` | Window Cropping H (0 to 100)     |        |       |
-| 36  | `pinp_window_cropping_v` | Window Cropping V (0 to 100)     |        |       |
-| 37  | `pinp_view_position_h`   | View Position H (-50 to +50)     |        |       |
-| 38  | `pinp_view_position_v`   | View Position V (-50 to +50)     |        |       |
-| 39  | `pinp_view_zoom`         | View Zoom (100 to 400)           |        |       |
+| 32  | `pinp_window_position_h` | Window Position H (-100 to +100) |        | FAIL  |
+| 33  | `pinp_window_position_v` | Window Position V (-100 to +100) |        | FAIL  |
+| 34  | `pinp_window_size`       | Window Size (0 to 100)           | PASS   |       |
+| 35  | `pinp_window_cropping_h` | Window Cropping H (0 to 100)     |        | PASS  |
+| 36  | `pinp_window_cropping_v` | Window Cropping V (0 to 100)     |        | PASS  |
+| 37  | `pinp_view_position_h`   | View Position H (-50 to +50)     |        | FAIL  |
+| 38  | `pinp_view_position_v`   | View Position V (-50 to +50)     |        | FAIL  |
+| 39  | `pinp_view_zoom`         | View Zoom (100 to 400)           |        | PASS  |
 
 Check the extremes as well as the middle — the signed encoding is the risky part. Cropping at
 100% means _no crop_; 0% is fully cropped and the window disappears.
@@ -182,27 +187,27 @@ Check the extremes as well as the middle — the signed encoding is the risky pa
 
 | #   | Action id        | Name             | Result | Notes |
 | --- | ---------------- | ---------------- | ------ | ----- |
-| 40  | `dsk_set_source` | DSK – Set Source |        |       |
-| 41  | `dsk_pgm_on`     | DSK – PGM On     |        |       |
-| 42  | `dsk_pgm_off`    | DSK – PGM Off    |        |       |
-| 43  | `dsk_pgm_toggle` | DSK – PGM Toggle |        |       |
-| 44  | `dsk_pvw_on`     | DSK – PVW On     |        |       |
-| 45  | `dsk_pvw_off`    | DSK – PVW Off    |        |       |
-| 46  | `dsk_pvw_toggle` | DSK – PVW Toggle |        |       |
+| 40  | `dsk_set_source` | DSK – Set Source | PASS   |       |
+| 41  | `dsk_pgm_on`     | DSK – PGM On     | PASS   |       |
+| 42  | `dsk_pgm_off`    | DSK – PGM Off    | PASS   |       |
+| 43  | `dsk_pgm_toggle` | DSK – PGM Toggle | PASS   |       |
+| 44  | `dsk_pvw_on`     | DSK – PVW On     | PASS   |       |
+| 45  | `dsk_pvw_off`    | DSK – PVW Off    | PASS   |       |
+| 46  | `dsk_pvw_toggle` | DSK – PVW Toggle | PASS   |       |
 
 ### C9. Audio
 
 | #   | Action id                 | Name                      | Result | Notes |
 | --- | ------------------------- | ------------------------- | ------ | ----- |
-| 47  | `audio_input_mute_on`     | Audio Input – Mute On     |        |       |
-| 48  | `audio_input_mute_off`    | Audio Input – Mute Off    |        |       |
-| 49  | `audio_input_mute_toggle` | Audio Input – Mute Toggle |        |       |
-| 50  | `main_bus_mute_on`        | Main Bus – Mute On        |        |       |
-| 51  | `main_bus_mute_off`       | Main Bus – Mute Off       |        |       |
-| 52  | `main_bus_mute_toggle`    | Main Bus – Mute Toggle    |        |       |
-| 53  | `aux_bus_mute_on`         | AUX Bus – Mute On         |        |       |
-| 54  | `aux_bus_mute_off`        | AUX Bus – Mute Off        |        |       |
-| 55  | `aux_bus_mute_toggle`     | AUX Bus – Mute Toggle     |        |       |
+| 47  | `audio_input_mute_on`     | Audio Input – Mute On     |        | PASS  |
+| 48  | `audio_input_mute_off`    | Audio Input – Mute Off    |        | PASS  |
+| 49  | `audio_input_mute_toggle` | Audio Input – Mute Toggle |        | PASS  |
+| 50  | `main_bus_mute_on`        | Main Bus – Mute On        |        | PASS  |
+| 51  | `main_bus_mute_off`       | Main Bus – Mute Off       |        | PASS  |
+| 52  | `main_bus_mute_toggle`    | Main Bus – Mute Toggle    |        | PASS  |
+| 53  | `aux_bus_mute_on`         | AUX Bus – Mute On         |        | PASS  |
+| 54  | `aux_bus_mute_off`        | AUX Bus – Mute Off        |        | PASS  |
+| 55  | `aux_bus_mute_toggle`     | AUX Bus – Mute Toggle     |        | PASS  |
 
 **Check the channel dropdown labels while you are here** — this release changed them. Adding an
 _action_ and adding a _feedback_ must now offer the same names: `Audio In 3/4`, `Bluetooth In`,
@@ -215,42 +220,44 @@ _action_ and adding a _feedback_ must now offer the same names: `Audio In 3/4`, 
 
 ### C10. Freeze
 
-| #   | Action id             | Name                  | Result | Notes |
-| --- | --------------------- | --------------------- | ------ | ----- |
-| 56  | `freeze_on`           | Freeze (all) – On     |        |       |
-| 57  | `freeze_off`          | Freeze (all) – Off    |        |       |
-| 58  | `freeze_toggle`       | Freeze (all) – Toggle |        |       |
-| 59  | `input_freeze_on`     | Input Freeze – On     |        |       |
-| 60  | `input_freeze_off`    | Input Freeze – Off    |        |       |
-| 61  | `input_freeze_toggle` | Input Freeze – Toggle |        |       |
+| # | Action id | Name | Result | Notes |
+| --- | --------------------- | --------------------- | PASS | ----- |
+| 56 | `freeze_on` | Freeze (all) – On | | |
+| 57 | `freeze_off` | Freeze (all) – Off | | |
+| 58 | `freeze_toggle` | Freeze (all) – Toggle | | |
+| 59 | `input_freeze_on` | Input Freeze – On | | |
+| 60 | `input_freeze_off` | Input Freeze – Off | | |
+| 61 | `input_freeze_toggle` | Input Freeze – Toggle | | |
 
 Input freeze covers HDMI 1–4 and SDI 1–4. Test at least one HDMI and one SDI.
 
 ### C11. Test patterns, Stream & Record, Capture, Utility
 
-| #   | Action id              | Name                              | Result | Notes                                                 |
-| --- | ---------------------- | --------------------------------- | ------ | ----------------------------------------------------- |
-| 62  | `test_pattern`         | Test Pattern All Outputs (toggle) |        |                                                       |
-| 63  | `test_pattern_off`     | Test Pattern Off                  |        |                                                       |
-| 64  | `stream_record_start`  | Stream & Record – Start           |        |                                                       |
-| 65  | `stream_record_stop`   | Stream & Record – Stop            |        |                                                       |
-| 66  | `capture_image`        | Capture Image to Still            |        | **0.8.0 broke this.** Still written AND screen clears |
-| 67  | `sync_now`             | Sync state now                    |        |                                                       |
-| 68  | `raw_command`          | Send raw LAN command              |        |                                                       |
-| 69  | `capture_mode_toggle`  | Capture Mode (toggle)             |        |                                                       |
-| 70  | `capture_screen_close` | Capture Mode – close if open      |        | Must NOT open the screen — see G2c                    |
+| # | Action id | Name | Result | Notes |
+| --- | ---------------------- | ALL PASS | ------ | ----------------------------------------------------- |
+| 62 | `test_pattern` | Test Pattern All Outputs (toggle) | |PASS|
+| 63 | `test_pattern_off` | Test Pattern Off |PASS| |
+| 64 | `stream_record_start` | Stream & Record – Start |PASS| d_stop`  | Stream & Record – Stop            |    PASS & UPDATE BUTTON TO SAY RECORD AND STREAM    |                                                        |
+| 65  |`stream_record_stop`  | Stream & Record – Stop            |    PASS & UPDATE BUTTON TO SAY RECORD AND STREAM    |                                                       |
+| 66  |`capture_image`       | Capture Image to Still            |        | **0.8.0 broke this.** Still written AND screen clears |
+| 67  |`sync_now`            | Sync state now                    |        |                                                   NOT SURE AS NO FB    |
+| 68  |`raw_command`         | Send raw LAN command              |        |PASS|
+| 69  |`capture_mode_toggle` | Capture Mode (toggle)             |        |                                                 PASS      |
+| 70  |`capture_screen_close` | Capture Mode – close if open | | Must NOT open the screen — see G2c PASS |
 
 ⚠️ **64/65 will start a livestream** if Live Streaming is enabled on the unit. Check
 Menu → Stream&Record on the device before pressing.
+SHOWS LIVE BUT NOT TYPE A LONG ASS RTMPS ADDRESS IN
 
 `raw_command` changed in this release — it is now **always listed**, and the "Allow advanced
 actions" checkbox gates whether it sends:
-
-| #   | Check                                                                        | Result | Notes |
+PASS
+| # | Check | Result | Notes |
 | --- | ---------------------------------------------------------------------------- | ------ | ----- |
-| 68a | With the checkbox **on**: `DTH:001500,29;` sets PGM to Input 1               |        |       |
-| 68b | With the checkbox **off**: nothing sent, log warns "enable Show advanced..." |        |       |
-| 68c | Toggling the checkbox off does **not** break an existing raw_command button  |        |       |
+| 68a | With the checkbox **on**: `DTH:001500,29;` sets PGM to Input 1 | | |
+| 68b | With the checkbox **off**: nothing sent, log warns "enable Show advanced..." | | |
+| 68c | Toggling the checkbox off does **not** break an existing raw_command button | | |
+PASSS
 
 ---
 
@@ -259,37 +266,37 @@ actions" checkbox gates whether it sends:
 Two things to check for each: does it light when Companion changes the state, and does it light when
 **the panel** changes it. The second is what proves polling is alive.
 
-| #   | Feedback id                 | Name                             | From Companion | From panel | Notes |
-| --- | --------------------------- | -------------------------------- | -------------- | ---------- | ----- |
-| F1  | `program_input_active`      | Program – Input on PGM           |                |            |       |
-| F2  | `preview_input_active`      | Preview – Input on PST           |                |            |       |
-| F3  | `program_source_active`     | Program – Raw source byte on PGM |                |            |       |
-| F4  | `preview_source_active`     | Preview – Raw source byte on PST |                |            |       |
-| F5  | `aux_input_active`          | AUX – Input on AUX bus           |                |            |       |
-| F6  | `transition_type_active`    | Transition type active           |                |            |       |
-| F7  | `ftb_active`                | Fade To Black – fade in progress |                |            |       |
-| F8  | `wipe_type_active`          | Wipe pattern active              |                |            |       |
-| F9  | `wipe_direction_active`     | Wipe direction active            |                |            |       |
-| F10 | `aux_linked_pgm_active`     | AUX Linked PGM mode active       |                |            |       |
-| F11 | `aux_linked_pgm_bus_active` | AUX Linked PGM – bus follows PGM |                |            |       |
-| F12 | `pinp_pgm_active`           | PinP & Key – active on PGM       |                |            |       |
-| F13 | `pinp_pvw_active`           | PinP & Key – active on PVW       |                |            |       |
-| F14 | `aux_layer_pinp_enabled`    | AUX Layer – PinP Enabled         |                |            |       |
-| F15 | `aux_layer_pinp_always_on`  | AUX Layer – PinP Always On       |                |            |       |
-| F16 | `dsk_pgm_active`            | DSK – active on PGM              |                |            |       |
-| F17 | `dsk_pvw_active`            | DSK – active on PVW              |                |            |       |
-| F18 | `split1_active`             | Split 1 – active                 |                |            |       |
-| F19 | `split2_active`             | Split 2 – active                 |                |            |       |
-| F20 | `audio_input_muted`         | Audio Input – Muted              |                |            |       |
-| F21 | `main_bus_muted`            | Main Bus – Muted                 |                |            |       |
-| F22 | `aux_bus_muted`             | AUX Bus – Muted                  |                |            |       |
-| F23 | `freeze_active`             | Freeze (all) – active            |                |            |       |
-| F24 | `input_freeze_active`       | Input Freeze – active            |                |            |       |
-| F25 | `tally_pgm`                 | Tally – Input on air (PGM)       |                |            |       |
-| F26 | `tally_pvw`                 | Tally – Input on preview (PST)   |                |            |       |
-| F27 | `stream_record_active`      | Stream & Record – active         |                |            |       |
-| F28 | `stream_record_state`       | Stream & Record – specific state |                |            |       |
-| F29 | `test_pattern_active`       | Test Pattern – active            |                |            |       |
+| # | Feedback id | Name | From Companion | From panel | Notes |
+| --- | --------------------------- | -------------------------------- | SEEN ALL DURING TESTING. PASS | ---------- | ----- |
+| F1 | `program_input_active` | Program – Input on PGM | | | |
+| F2 | `preview_input_active` | Preview – Input on PST | | | |
+| F3 | `program_source_active` | Program – Raw source byte on PGM | | | |
+| F4 | `preview_source_active` | Preview – Raw source byte on PST | | | |
+| F5 | `aux_input_active` | AUX – Input on AUX bus | | | |
+| F6 | `transition_type_active` | Transition type active | | | |
+| F7 | `ftb_active` | Fade To Black – fade in progress | | | |
+| F8 | `wipe_type_active` | Wipe pattern active | | | |
+| F9 | `wipe_direction_active` | Wipe direction active | | | |
+| F10 | `aux_linked_pgm_active` | AUX Linked PGM mode active | | | |
+| F11 | `aux_linked_pgm_bus_active` | AUX Linked PGM – bus follows PGM | | | |
+| F12 | `pinp_pgm_active` | PinP & Key – active on PGM | | | |
+| F13 | `pinp_pvw_active` | PinP & Key – active on PVW | | | |
+| F14 | `aux_layer_pinp_enabled` | AUX Layer – PinP Enabled | | | |
+| F15 | `aux_layer_pinp_always_on` | AUX Layer – PinP Always On | | | |
+| F16 | `dsk_pgm_active` | DSK – active on PGM | | | |
+| F17 | `dsk_pvw_active` | DSK – active on PVW | | | |
+| F18 | `split1_active` | Split 1 – active | | | |
+| F19 | `split2_active` | Split 2 – active | | | |
+| F20 | `audio_input_muted` | Audio Input – Muted | | | |
+| F21 | `main_bus_muted` | Main Bus – Muted | | | |
+| F22 | `aux_bus_muted` | AUX Bus – Muted | | | |
+| F23 | `freeze_active` | Freeze (all) – active | | | |
+| F24 | `input_freeze_active` | Input Freeze – active | | | |
+| F25 | `tally_pgm` | Tally – Input on air (PGM) | | | |
+| F26 | `tally_pvw` | Tally – Input on preview (PST) | | | |
+| F27 | `stream_record_active` | Stream & Record – active | | | |
+| F28 | `stream_record_state` | Stream & Record – specific state | | | |
+| F29 | `test_pattern_active` | Test Pattern – active | | | |
 
 **F7 is the known defect** — it lights only while a fade is _running_, not while FTB is engaged.
 Expected to fail as described; see section G.
@@ -300,29 +307,29 @@ Expected to fail as described; see section G.
 
 62 in total. The repetitive families are grouped — spot-check two or three within each.
 
-| #   | Variable(s)                                        | Expected value                                                                | Result | Notes |
-| --- | -------------------------------------------------- | ----------------------------------------------------------------------------- | ------ | ----- |
-| V1  | `program_input`, `preview_input`                   | Input number 1–8, or 0                                                        |        |       |
-| V2  | `program_source`, `preview_source`                 | Two-digit hex byte                                                            |        |       |
-| V3  | `aux1_input`, `aux2_input`                         | Input number                                                                  |        |       |
-| V4  | `aux1_source`, `aux2_source`                       | Two-digit hex byte                                                            |        |       |
-| V5  | `transition_type`                                  | `MIX` or `WIPE`                                                               |        |       |
-| V6  | `mix_time`                                         | e.g. `1000ms`                                                                 |        |       |
-| V7  | `wipe_type`, `wipe_direction`                      | Pattern / direction name                                                      |        |       |
-| V8  | `pinp1_pgm`, `pinp1_pvw`, `pinp2_pgm`, `pinp2_pvw` | `ON` / `OFF`                                                                  |        |       |
-| V9  | `dsk_pgm`, `dsk_pvw`                               | `ON` / `OFF`                                                                  |        |       |
-| V10 | `split1`, `split2`                                 | `ON` / `OFF`                                                                  |        |       |
-| V11 | `aux_linked_pgm`                                   | `Off` / `Auto Link` / `Manual Link`                                           |        |       |
-| V12 | `aux1_linked_pgm`, `aux2_linked_pgm`               | `ON` / `OFF`                                                                  |        |       |
-| V13 | `main_bus_mute`, `aux1_bus_mute`, `aux2_bus_mute`  | `ON` / `OFF`                                                                  |        |       |
-| V14 | `ftb`                                              | **`FADING` or `IDLE`** — not ON/OFF. HELP.md was wrong about this until 0.7.0 |        |       |
-| V15 | `freeze`                                           | `ON` / `OFF`                                                                  |        |       |
-| V16 | `test_pattern`                                     | Pattern name, or `Off`                                                        |        |       |
-| V17 | `stream_record`                                    | `ON` / `OFF`                                                                  |        |       |
-| V18 | `stream_record_state`                              | `Stopped` / `Starting` / `Running` / `Stopping`                               |        |       |
-| V19 | `mute_*` — 15 audio channels                       | `ON` / `OFF`                                                                  |        |       |
-| V20 | `freeze_*` — 8 inputs                              | `ON` / `OFF`                                                                  |        |       |
-| V21 | `tally_*` — 8 inputs                               | `OFF` / `PGM` / `PST`                                                         |        |       |
+| # | Variable(s) | Expected value | Result | Notes |
+| --- | ALL PULLING THROUGH TO COMPANION, PASS | ----------------------------------------------------------------------------- | ------ | ----- |
+| V1 | `program_input`, `preview_input` | Input number 1–8, or 0 | | |
+| V2 | `program_source`, `preview_source` | Two-digit hex byte | | |
+| V3 | `aux1_input`, `aux2_input` | Input number | | |
+| V4 | `aux1_source`, `aux2_source` | Two-digit hex byte | | |
+| V5 | `transition_type` | `MIX` or `WIPE` | | |
+| V6 | `mix_time` | e.g. `1000ms` | | |
+| V7 | `wipe_type`, `wipe_direction` | Pattern / direction name | | |
+| V8 | `pinp1_pgm`, `pinp1_pvw`, `pinp2_pgm`, `pinp2_pvw` | `ON` / `OFF` | | |
+| V9 | `dsk_pgm`, `dsk_pvw` | `ON` / `OFF` | | |
+| V10 | `split1`, `split2` | `ON` / `OFF` | | |
+| V11 | `aux_linked_pgm` | `Off` / `Auto Link` / `Manual Link` | | |
+| V12 | `aux1_linked_pgm`, `aux2_linked_pgm` | `ON` / `OFF` | | |
+| V13 | `main_bus_mute`, `aux1_bus_mute`, `aux2_bus_mute` | `ON` / `OFF` | | |
+| V14 | `ftb` | **`FADING` or `IDLE`** — not ON/OFF. HELP.md was wrong about this until 0.7.0 | | |
+| V15 | `freeze` | `ON` / `OFF` | | |
+| V16 | `test_pattern` | Pattern name, or `Off` | | |
+| V17 | `stream_record` | `ON` / `OFF` | | |
+| V18 | `stream_record_state` | `Stopped` / `Starting` / `Running` / `Stopping` | | |
+| V19 | `mute_*` — 15 audio channels | `ON` / `OFF` | | |
+| V20 | `freeze_*` — 8 inputs | `ON` / `OFF` | | |
+| V21 | `tally_*` — 8 inputs | `OFF` / `PGM` / `PST` | | |
 
 ---
 
@@ -333,29 +340,29 @@ each category onto a page and confirm it appears correctly and works.
 
 | #   | Category        | Appears | Works | Notes |
 | --- | --------------- | ------- | ----- | ----- |
-| P1  | Transitions     |         |       |       |
-| P2  | Program         |         |       |       |
-| P3  | Preview         |         |       |       |
-| P4  | AUX 1           |         |       |       |
-| P5  | AUX 2           |         |       |       |
-| P6  | AUX Link        |         |       |       |
-| P7  | PinP & Key      |         |       |       |
-| P8  | DSK             |         |       |       |
-| P9  | Split           |         |       |       |
-| P10 | Audio           |         |       |       |
-| P11 | Freeze          |         |       |       |
-| P12 | Test Patterns   |         |       |       |
-| P13 | Stream & Record |         |       |       |
-| P14 | Image Capture   |         |       |       |
-| P15 | Tally           |         |       |       |
-| P16 | Input Assign    |         |       |       |
+| P1  | Transitions     | PASS    | PASS  |
+| P2  | Program         | PASS    |       | PASS  |
+| P3  | Preview         | PASS    |       | PASS  |
+| P4  | AUX 1           | PASS    |       | PASS  |
+| P5  | AUX 2           | PASS    |       | PASS  |
+| P6  | AUX Link        | PASS    |       | PASS  |
+| P7  | PinP & Key      | PASS    |       | PASS  |
+| P8  | DSK             | PASS    |       | PASS  |
+| P9  | Split           | PASS    |       | PASS  |
+| P10 | Audio           | PASS    |       | PASS  |
+| P11 | Freeze          | PASS    |       | PASS  |
+| P12 | Test Patterns   | PASS    |       | PASS  |
+| P13 | Stream & Record | PASS    |       | PASS  |
+| P14 | Image Capture   | PASS    |       | PASS  |
+| P15 | Tally           | PASS    |       | PASS  |
+| P16 | Input Assign    | PASS    |       | PASS  |
 
 Two preset details changed shape in this release even though the output is identical — worth a glance:
 
-| #   | Check                                                   | Result | Notes |
-| --- | ------------------------------------------------------- | ------ | ----- |
-| P17 | Tally button text still reads `HDMI` / `1` on two lines |        |       |
-| P18 | Freeze button text still reads `FRZ` / `HDMI 1`         |        |       |
+| # | Check | Result | Notes |
+| --- | PASS AND ALL GOOD, AND ACTUALLY KEEP THE TALLEY PREWSET, NO HARM | ------ | ----- |
+| P17 | Tally button text still reads `HDMI` / `1` on two lines | | |
+| P18 | Freeze button text still reads `FRZ` / `HDMI 1` | | |
 
 ---
 
@@ -366,14 +373,14 @@ there is time on the day, this is the highest-value thing to capture.
 
 `030207` is a fade-**in-progress** flag, not the engaged state — confirmed by capture: six FTB
 presses produced twelve transitions, 00→01 while each fade ran and back to 00 once it settled,
-whether the result was black or live. The steady state lives at an address not yet identified.
+whether the result was black or live. The steady state lives at an address not yet identified. CONFIRMED ONLY SHOWS IN PROGRESS
 
-| #   | Step                                                                   | Result | Notes |
-| --- | ---------------------------------------------------------------------- | ------ | ----- |
-| G1  | Engage FTB and let it **settle** (output fully black, no fade running) |        |       |
-| G2  | Send `RQH:030200,000030;` via `raw_command` and capture the reply      |        |       |
-| G3  | Diff against the FTB-off block already captured (see `working_doc.md`) |        |       |
-| G4  | Candidate address for the engaged state:                               |        |       |
+| # | Step | Result | Notes |
+| --- | ---------------------------------------------------------------------- | ------ | NO RESPONCE OR FB |
+| G1 | Engage FTB and let it **settle** (output fully black, no fade running) | | |
+| G2 | Send `RQH:030200,000030;` via `raw_command` and capture the reply | | |
+| G3 | Diff against the FTB-off block already captured (see `working_doc.md`) | | |
+| G4 | Candidate address for the engaged state: | | |
 
 Fallback approaches are recorded in `working_doc.md`.
 
@@ -394,14 +401,14 @@ and the device answers `0A0504,01` or `0A0504,00` within ~60ms every time.
 the device's own `0A0504` push and only closes what the device says is open. That gate is the thing
 most worth testing here.
 
-| #   | Step                                                                                      | Result | Notes |
-| --- | ----------------------------------------------------------------------------------------- | ------ | ----- |
-| G2a | `capture_image` into a spare slot. Still is written **and** screen clears unaided         |        |       |
-| G2b | Log still shows `Image capture complete`                                                  |        |       |
-| G2c | `capture_screen_close` with **no** screen showing. Nothing happens — it must not open one |        |       |
-| G2d | Open the screen from the panel, then `capture_screen_close`. It closes                    |        |       |
-| G2e | `capture_mode_toggle` twice. Opens, then closes                                           |        |       |
-| G2f | Repeat G2a three times back to back. No drift, no screen left behind                      |        |       |
+| # | PASS Step | Result | Notes |
+| --- | ----------------------------------------------------------------------------------------- | ALL PASSED, AND NOTHING A THROUGH AT IT EVEN OTHER MENUS BLOCKED IT | ----- |
+| G2a | `capture_image` into a spare slot. Still is written **and** screen clears unaided | | |
+| G2b | Log still shows `Image capture complete` | | |
+| G2c | `capture_screen_close` with **no** screen showing. Nothing happens — it must not open one | | |
+| G2d | Open the screen from the panel, then `capture_screen_close`. It closes | | |
+| G2e | `capture_mode_toggle` twice. Opens, then closes | | |
+| G2f | Repeat G2a three times back to back. No drift, no screen left behind | | |
 
 G2c is the important one. If it opens the screen, the state gate is not working and the action is
 dangerous on a live desk.
@@ -415,24 +422,24 @@ switch is to capture RCS driving that same control.
 
 ## H. Soak
 
-| #   | Check                                                                     | Result | Notes |
-| --- | ------------------------------------------------------------------------- | ------ | ----- |
-| H1  | Leave connected 30+ min idle. Still OK, no runaway reconnects in the log. |        |       |
-| H2  | Feedbacks still accurate after the soak.                                  |        |       |
-| H3  | No memory or log growth that looks wrong.                                 |        |       |
-| H4  | Debug logging off — no leftover verbose output.                           |        |       |
+| # | Check | Result | Notes |
+| --- | PASS, WENT FOR COFFEE AND STILL GOOD | ------ | ----- |
+| H1 | Leave connected 30+ min idle. Still OK, no runaway reconnects in the log. | | |
+| H2 | Feedbacks still accurate after the soak. | | |
+| H3 | No memory or log growth that looks wrong. | | |
+| H4 | Debug logging off — no leftover verbose output. | | |
 
 ---
 
 ## Verdict
 
-| Question                                           | Answer |
-| -------------------------------------------------- | ------ |
-| Is 0.8.1 safe to merge to `main`?                  |        |
-| Did the 0.7.0 password migration work (A1)?        |        |
-| Is Image Capture fixed, and does the screen clear? |        |
-| Any regression against 0.6.5?                      |        |
-| Anything that needs fixing before a 1.0 attempt?   |        |
-| Tag 0.6.5 and/or 0.8.1 once this passes?           |        |
+| Question                                           | Answer                                             |
+| -------------------------------------------------- | -------------------------------------------------- |
+| Is 0.8.1 safe to merge to `main`?                  | YES, MERGE,                                        |
+| Did the 0.7.0 password migration work (A1)?        | PASS                                               |
+| Is Image Capture fixed, and does the screen clear? | PASS                                               |
+| Any regression against 0.6.5?                      | NO                                                 |
+| Anything that needs fixing before a 1.0 attempt?   | PIP NOTES, BUT CAN BE TEATHING ISSUES SORTED LATER |
+| Tag 0.6.5 and/or 0.8.1 once this passes?           | BUMB RO 0.8.4                                      |
 
 **Summary / next actions**

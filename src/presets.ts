@@ -446,23 +446,24 @@ export function UpdatePresets(self: ModuleInstance): void {
 	presets['stream_record_start'] = {
 		type: 'button',
 		category: 'Stream & Record',
-		name: 'Stream & Record Start',
-		style: { text: 'STREAM\nSTART', size: sz, color: c.white, bgcolor: c.pgm, show_topbar: false },
+		name: 'Record & Stream Start',
+		style: { text: 'REC &\nSTREAM\nSTART', size: sz, color: c.white, bgcolor: c.pgm, show_topbar: false },
 		steps: [{ down: [{ actionId: 'stream_record_start', options: {} }], up: [] }],
 		feedbacks: [{ feedbackId: 'stream_record_active', options: {}, style: { bgcolor: c.pgm_on } }],
 	}
 	presets['stream_record_stop'] = {
 		type: 'button',
 		category: 'Stream & Record',
-		name: 'Stream & Record Stop',
-		style: { text: 'STREAM\nSTOP', size: sz, color: c.white, bgcolor: c.pgm, show_topbar: false },
+		name: 'Record & Stream Stop',
+		style: { text: 'REC &\nSTREAM\nSTOP', size: sz, color: c.white, bgcolor: c.pgm, show_topbar: false },
 		steps: [{ down: [{ actionId: 'stream_record_stop', options: {} }], up: [] }],
 		feedbacks: [{ feedbackId: 'stream_record_active', options: {}, style: { bgcolor: c.pgm_on } }],
 	}
 
 	// ── Image Capture ─────────────────────────────────────────────────────────
 	// Still 1-8 from HDMI In 1 as a starting point; change the source on the button.
-	// A capture takes about 1.5s and overwrites the slot without asking.
+	// A capture takes about 10 seconds and overwrites the slot without asking - most of that
+	// is the 7s hold before the capture screen is dismissed. See cmdCaptureImage.
 	for (let slot = 1; slot <= 8; slot++) {
 		presets[`capture_still_${slot}`] = {
 			type: 'button',

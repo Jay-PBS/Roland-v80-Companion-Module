@@ -8,7 +8,7 @@ Repository: https://github.com/Jay-PBS/Roland-v80-Companion-Module
 
 This module is currently in beta. It has been tested on physical hardware and is provided for evaluation. Use in production environments is at the operator's own discretion and risk.
 
-Current version: 0.6.5
+Current version: 0.8.4
 
 ---
 
@@ -22,47 +22,47 @@ Current version: 0.6.5
 
 ## Feature Status
 
-| Feature                             | Status                                        |
-| ----------------------------------- | --------------------------------------------- |
-| CUT, AUTO, Fade To Black            | Confirmed working                             |
-| Transition Type Mix and Wipe        | Confirmed working                             |
-| Mix and Wipe Time                   | Confirmed working                             |
-| Wipe Pattern and Direction          | Confirmed working                             |
-| Program Source routing              | Confirmed working                             |
-| Preview Source routing              | Confirmed working                             |
-| Input Assign slots 1 to 8           | Confirmed working                             |
-| AUX 1 and 2 Source routing          | Confirmed working                             |
-| AUX Linked PGM                      | Confirmed working                             |
-| AUX Layer PinP and Key control      | Confirmed working                             |
-| Split 1 and 2                       | Confirmed working                             |
-| PinP and Key Source                 | Confirmed working                             |
-| PinP PGM and PVW On, Off, Toggle    | Confirmed working                             |
-| PinP Window Position H and V        | Confirmed working                             |
-| PinP Window Size                    | Confirmed working                             |
-| PinP Window Cropping H and V        | Confirmed working                             |
-| PinP View Position H and V          | Confirmed working                             |
-| PinP View Zoom                      | Confirmed working                             |
-| DSK Source, PGM, PVW                | Confirmed working                             |
-| Audio Input Mute all channels       | Confirmed working                             |
-| Main Bus Mute                       | Confirmed working                             |
-| AUX Bus Mute                        | Confirmed working                             |
-| Feedback for all polled state       | Confirmed working                             |
-| Test Patterns 12 patterns           | Confirmed working                             |
-| Fade To Black feedback              | Confirmed working — added in 0.6.0            |
-| Wipe Pattern and Direction feedback | Confirmed working — added in 0.6.0            |
-| AUX Linked PGM feedback             | Confirmed working — added in 0.6.0            |
-| AUX Linked PGM per-bus follow       | Confirmed working — added in 0.6.3            |
-| AUX Linked PGM presets              | Confirmed working — added in 0.6.3            |
-| Per-channel audio mute variables    | Confirmed working — added in 0.6.0            |
-| Per-input freeze variables          | Confirmed working — added in 0.6.0            |
-| Audio mute feedback via panel       | Confirmed working                             |
-| Transition type feedback via panel  | Partial                                       |
-| Stream & Record start/stop          | Confirmed working — added in 0.6.4            |
-| Stream & Record state feedback      | Fixed in 0.6.5 — awaiting verification        |
-| Image Capture to Still              | Confirmed working — added in 0.6.4            |
-| Capture Mode open/close             | New in 0.8.1 — `0B002A`, confirmed by capture |
-| Tally feedbacks                     | Confirmed working — added in 0.6.3            |
-| Audio level control                 | Mute only by design — raise a GitHub issue    |
+| Feature                             | Status                                     |
+| ----------------------------------- | ------------------------------------------ |
+| CUT, AUTO, Fade To Black            | Confirmed working                          |
+| Transition Type Mix and Wipe        | Confirmed working                          |
+| Mix and Wipe Time                   | Confirmed working                          |
+| Wipe Pattern and Direction          | Confirmed working                          |
+| Program Source routing              | Confirmed working                          |
+| Preview Source routing              | Confirmed working                          |
+| Input Assign slots 1 to 8           | Confirmed working                          |
+| AUX 1 and 2 Source routing          | Confirmed working                          |
+| AUX Linked PGM                      | Confirmed working                          |
+| AUX Layer PinP and Key control      | Confirmed working                          |
+| Split 1 and 2                       | Confirmed working                          |
+| PinP and Key Source                 | Confirmed working                          |
+| PinP PGM and PVW On, Off, Toggle    | Confirmed working                          |
+| PinP Window Position H and V        | **Not working** — no movement, see below   |
+| PinP Window Size                    | Confirmed working                          |
+| PinP Window Cropping H and V        | Confirmed working                          |
+| PinP View Position H and V          | **Not working** — no movement, see below   |
+| PinP View Zoom                      | Confirmed working                          |
+| DSK Source, PGM, PVW                | Confirmed working                          |
+| Audio Input Mute all channels       | Confirmed working                          |
+| Main Bus Mute                       | Confirmed working                          |
+| AUX Bus Mute                        | Confirmed working                          |
+| Feedback for all polled state       | Confirmed working                          |
+| Test Patterns 12 patterns           | Confirmed working                          |
+| Fade To Black feedback              | Confirmed working — added in 0.6.0         |
+| Wipe Pattern and Direction feedback | Confirmed working — added in 0.6.0         |
+| AUX Linked PGM feedback             | Confirmed working — added in 0.6.0         |
+| AUX Linked PGM per-bus follow       | Confirmed working — added in 0.6.3         |
+| AUX Linked PGM presets              | Confirmed working — added in 0.6.3         |
+| Per-channel audio mute variables    | Confirmed working — added in 0.6.0         |
+| Per-input freeze variables          | Confirmed working — added in 0.6.0         |
+| Audio mute feedback via panel       | Confirmed working                          |
+| Transition type feedback via panel  | Partial                                    |
+| Stream & Record start/stop          | Confirmed working — added in 0.6.4         |
+| Stream & Record state feedback      | Confirmed working — verified 2026-09-08    |
+| Image Capture to Still              | Confirmed working — added in 0.6.4         |
+| Capture screen close after capture  | Confirmed working on hardware — 0.8.3      |
+| Tally feedbacks                     | Confirmed working — added in 0.6.3         |
+| Audio level control                 | Mute only by design — raise a GitHub issue |
 
 ---
 
@@ -134,6 +134,8 @@ after a fresh clone run `yarn husky` once to enable it. Without that step commit
 
 ## Known Issues
 
+PinP position does not work. Window Position H and V, and View Position H and V, send their commands but the window does not move, at any value. The four unsigned geometry actions next to them — Window Size, Cropping H and V, and View Zoom — all work, and the addresses and byte encoding both match the control specification exactly, so the cause is not yet understood. This is long-standing rather than new; the only change ever made to those lines was code formatting. Diagnosing it needs a packet capture of the Roland RCS software moving a PinP window.
+
 Fade To Black feedback is unreliable. It lights while the fade is running rather than while Fade To Black is engaged, because it reads a transition-in-progress flag rather than the steady state. Under investigation.
 
 The Stream & Record actions may start a livestream, not only a recording. On the V-80HD the livestream, audio recording and video recording all start and stop together and cannot be triggered separately; only whether each one occurs is separately configurable, and only on the unit itself under Menu, Stream&Record. If Live Streaming is enabled there, the module's Start action begins a livestream — the unit supports RTMP and RTMPS to YouTube Live, Facebook Live and Twitch as well as custom RTMP and SRT destinations. Check the device's Stream&Record settings before assigning this to a button.
@@ -148,13 +150,34 @@ If you want the advanced audio controls, please raise an issue on GitHub (https:
 
 ## Changelog
 
-### 0.8.2 — experimental
+### 0.8.4 — presets and wording
+
+- **The Stream & Record buttons now read `REC & STREAM`** rather than `STREAM`, so it is obvious from the button face that recording starts alongside the stream. One trigger drives both on this unit
+- `Capture Image to Still` is described as taking 10 seconds rather than 1.5, which is what it now takes — most of it is the 7-second hold before the capture screen is dismissed
+
+No protocol changes.
+
+### 0.8.3 — confirmed working on hardware, 2026-09-08
+
+**The 0.8.x line and the whole 0.7.0 code review have now been tested on a V-80HD.** The run passed with no regressions against 0.6.5: the password migration worked with no re-entry, every action, feedback, variable and preset category checked out, and a 30-minute soak was clean. Four PinP geometry actions failed and are recorded in `working_doc.md` — Window Position H/V and View Position H/V do nothing at any value. They are a pre-existing fault, not a regression; the only change ever made to those lines was prettier reformatting.
+
+- **Image Capture now clears its own screen, confirmed on hardware.** Exiting the capture function is two presses of `[CAPTURE IMAGE]` 300ms apart, ungated, after a 7-second wait
+
+What it took, in case it ever regresses: the address had to be right (`0B002A`), the wait had to be long (7s, not 0.5s or 1.2s), the gate had to go, **and** it had to be two presses rather than one. Each of those was necessary on its own; 0.8.0 through 0.8.2 each had one of them wrong.
+
+Why the gate went: `cmdCloseCaptureScreen()` only fired if the device had pushed `0A0504,01`, which happens when the screen is _toggled_. The module's own capture sequence gets `04`/`08`/`0A` back instead, so the close was almost certainly never firing at all in 0.8.1 or 0.8.2 — which is consistent with 1200ms and 7000ms behaving identically on hardware. One press was not enough either, so the screen left behind by a capture is evidently not the same single toggle RCS drives from idle.
+
+The capture sequence now logs whether it fired and what the device reported the screen as, so the next run diagnoses itself without another packet capture.
+
+The standalone `Capture Mode – close if open` action keeps its gate — that one is driven by hand, where the toggle behaviour is exactly what was confirmed by capture.
+
+### 0.8.2 — superseded by 0.8.3
 
 - **Capture screen close now waits 7 seconds**, up from 1.2s. Tested on hardware: the device holds the capture screen far longer than its own "capture done" reply suggests, and closing early either broke the capture (0.8.0, 500ms) or did nothing useful (0.8.1, 1200ms)
 
 The close is still gated on the device's reported state, so it cannot open a screen that is shut. Because the wait is long, starting a second capture within 7 seconds can let the first close land on the second capture's screen — the gate keeps that to a closed screen rather than an opened one, and firing captures that fast is not a real workflow.
 
-### 0.8.1 — experimental, awaiting hardware test
+### 0.8.1 — superseded by 0.8.3
 
 Fixes 0.8.0, which broke Image Capture on hardware. Builds on 0.7.0, also untested. Read both sets of notes below.
 
@@ -173,11 +196,11 @@ Two claims made in the 0.8.0 notes were wrong and are withdrawn:
 - **The device does not report physical panel presses.** Ten panel presses of `[CAPTURE IMAGE]` produced no `0B0400` frames at all — only `0A0504` state. The `0B0400` frames in the older logs are something else, so "press the button with Wireshark running and read the address" does not work
 - **One press, not two.** RCS sends a single press/release pair per action. The doubled send in 0.8.0 solved a problem that did not exist
 
-### 0.7.0 — experimental, awaiting hardware test
+### 0.7.0 — code review, tested on hardware in the 0.8.3 run
 
-Everything in this release comes from the code review in `CODE_REVIEW.md`. It has passed lint, types, formatting, the manifest check and a set of scripted behaviour comparisons against 0.6.5, but **it has not yet been tested against a V-80HD**.
+Everything in this release comes from the code review in `CODE_REVIEW.md`. It shipped untested and was finally put on hardware as part of the 0.8.3 run on 2026-09-08, where it passed.
 
-Behaviour changes to check on hardware:
+Behaviour changes, all since confirmed:
 
 - **The device password now lives in Companion's secrets store** rather than the plaintext config store, where it was previously saved next to the IP address and sent back to the web UI in the clear. An upgrade script moves an existing password across automatically, so no re-entry should be needed. This is the change most worth watching on first connect
 - **Commands are refused until authentication completes.** Pressing a button during the "Connecting — Authenticating" window previously wrote a command into a session still waiting for the password, risking the device's brute-force lockout. Such presses are now dropped with a warning in the log

@@ -21,6 +21,39 @@ Last reviewed: 2026-09-04 · Working version: 0.6.5
 
 ---
 
+## Failures from the 0.8.3 hardware run — 2026-09-08
+
+Full sheet in `TESTING.md`. Verdict was merge: no regressions against 0.6.5, soak passed, image
+capture and the whole of section G2 passed. These are what did not.
+
+- **PinP position does nothing — four actions, all of them (C7).** `pinp_window_position_h`,
+  `pinp_window_position_v`, `pinp_view_position_h`, `pinp_view_position_v`. Nothing moves at any
+  value, positive or negative. The four unsigned neighbours all pass: Size (`09`), Cropping H
+  (`0B`), Cropping V (`0D`), View Zoom (`1C`).
+
+  Everything checks out on paper, which is why this needs observation rather than another guess:
+  the addresses are right (anchored on Size working at `09`, the params before it fill `00`-`08`
+  exactly, putting Position H at `05` and V at `07`); the encoder emits the spec's own printed
+  bytes (`-100%` -> `78H 18H`, `+100%` -> `07H 68H`); the action option ranges permit negatives.
+  **Not a regression** — `git log -L 985,1020:src/api.ts` shows prettier reformatting as the only
+  change ever made to those lines, so this has been broken since at least 0.6.5. Size passing
+  proves the layer was visible and writable, so it is not a "nothing on air" artefact.
+
+  **Next step: capture RCS dragging a PinP window** and read what it really sends. Same method
+  that identified `0B002A` in a single recording — tshark against `10.100.20.229` on Ethernet 4.
+
+- **A corrected password is not retried (A4).** After an auth failure, saving the right password
+  leaves the connection sitting at failed; it only recovers if the connection is toggled off and
+  on. A saved config change should force a reconnect.
+- **`sync_now` gives the operator nothing (C67).** No feedback, no log line, so there is no way to
+  tell whether it did anything. A log line at minimum.
+- **Split actions are in an odd order in the actions list (C5).** Cosmetic.
+- **A5 and A7 are untestable, not passing.** The auth window is under 100ms, so no button can be
+  pressed inside it by hand. They need a different method or should be marked NA.
+- **FTB section G could not be attempted.** `RQH:030200,000030;` returned nothing at all, so the
+  block-diff approach does not work as written. Confirmed again that the feedback only reports
+  fade-in-progress. The engaged-state address remains unidentified.
+
 ## Pending release decisions
 
 - **Merged and pushed 2026-09-04.** `main` is at `d080ed1` (0.6.5) on `origin`, fast-forwarded from `012569f`, bringing in the bitfocus upstream sync, the doc rewrite, the prettier cleanup and the whole 0.6.5 protocol correction. The `chore/upstream-sync-0.6.1` branch is now redundant and can be deleted whenever convenient.
@@ -296,7 +329,7 @@ actually be. Nothing to do until he says.
 - **Source and still names are readable.** `0220xx` returns 8-byte ASCII: `022000` = "HDMI 1", `022400` = "SDI 1", `022800` onward = "Still 1", "Still 2" ... So dropdowns and button labels could carry the operator's own names instead of fixed text. Worth doing; needs a decoder for ASCII payloads, which `parseDth` cannot do today (it truncates to the first byte).
 - **The device does push state unprompted, extensively.** After every capture it dumps its entire parameter set — `000000` through `600xxx`, bracketed by `0E0001,01` and `0E0002`. That answers the long-standing "does it push without polling" question: it does, but as a full reload rather than per-parameter deltas. Whether that could replace or reduce the 500ms poll is worth investigating, though it would need the multi-byte parser above.
 - **`0B00xx` panel switches work on the V-80HD.** RCS sends `0B002A` press/release pairs (`01` then `00`, ~10ms apart) throughout. Function unidentified, but it confirms the press/release mechanism the V-160HD uses, which is the route to assignable pads if one is ever needed.
-- **`0B002A` is the `[CAPTURE IMAGE]` panel switch — identified 2026-09-08.** Packet capture against RCS, 16 open/close cycles: the same press/release pair both opens and closes the still-capture screen, device answers `0A0504,01`/`,00` within ~60ms. It is a toggle, so it must only be sent gated on the pushed `0A0504` state. This closes the earlier "function unidentified" note above. **Two things it disproved:** the device does _not_ echo physical panel presses (ten panel presses, zero `0B0400` frames — whatever `0B0400` is in the old logs, it is not that), and RCS sends a _single_ press/release pair per action, not two. **Still open: there is no known EXIT or MENU command.** Mapping any other panel switch means capturing RCS driving that control. Captures kept at `scratchpad/v80_exit_hunt.pcapng` and `v80_toggle_test.pcapng`.
+- **`0B002A` is the `[CAPTURE IMAGE]` panel switch — identified 2026-09-08 by packet capture against RCS, 16 open/close cycles.** Closing the screen a capture leaves behind needs **two** presses 300ms apart, ungated, **7 seconds** after the capture executes. Confirmed working in 0.8.3. All four of those had to be right at once, which is why 0.8.0-0.8.2 each failed differently. Note the gate on the pushed `0A0504` `00`/`01` state is wrong for this path — our own capture sequence gets `04`/`08`/`0A` back, never `01` — but it is still correct for the hand-driven `capture_screen_close` action. **Two things this disproved:** the device does _not_ echo physical panel presses (ten presses, zero `0B0400` frames), and RCS sends a _single_ press/release pair per action. **Still open: no known EXIT or MENU command.** Captures kept at `scratchpad/v80_exit_hunt.pcapng` and `v80_toggle_test.pcapng`.
 - **Audio level meters are pushed unprompted at `0F0000`, `0F0300` and `0F0600`** — spotted 2026-09-08 in `scratchpad/v80_toggle_test.pcapng` around t=227s. 36-byte payloads, values in L/R pairs, `7F` = silence and lower = louder (matching the control guide's -INF..0dB encoding). Three registers, probably Main / AUX 1 / AUX 2. They arrive only while audio is present, no polling. Would give real level meters as Companion variables, but needs the multi-byte payload parser `parseDth` still lacks. Not started.
 - **`0E0000`** is a 1 Hz keepalive both directions; **`030604`** a 1 Hz clock counter. Neither is state.
 
