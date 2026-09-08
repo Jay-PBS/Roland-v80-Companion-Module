@@ -1,12 +1,15 @@
-# Hardware Test Sheet — 0.7.0
+# Hardware Test Sheet — 0.8.2
 
-**Build:** `roland-v80hd-0.7.0.tgz` · **Branch:** `exp/code-review-0.7.0` @ `e2f62af` · **Base:** 0.6.5 (`main` @ `68787f8`)
-**Tester:** Jay · **Date:** \***\*\_\_\_\*\*** · **Device firmware:** \***\*\_\_\_\*\*** · **Companion version:** \***\*\_\_\_\*\***
+**Build:** `roland-v80hd-0.8.2.tgz` · **Branch:** `exp/code-review-0.7.0` @ `8cf5d5e` + uncommitted 0.8.1 changes
+**Base:** 0.6.5 (`main` @ `68787f8`)
+**Tester:** Jay · **Date:** 2026-09-08 · **Device firmware:** \***\*\_\_\_\*\*** · **Companion version:** \***\*\_\_\_\*\***
 
-0.7.0 is the code review branch — see `CODE_REVIEW.md` §0 for what changed and why. Nothing in it has
-been near a V-80HD. Every definition was diffed against the 0.6.5 build and 108 presets, 67 actions
-and 28 of 29 feedbacks are byte-identical, so most of this sheet is regression cover rather than new
-ground. **Section A is where the real risk is** — do it first and stop if it fails.
+0.8.1 is the code review branch plus the capture-screen fix — see `CODE_REVIEW.md` §0 for the review
+changes and why. The review changes have still not been near a V-80HD; 0.8.0 was tried and broke
+Image Capture, which 0.8.1 fixes. The 0.7.0 definitions were diffed against the 0.6.5 build and 108
+presets, 67 actions and 28 of 29 feedbacks came out byte-identical, so most of this sheet is
+regression cover rather than new ground. 0.8.1 adds two actions on top, taking the total to 70. **Section A is where the real risk is** — do it first and stop if it fails. **Section G2 is the new
+work**, and C66 is the regression that 0.8.0 caused.
 
 ## How to use this sheet
 
@@ -18,22 +21,32 @@ per the working-doc convention. Leave this file whole as the record of the run.
 
 **Setup before starting**
 
-1. Install `roland-v80hd-0.7.0.tgz` into Companion. Confirm the version shows **0.7.0**, not 0.6.5 —
+1. Install `roland-v80hd-0.8.2.tgz` into Companion. Confirm the version shows **0.8.2**, not 0.6.5 —
    Companion caches by version, and a stale 0.6.5 would make the whole sheet meaningless.
 2. Do **not** delete the existing connection. A1 depends on an existing 0.6.5 connection with a saved
    password being upgraded in place.
-3. Turn on **Enable debug logging** in the connection config for section A, then turn it back off.
+   - **Caveat:** 0.8.0 was already installed over it. If that upgrade already moved the password into
+     the secrets store, A1 has effectively been run once and will pass trivially. Record that in the
+     A1 note rather than reporting a clean pass.
+3. **Delete any button built on `menu_exit`.** That action existed only in 0.8.0 and is gone in 0.8.1,
+   so a button using it will show as an unknown action. Repoint it at `capture_screen_close` if you
+   want to keep it.
+4. Turn on **Enable debug logging** in the connection config for section A, then turn it back off.
+
+**Suggested order for a full run:** A → B → G2 → C → D → E → F → G → H. A gates everything, and G2 is
+the only genuinely new code, so both are worth doing while you are fresh.
 
 ---
 
 ## A. Gate — the 0.7.0 changes that could stop it working
 
-These three are the only changes that alter what goes on the wire. If A1 fails, nothing else on the
-sheet is testable.
+These ship in 0.8.1 and have never been tested on hardware. They are 0.7.0 work, not 0.8.x work.
+
+If A1 fails, nothing else on the sheet is testable.
 
 | #   | Area                | What should happen                                                                                                                       | How to test                                                                                                                     | Result | Notes |
 | --- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------ | ----- |
-| A1  | Password migration  | The existing connection authenticates with **no password re-entry**. The upgrade script moves the saved password into the secrets store. | Install 0.7.0 over the existing 0.6.5 connection. Watch the status go Connecting → Authenticating → OK without touching config. |        |       |
+| A1  | Password migration  | The existing connection authenticates with **no password re-entry**. The upgrade script moves the saved password into the secrets store. | Install 0.8.2 over the existing 0.6.5 connection. Watch the status go Connecting → Authenticating → OK without touching config. |        |       |
 | A2  | Password field type | The config now shows the password as a **secret** field (masked, not echoed back after save).                                            | Open the connection config. Check the field is masked and the rest of the config (IP, port, checkboxes) is intact.              |        |       |
 | A3  | Password re-entry   | Clearing and retyping the password still works.                                                                                          | Blank the password, save (expect auth failure), retype it, save. Should reconnect cleanly.                                      |        |       |
 | A4  | Wrong password      | A wrong password reports "Authentication failed – check password" and does **not** retry into the device lockout.                        | Enter a deliberately wrong password. Watch the log. Then restore the correct one. _Do this once only._                          |        |       |
@@ -59,7 +72,7 @@ sheet is testable.
 
 ## C. Actions
 
-All 68. Where an action has a dropdown, test a representative value or two rather than every entry —
+All 70. Where an action has a dropdown, test a representative value or two rather than every entry —
 the option lists were verified identical to 0.6.5 in software.
 
 ### C1. Transitions
@@ -215,15 +228,17 @@ Input freeze covers HDMI 1–4 and SDI 1–4. Test at least one HDMI and one SDI
 
 ### C11. Test patterns, Stream & Record, Capture, Utility
 
-| #   | Action id             | Name                              | Result | Notes |
-| --- | --------------------- | --------------------------------- | ------ | ----- |
-| 62  | `test_pattern`        | Test Pattern All Outputs (toggle) |        |       |
-| 63  | `test_pattern_off`    | Test Pattern Off                  |        |       |
-| 64  | `stream_record_start` | Stream & Record – Start           |        |       |
-| 65  | `stream_record_stop`  | Stream & Record – Stop            |        |       |
-| 66  | `capture_image`       | Capture Image to Still            |        |       |
-| 67  | `sync_now`            | Sync state now                    |        |       |
-| 68  | `raw_command`         | Send raw LAN command              |        |       |
+| #   | Action id              | Name                              | Result | Notes                                                 |
+| --- | ---------------------- | --------------------------------- | ------ | ----------------------------------------------------- |
+| 62  | `test_pattern`         | Test Pattern All Outputs (toggle) |        |                                                       |
+| 63  | `test_pattern_off`     | Test Pattern Off                  |        |                                                       |
+| 64  | `stream_record_start`  | Stream & Record – Start           |        |                                                       |
+| 65  | `stream_record_stop`   | Stream & Record – Stop            |        |                                                       |
+| 66  | `capture_image`        | Capture Image to Still            |        | **0.8.0 broke this.** Still written AND screen clears |
+| 67  | `sync_now`             | Sync state now                    |        |                                                       |
+| 68  | `raw_command`          | Send raw LAN command              |        |                                                       |
+| 69  | `capture_mode_toggle`  | Capture Mode (toggle)             |        |                                                       |
+| 70  | `capture_screen_close` | Capture Mode – close if open      |        | Must NOT open the screen — see G2c                    |
 
 ⚠️ **64/65 will start a livestream** if Live Streaming is enabled on the unit. Check
 Menu → Stream&Record on the device before pressing.
@@ -364,6 +379,40 @@ Fallback approaches are recorded in `working_doc.md`.
 
 ---
 
+## G2. The capture screen — `0B002A`
+
+**The new work in 0.8.1.** Image capture left its screen up on the monitor with no documented way to
+dismiss it. There is no EXIT command: the LAN interface is only `DTH`/`RQH`/`VER` over the SysEx map,
+and Panel Lock (`020300`–`020347`) is lock state rather than presses — it omits `[MENU]`, `[EXIT]`,
+`[ENTER]` and the `[VALUE]` knob entirely.
+
+`0B002A` is the `[CAPTURE IMAGE]` panel switch, confirmed by packet capture against RCS on
+2026-09-08 over 16 open/close cycles — RCS sends the same press/release pair to open and to close,
+and the device answers `0A0504,01` or `0A0504,00` within ~60ms every time.
+
+**It is a toggle, so sending it blind opens the screen.** The module therefore tracks the screen from
+the device's own `0A0504` push and only closes what the device says is open. That gate is the thing
+most worth testing here.
+
+| #   | Step                                                                                      | Result | Notes |
+| --- | ----------------------------------------------------------------------------------------- | ------ | ----- |
+| G2a | `capture_image` into a spare slot. Still is written **and** screen clears unaided         |        |       |
+| G2b | Log still shows `Image capture complete`                                                  |        |       |
+| G2c | `capture_screen_close` with **no** screen showing. Nothing happens — it must not open one |        |       |
+| G2d | Open the screen from the panel, then `capture_screen_close`. It closes                    |        |       |
+| G2e | `capture_mode_toggle` twice. Opens, then closes                                           |        |       |
+| G2f | Repeat G2a three times back to back. No drift, no screen left behind                      |        |       |
+
+G2c is the important one. If it opens the screen, the state gate is not working and the action is
+dangerous on a live desk.
+
+Still unknown, and **not** solved by this: a general menu dismissal. `[MENU]`, `[EXIT]`, `[ENTER]` and
+the `[VALUE]` knob have no known remote equivalent. Note that the device does **not** echo physical
+panel presses — ten panel presses produced no `0B0400` frames — so the only way to map another panel
+switch is to capture RCS driving that same control.
+
+---
+
 ## H. Soak
 
 | #   | Check                                                                     | Result | Notes |
@@ -377,10 +426,13 @@ Fallback approaches are recorded in `working_doc.md`.
 
 ## Verdict
 
-| Question                                         | Answer |
-| ------------------------------------------------ | ------ |
-| Is 0.7.0 safe to merge to `main`?                |        |
-| Any regression against 0.6.5?                    |        |
-| Anything that needs fixing before a 1.0 attempt? |        |
+| Question                                           | Answer |
+| -------------------------------------------------- | ------ |
+| Is 0.8.1 safe to merge to `main`?                  |        |
+| Did the 0.7.0 password migration work (A1)?        |        |
+| Is Image Capture fixed, and does the screen clear? |        |
+| Any regression against 0.6.5?                      |        |
+| Anything that needs fixing before a 1.0 attempt?   |        |
+| Tag 0.6.5 and/or 0.8.1 once this passes?           |        |
 
 **Summary / next actions**

@@ -22,46 +22,47 @@ Current version: 0.6.5
 
 ## Feature Status
 
-| Feature                             | Status                                     |
-| ----------------------------------- | ------------------------------------------ |
-| CUT, AUTO, Fade To Black            | Confirmed working                          |
-| Transition Type Mix and Wipe        | Confirmed working                          |
-| Mix and Wipe Time                   | Confirmed working                          |
-| Wipe Pattern and Direction          | Confirmed working                          |
-| Program Source routing              | Confirmed working                          |
-| Preview Source routing              | Confirmed working                          |
-| Input Assign slots 1 to 8           | Confirmed working                          |
-| AUX 1 and 2 Source routing          | Confirmed working                          |
-| AUX Linked PGM                      | Confirmed working                          |
-| AUX Layer PinP and Key control      | Confirmed working                          |
-| Split 1 and 2                       | Confirmed working                          |
-| PinP and Key Source                 | Confirmed working                          |
-| PinP PGM and PVW On, Off, Toggle    | Confirmed working                          |
-| PinP Window Position H and V        | Confirmed working                          |
-| PinP Window Size                    | Confirmed working                          |
-| PinP Window Cropping H and V        | Confirmed working                          |
-| PinP View Position H and V          | Confirmed working                          |
-| PinP View Zoom                      | Confirmed working                          |
-| DSK Source, PGM, PVW                | Confirmed working                          |
-| Audio Input Mute all channels       | Confirmed working                          |
-| Main Bus Mute                       | Confirmed working                          |
-| AUX Bus Mute                        | Confirmed working                          |
-| Feedback for all polled state       | Confirmed working                          |
-| Test Patterns 12 patterns           | Confirmed working                          |
-| Fade To Black feedback              | Confirmed working — added in 0.6.0         |
-| Wipe Pattern and Direction feedback | Confirmed working — added in 0.6.0         |
-| AUX Linked PGM feedback             | Confirmed working — added in 0.6.0         |
-| AUX Linked PGM per-bus follow       | Confirmed working — added in 0.6.3         |
-| AUX Linked PGM presets              | Confirmed working — added in 0.6.3         |
-| Per-channel audio mute variables    | Confirmed working — added in 0.6.0         |
-| Per-input freeze variables          | Confirmed working — added in 0.6.0         |
-| Audio mute feedback via panel       | Confirmed working                          |
-| Transition type feedback via panel  | Partial                                    |
-| Stream & Record start/stop          | Confirmed working — added in 0.6.4         |
-| Stream & Record state feedback      | Fixed in 0.6.5 — awaiting verification     |
-| Image Capture to Still              | Confirmed working — added in 0.6.4         |
-| Tally feedbacks                     | Confirmed working — added in 0.6.3         |
-| Audio level control                 | Mute only by design — raise a GitHub issue |
+| Feature                             | Status                                        |
+| ----------------------------------- | --------------------------------------------- |
+| CUT, AUTO, Fade To Black            | Confirmed working                             |
+| Transition Type Mix and Wipe        | Confirmed working                             |
+| Mix and Wipe Time                   | Confirmed working                             |
+| Wipe Pattern and Direction          | Confirmed working                             |
+| Program Source routing              | Confirmed working                             |
+| Preview Source routing              | Confirmed working                             |
+| Input Assign slots 1 to 8           | Confirmed working                             |
+| AUX 1 and 2 Source routing          | Confirmed working                             |
+| AUX Linked PGM                      | Confirmed working                             |
+| AUX Layer PinP and Key control      | Confirmed working                             |
+| Split 1 and 2                       | Confirmed working                             |
+| PinP and Key Source                 | Confirmed working                             |
+| PinP PGM and PVW On, Off, Toggle    | Confirmed working                             |
+| PinP Window Position H and V        | Confirmed working                             |
+| PinP Window Size                    | Confirmed working                             |
+| PinP Window Cropping H and V        | Confirmed working                             |
+| PinP View Position H and V          | Confirmed working                             |
+| PinP View Zoom                      | Confirmed working                             |
+| DSK Source, PGM, PVW                | Confirmed working                             |
+| Audio Input Mute all channels       | Confirmed working                             |
+| Main Bus Mute                       | Confirmed working                             |
+| AUX Bus Mute                        | Confirmed working                             |
+| Feedback for all polled state       | Confirmed working                             |
+| Test Patterns 12 patterns           | Confirmed working                             |
+| Fade To Black feedback              | Confirmed working — added in 0.6.0            |
+| Wipe Pattern and Direction feedback | Confirmed working — added in 0.6.0            |
+| AUX Linked PGM feedback             | Confirmed working — added in 0.6.0            |
+| AUX Linked PGM per-bus follow       | Confirmed working — added in 0.6.3            |
+| AUX Linked PGM presets              | Confirmed working — added in 0.6.3            |
+| Per-channel audio mute variables    | Confirmed working — added in 0.6.0            |
+| Per-input freeze variables          | Confirmed working — added in 0.6.0            |
+| Audio mute feedback via panel       | Confirmed working                             |
+| Transition type feedback via panel  | Partial                                       |
+| Stream & Record start/stop          | Confirmed working — added in 0.6.4            |
+| Stream & Record state feedback      | Fixed in 0.6.5 — awaiting verification        |
+| Image Capture to Still              | Confirmed working — added in 0.6.4            |
+| Capture Mode open/close             | New in 0.8.1 — `0B002A`, confirmed by capture |
+| Tally feedbacks                     | Confirmed working — added in 0.6.3            |
+| Audio level control                 | Mute only by design — raise a GitHub issue    |
 
 ---
 
@@ -146,6 +147,31 @@ If you want the advanced audio controls, please raise an issue on GitHub (https:
 ---
 
 ## Changelog
+
+### 0.8.2 — experimental
+
+- **Capture screen close now waits 7 seconds**, up from 1.2s. Tested on hardware: the device holds the capture screen far longer than its own "capture done" reply suggests, and closing early either broke the capture (0.8.0, 500ms) or did nothing useful (0.8.1, 1200ms)
+
+The close is still gated on the device's reported state, so it cannot open a screen that is shut. Because the wait is long, starting a second capture within 7 seconds can let the first close land on the second capture's screen — the gate keeps that to a closed screen rather than an opened one, and firing captures that fast is not a real workflow.
+
+### 0.8.1 — experimental, awaiting hardware test
+
+Fixes 0.8.0, which broke Image Capture on hardware. Builds on 0.7.0, also untested. Read both sets of notes below.
+
+- **Image Capture works again, and now closes its own screen.** 0.8.0 sent a guessed panel-switch address (`0B003A`) 500ms after the capture executed, which broke the capture outright. The address was wrong and the timing was too early
+- **New actions: Capture Mode (toggle) and Capture Mode – close if open.** These work the unit's `[CAPTURE IMAGE]` button
+- **Removed the EXIT action added in 0.8.0.** It did not do what it claimed — see below
+
+**There is no EXIT command, and 0.8.0 was wrong to claim one.** Roland documents no way to work the menu remotely: the LAN interface is only `DTH`/`RQH`/`VER` over the SysEx map, and Panel Lock (`020300`–`020347`) is lock state rather than presses — it omits `[MENU]`, `[EXIT]`, `[ENTER]` and the `[VALUE]` knob entirely. Nothing found since changes that.
+
+What was actually found is narrower and more useful. **`0B002A` is the `[CAPTURE IMAGE]` panel switch**, confirmed by packet capture against RCS on 2026-09-08 over 16 open/close cycles: RCS sends the same press/release pair to both open and close the still-capture screen, and the device answers `0A0504,01` or `0A0504,00` within ~60ms every time. It is a **toggle**, so sending it blind when the screen is shut opens it.
+
+That is why the capture flow gates on state rather than firing it: the module now tracks the screen from the device's own `0A0504` `00`/`01` push, and `Capture Image to Still` closes the screen only if the device says it is up. A capture that leaves no screen behind is left alone, and a screen opened from the panel is still closed correctly.
+
+Two claims made in the 0.8.0 notes were wrong and are withdrawn:
+
+- **The device does not report physical panel presses.** Ten panel presses of `[CAPTURE IMAGE]` produced no `0B0400` frames at all — only `0A0504` state. The `0B0400` frames in the older logs are something else, so "press the button with Wireshark running and read the address" does not work
+- **One press, not two.** RCS sends a single press/release pair per action. The doubled send in 0.8.0 solved a problem that did not exist
 
 ### 0.7.0 — experimental, awaiting hardware test
 

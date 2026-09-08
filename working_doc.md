@@ -10,14 +10,14 @@ Last reviewed: 2026-09-04 · Working version: 0.6.5
 
 ## Build status
 
-| Check                | State                              |
-| -------------------- | ---------------------------------- |
-| `yarn install`       | Passing                            |
-| `yarn build`         | Passing                            |
-| `yarn lint`          | Passing — clean, 0 errors          |
-| `prettier --check .` | Passing                            |
-| `yarn package`       | Passing — `roland-v80hd-0.6.5.tgz` |
-| GitHub Actions       | **Never run** — see below          |
+| Check                | State                                      |
+| -------------------- | ------------------------------------------ |
+| `yarn install`       | Passing                                    |
+| `yarn build`         | Passing                                    |
+| `yarn lint`          | Passing — clean, 0 errors                  |
+| `prettier --check .` | Passing                                    |
+| `yarn package`       | 0.8.1 not yet packaged — awaiting GO BUILD |
+| GitHub Actions       | **Never run** — see below                  |
 
 ---
 
@@ -296,6 +296,8 @@ actually be. Nothing to do until he says.
 - **Source and still names are readable.** `0220xx` returns 8-byte ASCII: `022000` = "HDMI 1", `022400` = "SDI 1", `022800` onward = "Still 1", "Still 2" ... So dropdowns and button labels could carry the operator's own names instead of fixed text. Worth doing; needs a decoder for ASCII payloads, which `parseDth` cannot do today (it truncates to the first byte).
 - **The device does push state unprompted, extensively.** After every capture it dumps its entire parameter set — `000000` through `600xxx`, bracketed by `0E0001,01` and `0E0002`. That answers the long-standing "does it push without polling" question: it does, but as a full reload rather than per-parameter deltas. Whether that could replace or reduce the 500ms poll is worth investigating, though it would need the multi-byte parser above.
 - **`0B00xx` panel switches work on the V-80HD.** RCS sends `0B002A` press/release pairs (`01` then `00`, ~10ms apart) throughout. Function unidentified, but it confirms the press/release mechanism the V-160HD uses, which is the route to assignable pads if one is ever needed.
+- **`0B002A` is the `[CAPTURE IMAGE]` panel switch — identified 2026-09-08.** Packet capture against RCS, 16 open/close cycles: the same press/release pair both opens and closes the still-capture screen, device answers `0A0504,01`/`,00` within ~60ms. It is a toggle, so it must only be sent gated on the pushed `0A0504` state. This closes the earlier "function unidentified" note above. **Two things it disproved:** the device does _not_ echo physical panel presses (ten panel presses, zero `0B0400` frames — whatever `0B0400` is in the old logs, it is not that), and RCS sends a _single_ press/release pair per action, not two. **Still open: there is no known EXIT or MENU command.** Mapping any other panel switch means capturing RCS driving that control. Captures kept at `scratchpad/v80_exit_hunt.pcapng` and `v80_toggle_test.pcapng`.
+- **Audio level meters are pushed unprompted at `0F0000`, `0F0300` and `0F0600`** — spotted 2026-09-08 in `scratchpad/v80_toggle_test.pcapng` around t=227s. 36-byte payloads, values in L/R pairs, `7F` = silence and lower = louder (matching the control guide's -INF..0dB encoding). Three registers, probably Main / AUX 1 / AUX 2. They arrive only while audio is present, no polling. Would give real level meters as Companion variables, but needs the multi-byte payload parser `parseDth` still lacks. Not started.
 - **`0E0000`** is a 1 Hz keepalive both directions; **`030604`** a 1 Hz clock counter. Neither is state.
 
 ---

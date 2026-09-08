@@ -58,6 +58,10 @@ export class ModuleInstance extends InstanceBase<ModuleConfig, ModuleSecrets> {
 	// True only while a fade is running. The engaged state is not yet known - see working_doc.
 	public ftbFading = false
 	public freezeActive = false
+	// Whether the still-capture screen is showing. Set only from the device's own 0A0504
+	// 00/01 push, never optimistically - it is the gate that stops a CAPTURE IMAGE toggle
+	// being sent into a closed screen and opening it.
+	public captureModeOpen = false
 	// Stream & Record. streamRecordState is the raw 030800 byte the device pushes:
 	// 02 stopped, 03 stopping, 04 starting, 05 running. Defaults to stopped.
 	public streamRecordState = 0x02

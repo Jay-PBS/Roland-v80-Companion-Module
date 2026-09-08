@@ -34,6 +34,20 @@ export function UpdateActions(self: ModuleInstance): void {
 		cut: { name: 'CUT', options: [], callback: async () => self.api.cmdCut() },
 		auto: { name: 'AUTO', options: [], callback: async () => self.api.cmdAuto() },
 		fade_to_black: { name: 'Fade To Black (tap)', options: [], callback: async () => self.api.cmdFadeToBlack() },
+		capture_mode_toggle: {
+			name: 'Capture Mode (toggle)',
+			description:
+				"Works the unit's [CAPTURE IMAGE] button, opening or closing the still-capture screen. It is a toggle, so it opens the screen if it is shut. Capture Image to Still already closes the screen on its own.",
+			options: [],
+			callback: async () => self.api.cmdToggleCaptureMode(),
+		},
+		capture_screen_close: {
+			name: 'Capture Mode – close if open',
+			description:
+				'Closes the still-capture screen, and does nothing if it is not showing. Safer than the toggle for a blind button press.',
+			options: [],
+			callback: async () => self.api.cmdCloseCaptureScreen(),
+		},
 		set_transition_type: {
 			name: 'Set Transition Type',
 			options: [
