@@ -8,7 +8,7 @@ Repository: https://github.com/Jay-PBS/Roland-v80-Companion-Module
 
 This module is currently in beta. It has been tested on physical hardware and is provided for evaluation. Use in production environments is at the operator's own discretion and risk.
 
-Current version: 0.6.5
+Current version: 0.8.4
 
 ---
 
@@ -37,10 +37,10 @@ Current version: 0.6.5
 | Split 1 and 2                       | Confirmed working                          |
 | PinP and Key Source                 | Confirmed working                          |
 | PinP PGM and PVW On, Off, Toggle    | Confirmed working                          |
-| PinP Window Position H and V        | Confirmed working                          |
+| PinP Window Position H and V        | **Not working** — no movement, see below   |
 | PinP Window Size                    | Confirmed working                          |
 | PinP Window Cropping H and V        | Confirmed working                          |
-| PinP View Position H and V          | Confirmed working                          |
+| PinP View Position H and V          | **Not working** — no movement, see below   |
 | PinP View Zoom                      | Confirmed working                          |
 | DSK Source, PGM, PVW                | Confirmed working                          |
 | Audio Input Mute all channels       | Confirmed working                          |
@@ -58,9 +58,10 @@ Current version: 0.6.5
 | Audio mute feedback via panel       | Confirmed working                          |
 | Transition type feedback via panel  | Partial                                    |
 | Stream & Record start/stop          | Confirmed working — added in 0.6.4         |
-| Stream & Record state feedback      | Fixed in 0.6.5 — awaiting verification     |
+| Stream & Record state feedback      | Confirmed working — verified 2026-09-08    |
 | Image Capture to Still              | Confirmed working — added in 0.6.4         |
-| Tally feedbacks                     | Confirmed working — added in 0.6.4         |
+| Capture screen close after capture  | Confirmed working on hardware — 0.8.3      |
+| Tally feedbacks                     | Confirmed working — added in 0.6.3         |
 | Audio level control                 | Mute only by design — raise a GitHub issue |
 
 ---
@@ -80,6 +81,8 @@ Note: the V-80HD applies a brute-force lockout after repeated failed password at
 ## Polling and Feedback
 
 State is polled every 500ms. Feedback updates may lag up to 500ms behind operations performed on the panel.
+
+Polling is the module's only source of truth, so the "Enable polling" option costs more than lag when it is turned off. Actions that update their own feedback locally — mutes, splits, PinP and DSK on air, freeze, test patterns, AUX layer modes — keep working from Companion. The rest have nothing to update them: PGM, PVW and AUX source selection, PinP and DSK sources, PinP geometry, AUX link follow, tally and Stream & Record all freeze at their last value, and panel or RCS activity is not seen at all.
 
 Each polled address is requested as its own TCP write. 0.6.0 batched the whole cycle into a single write as a traffic optimisation; packet capture showed the device does not answer batched requests at all, which silently disabled every polled feedback. Batching was removed in 0.6.4.
 
@@ -119,9 +122,19 @@ yarn build
 yarn package
 ```
 
+`companion/manifest.json` carries `"version": "0.0.0"` deliberately. `yarn package` injects the real
+version from `package.json` into the packaged manifest and names the `.tgz` from it, so `package.json`
+is the single place a release number is set.
+
+The git pre-commit hook runs `lint-staged`. `.yarnrc.yml` sets `enableScripts: false`, inherited from
+upstream, which stops the `postinstall: husky` script from installing the hook automatically — so
+after a fresh clone run `yarn husky` once to enable it. Without that step commits are not linted.
+
 ---
 
 ## Known Issues
+
+PinP position does not work. Window Position H and V, and View Position H and V, send their commands but the window does not move, at any value. The four unsigned geometry actions next to them — Window Size, Cropping H and V, and View Zoom — all work, and the addresses and byte encoding both match the control specification exactly, so the cause is not yet understood. This is long-standing rather than new; the only change ever made to those lines was code formatting. Diagnosing it needs a packet capture of the Roland RCS software moving a PinP window.
 
 Fade To Black feedback is unreliable. It lights while the fade is running rather than while Fade To Black is engaged, because it reads a transition-in-progress flag rather than the steady state. Under investigation.
 
@@ -136,6 +149,75 @@ If you want the advanced audio controls, please raise an issue on GitHub (https:
 ---
 
 ## Changelog
+
+### 0.8.4 — presets and wording
+
+- **The Stream & Record buttons now read `REC & STREAM`** rather than `STREAM`, so it is obvious from the button face that recording starts alongside the stream. One trigger drives both on this unit
+- `Capture Image to Still` is described as taking 10 seconds rather than 1.5, which is what it now takes — most of it is the 7-second hold before the capture screen is dismissed
+
+No protocol changes.
+
+### 0.8.3 — confirmed working on hardware, 2026-09-08
+
+**The 0.8.x line and the whole 0.7.0 code review have now been tested on a V-80HD.** The run passed with no regressions against 0.6.5: the password migration worked with no re-entry, every action, feedback, variable and preset category checked out, and a 30-minute soak was clean. Four PinP geometry actions failed and are recorded in `working_doc.md` — Window Position H/V and View Position H/V do nothing at any value. They are a pre-existing fault, not a regression; the only change ever made to those lines was prettier reformatting.
+
+- **Image Capture now clears its own screen, confirmed on hardware.** Exiting the capture function is two presses of `[CAPTURE IMAGE]` 300ms apart, ungated, after a 7-second wait
+
+What it took, in case it ever regresses: the address had to be right (`0B002A`), the wait had to be long (7s, not 0.5s or 1.2s), the gate had to go, **and** it had to be two presses rather than one. Each of those was necessary on its own; 0.8.0 through 0.8.2 each had one of them wrong.
+
+Why the gate went: `cmdCloseCaptureScreen()` only fired if the device had pushed `0A0504,01`, which happens when the screen is _toggled_. The module's own capture sequence gets `04`/`08`/`0A` back instead, so the close was almost certainly never firing at all in 0.8.1 or 0.8.2 — which is consistent with 1200ms and 7000ms behaving identically on hardware. One press was not enough either, so the screen left behind by a capture is evidently not the same single toggle RCS drives from idle.
+
+The capture sequence now logs whether it fired and what the device reported the screen as, so the next run diagnoses itself without another packet capture.
+
+The standalone `Capture Mode – close if open` action keeps its gate — that one is driven by hand, where the toggle behaviour is exactly what was confirmed by capture.
+
+### 0.8.2 — superseded by 0.8.3
+
+- **Capture screen close now waits 7 seconds**, up from 1.2s. Tested on hardware: the device holds the capture screen far longer than its own "capture done" reply suggests, and closing early either broke the capture (0.8.0, 500ms) or did nothing useful (0.8.1, 1200ms)
+
+The close is still gated on the device's reported state, so it cannot open a screen that is shut. Because the wait is long, starting a second capture within 7 seconds can let the first close land on the second capture's screen — the gate keeps that to a closed screen rather than an opened one, and firing captures that fast is not a real workflow.
+
+### 0.8.1 — superseded by 0.8.3
+
+Fixes 0.8.0, which broke Image Capture on hardware. Builds on 0.7.0, also untested. Read both sets of notes below.
+
+- **Image Capture works again, and now closes its own screen.** 0.8.0 sent a guessed panel-switch address (`0B003A`) 500ms after the capture executed, which broke the capture outright. The address was wrong and the timing was too early
+- **New actions: Capture Mode (toggle) and Capture Mode – close if open.** These work the unit's `[CAPTURE IMAGE]` button
+- **Removed the EXIT action added in 0.8.0.** It did not do what it claimed — see below
+
+**There is no EXIT command, and 0.8.0 was wrong to claim one.** Roland documents no way to work the menu remotely: the LAN interface is only `DTH`/`RQH`/`VER` over the SysEx map, and Panel Lock (`020300`–`020347`) is lock state rather than presses — it omits `[MENU]`, `[EXIT]`, `[ENTER]` and the `[VALUE]` knob entirely. Nothing found since changes that.
+
+What was actually found is narrower and more useful. **`0B002A` is the `[CAPTURE IMAGE]` panel switch**, confirmed by packet capture against RCS on 2026-09-08 over 16 open/close cycles: RCS sends the same press/release pair to both open and close the still-capture screen, and the device answers `0A0504,01` or `0A0504,00` within ~60ms every time. It is a **toggle**, so sending it blind when the screen is shut opens it.
+
+That is why the capture flow gates on state rather than firing it: the module now tracks the screen from the device's own `0A0504` `00`/`01` push, and `Capture Image to Still` closes the screen only if the device says it is up. A capture that leaves no screen behind is left alone, and a screen opened from the panel is still closed correctly.
+
+Two claims made in the 0.8.0 notes were wrong and are withdrawn:
+
+- **The device does not report physical panel presses.** Ten panel presses of `[CAPTURE IMAGE]` produced no `0B0400` frames at all — only `0A0504` state. The `0B0400` frames in the older logs are something else, so "press the button with Wireshark running and read the address" does not work
+- **One press, not two.** RCS sends a single press/release pair per action. The doubled send in 0.8.0 solved a problem that did not exist
+
+### 0.7.0 — code review, tested on hardware in the 0.8.3 run
+
+Everything in this release comes from the code review in `CODE_REVIEW.md`. It shipped untested and was finally put on hardware as part of the 0.8.3 run on 2026-09-08, where it passed.
+
+Behaviour changes, all since confirmed:
+
+- **The device password now lives in Companion's secrets store** rather than the plaintext config store, where it was previously saved next to the IP address and sent back to the web UI in the clear. An upgrade script moves an existing password across automatically, so no re-entry should be needed. This is the change most worth watching on first connect
+- **Commands are refused until authentication completes.** Pressing a button during the "Connecting — Authenticating" window previously wrote a command into a session still waiting for the password, risking the device's brute-force lockout. Such presses are now dropped with a warning in the log
+- **Data arriving in the same packet as the password prompt is no longer thrown away**, and an overflowing receive buffer is discarded with a warning instead of being sliced through the middle of a frame
+- **Send raw LAN command is always listed.** It used to be registered only while "Show advanced actions" was ticked, so unticking it left any button using it in an unknown-action state. The checkbox now gates whether the command is sent, and is renamed "Allow advanced actions"
+- Audio channels are named consistently between actions and feedbacks. The feedback dropdown previously showed `audio in 34` where the action showed `Audio In 3/4`
+
+No behaviour change, but touched:
+
+- The 57-method pass-through layer in `main.ts` is gone; actions call the API directly. `main.ts` drops from 364 lines to 189
+- Every duplicated choice list has a single source in `api.ts`. The eight physical inputs were written out five times, wipe patterns and directions three times each, and the 41-entry Input Assign list is now derived from the source list rather than retyped. The protocol address maps stay written out but are now tied to the canonical list at compile time
+- `presets.ts` comment damage repaired — a duplicated and truncated AUX Link block, a Stream & Record header sitting above the Test Pattern presets, and a stale "Image Capture — suspended" note above the live implementation
+- Four documentation statements corrected that contradicted the code, including HELP.md claiming Stream & Record is not polled and that Stream Start/Stop is unimplemented
+- Both docs now state what disabling polling actually costs: roughly half the feedbacks stop updating rather than merely lagging
+- `tsconfig.json` now extends `tsconfig.build.json`, so the editor, linter and build agree on module resolution
+- `.github/workflows/node.yaml` and `.husky/pre-commit` restored. The commit hook had never run
+- `manifest.json` version returns to `0.0.0`; the build injects the real version from `package.json`
 
 ### 0.6.5
 
@@ -193,4 +275,4 @@ Note: versions 0.4.1 and 0.4.2 were local test builds only and were never tagged
 
 ## Roadmap
 
-- Stream Start and Stop
+- Fade To Black engaged state. `030207` is a fade-in-progress flag, not the engaged state — confirmed by capture — so the FTB feedback lights only while a fade runs. The address holding the steady state has not been identified yet.

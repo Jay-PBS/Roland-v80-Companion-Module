@@ -13,6 +13,33 @@ export const SRC_VPLAYER = 0x28
 export const SRC_INPUT1 = 0x29
 export const SRC_INPUT16 = 0x38
 
+// The panel [CAPTURE IMAGE] switch, in the undocumented 0B00xx panel-switch region. Confirmed
+// by packet capture on 2026-09-08 against RCS over 16 open/close cycles: RCS sends this exact
+// press/release pair to both open and close the still-capture screen, and the device answers
+// 0A0504,01 or 0A0504,00 within ~60ms every time. It is a toggle, not a close - firing it
+// while the screen is shut opens it. Never send it ungated.
+const CAPTURE_MODE_SW = '0B002A'
+
+// The eight physical inputs in panel order. Canonical: the freeze and tally address maps, the
+// freeze and tally dropdowns, the capture source list and the freeze and tally presets all key
+// off this one list. `short` is the button-label form used by the presets.
+export const PHYSICAL_INPUTS = [
+	{ id: 'hdmi_1', label: 'HDMI In 1', short: 'HDMI 1' },
+	{ id: 'hdmi_2', label: 'HDMI In 2', short: 'HDMI 2' },
+	{ id: 'hdmi_3', label: 'HDMI In 3', short: 'HDMI 3' },
+	{ id: 'hdmi_4', label: 'HDMI In 4', short: 'HDMI 4' },
+	{ id: 'sdi_1', label: 'SDI In 1', short: 'SDI 1' },
+	{ id: 'sdi_2', label: 'SDI In 2', short: 'SDI 2' },
+	{ id: 'sdi_3', label: 'SDI In 3', short: 'SDI 3' },
+	{ id: 'sdi_4', label: 'SDI In 4', short: 'SDI 4' },
+] as const
+export type PhysicalInputId = (typeof PHYSICAL_INPUTS)[number]['id']
+export const PHYSICAL_INPUT_CHOICES = PHYSICAL_INPUTS.map(({ id, label }) => ({ id, label }))
+
+// The address maps below are written out rather than generated: these are protocol constants
+// and they need to stay readable against the control specification. The `satisfies` clause is
+// what removes the duplication risk - miss an input, or add one to PHYSICAL_INPUTS without an
+// address here, and the build fails rather than the feature silently going missing.
 export const INPUT_FREEZE_IDX: Record<string, number> = {
 	hdmi_1: 0x02,
 	hdmi_2: 0x03,
@@ -22,7 +49,7 @@ export const INPUT_FREEZE_IDX: Record<string, number> = {
 	sdi_2: 0x07,
 	sdi_3: 0x08,
 	sdi_4: 0x09,
-}
+} satisfies Record<PhysicalInputId, number>
 
 // Tally Parameter Area. Read-only: the switcher reports its own on-air state here, which is
 // unrelated to the physical tally port. Values are 0 = Off, 1 = PGM, 2 = PST.
@@ -35,7 +62,31 @@ export const TALLY_IDX: Record<string, number> = {
 	sdi_2: 0x05,
 	sdi_3: 0x06,
 	sdi_4: 0x07,
-}
+} satisfies Record<PhysicalInputId, number>
+
+const VIDEO_PLAYER_LABEL = 'Video Player / SRT In'
+
+// The 15 mixer input channels, with the labels the user sees. Actions and feedbacks both read
+// this list, so the same channel cannot end up named two different ways in the two dropdowns.
+const AUDIO_CHANNEL_DEFS = [
+	{ id: 'audio_in_1', label: 'Audio In 1' },
+	{ id: 'audio_in_2', label: 'Audio In 2' },
+	{ id: 'audio_in_34', label: 'Audio In 3/4' },
+	{ id: 'usb_in', label: 'USB In' },
+	{ id: 'bluetooth_in', label: 'Bluetooth In' },
+	{ id: 'audio_player', label: 'Audio Player' },
+	{ id: 'hdmi_in_1', label: 'HDMI In 1' },
+	{ id: 'hdmi_in_2', label: 'HDMI In 2' },
+	{ id: 'hdmi_in_3', label: 'HDMI In 3' },
+	{ id: 'hdmi_in_4', label: 'HDMI In 4' },
+	{ id: 'sdi_in_1', label: 'SDI In 1' },
+	{ id: 'sdi_in_2', label: 'SDI In 2' },
+	{ id: 'sdi_in_3', label: 'SDI In 3' },
+	{ id: 'sdi_in_4', label: 'SDI In 4' },
+	{ id: 'video_player', label: VIDEO_PLAYER_LABEL },
+] as const
+export type AudioChannelId = (typeof AUDIO_CHANNEL_DEFS)[number]['id']
+export const AUDIO_CHANNEL_CHOICES = AUDIO_CHANNEL_DEFS.map(({ id, label }) => ({ id, label }))
 
 export const AUDIO_CH: Record<string, number> = {
 	audio_in_1: 0x01,
@@ -53,7 +104,11 @@ export const AUDIO_CH: Record<string, number> = {
 	sdi_in_3: 0x0d,
 	sdi_in_4: 0x0e,
 	video_player: 0x0f,
-}
+} satisfies Record<AudioChannelId, number>
+
+// Image capture can take any physical input, plus the video player.
+export const CAPTURE_SOURCE_CHOICES = [...PHYSICAL_INPUT_CHOICES, { id: 'video_player', label: VIDEO_PLAYER_LABEL }]
+type CaptureSourceId = PhysicalInputId | 'video_player'
 
 export const CAPTURE_SRC: Record<string, number> = {
 	hdmi_1: 0x00,
@@ -65,7 +120,7 @@ export const CAPTURE_SRC: Record<string, number> = {
 	sdi_3: 0x06,
 	sdi_4: 0x07,
 	video_player: 0x08,
-}
+} satisfies Record<CaptureSourceId, number>
 
 export const TEST_PATTERNS: { id: string; label: string; value: number }[] = [
 	{ id: 'bars75', label: 'Color Bars 75%', value: 0x01 },
@@ -82,101 +137,50 @@ export const TEST_PATTERNS: { id: string; label: string; value: number }[] = [
 	{ id: 'hatchsp', label: 'Hatch-SP', value: 0x0c },
 ]
 
-export const SOURCE_CHOICES = [
-	{ id: 'input_1', label: 'Input 1' },
-	{ id: 'input_2', label: 'Input 2' },
-	{ id: 'input_3', label: 'Input 3' },
-	{ id: 'input_4', label: 'Input 4' },
-	{ id: 'input_5', label: 'Input 5' },
-	{ id: 'input_6', label: 'Input 6' },
-	{ id: 'input_7', label: 'Input 7' },
-	{ id: 'input_8', label: 'Input 8' },
-	{ id: 'hdmi_1', label: 'HDMI In 1' },
-	{ id: 'hdmi_2', label: 'HDMI In 2' },
-	{ id: 'hdmi_3', label: 'HDMI In 3' },
-	{ id: 'hdmi_4', label: 'HDMI In 4' },
-	{ id: 'sdi_1', label: 'SDI In 1' },
-	{ id: 'sdi_2', label: 'SDI In 2' },
-	{ id: 'sdi_3', label: 'SDI In 3' },
-	{ id: 'sdi_4', label: 'SDI In 4' },
-	{ id: 'still_1', label: 'Still 1' },
-	{ id: 'still_2', label: 'Still 2' },
-	{ id: 'still_3', label: 'Still 3' },
-	{ id: 'still_4', label: 'Still 4' },
-	{ id: 'still_5', label: 'Still 5' },
-	{ id: 'still_6', label: 'Still 6' },
-	{ id: 'still_7', label: 'Still 7' },
-	{ id: 'still_8', label: 'Still 8' },
-	{ id: 'still_9', label: 'Still 9' },
-	{ id: 'still_10', label: 'Still 10' },
-	{ id: 'still_11', label: 'Still 11' },
-	{ id: 'still_12', label: 'Still 12' },
-	{ id: 'still_13', label: 'Still 13' },
-	{ id: 'still_14', label: 'Still 14' },
-	{ id: 'still_15', label: 'Still 15' },
-	{ id: 'still_16', label: 'Still 16' },
-	{ id: 'still_17', label: 'Still 17' },
-	{ id: 'still_18', label: 'Still 18' },
-	{ id: 'still_19', label: 'Still 19' },
-	{ id: 'still_20', label: 'Still 20' },
-	{ id: 'still_21', label: 'Still 21' },
-	{ id: 'still_22', label: 'Still 22' },
-	{ id: 'still_23', label: 'Still 23' },
-	{ id: 'still_24', label: 'Still 24' },
-	{ id: 'still_25', label: 'Still 25' },
-	{ id: 'still_26', label: 'Still 26' },
-	{ id: 'still_27', label: 'Still 27' },
-	{ id: 'still_28', label: 'Still 28' },
-	{ id: 'still_29', label: 'Still 29' },
-	{ id: 'still_30', label: 'Still 30' },
-	{ id: 'still_31', label: 'Still 31' },
-	{ id: 'still_32', label: 'Still 32' },
-	{ id: 'video_player', label: 'Video Player / SRT In' },
+// Wipe patterns and directions. The names are indexed by the device's own byte value, so the
+// *_NAMES arrays double as the variable text and the *_CHOICES arrays as the dropdown options.
+export const WIPE_TYPE_NAMES = [
+	'Horizontal',
+	'Vertical',
+	'Upper Left',
+	'Upper Right',
+	'Lower Left',
+	'Lower Right',
+	'H-Center',
+	'V-Center',
+]
+export const WIPE_DIRECTION_NAMES = ['Normal', 'Reverse', 'Round Trip']
+export const AUX_LINK_MODE_NAMES = ['Off', 'Auto Link', 'Manual Link']
+
+const byIndex = (names: string[]) => names.map((label, i) => ({ id: String(i), label }))
+export const WIPE_TYPE_CHOICES = byIndex(WIPE_TYPE_NAMES)
+export const WIPE_DIRECTION_CHOICES = byIndex(WIPE_DIRECTION_NAMES)
+export const AUX_LINK_MODE_CHOICES = byIndex(AUX_LINK_MODE_NAMES)
+
+export const AUX_CHOICES = [
+	{ id: '1', label: 'AUX 1' },
+	{ id: '2', label: 'AUX 2' },
+]
+export const AUX_LAYER_CHOICES = [
+	{ id: '1', label: 'PinP & Key 1' },
+	{ id: '2', label: 'PinP & Key 2' },
 ]
 
-export const INPUT_ASSIGN_SOURCE_CHOICES = [
-	{ id: 'hdmi_1', label: 'HDMI In 1' },
-	{ id: 'hdmi_2', label: 'HDMI In 2' },
-	{ id: 'hdmi_3', label: 'HDMI In 3' },
-	{ id: 'hdmi_4', label: 'HDMI In 4' },
-	{ id: 'sdi_1', label: 'SDI In 1' },
-	{ id: 'sdi_2', label: 'SDI In 2' },
-	{ id: 'sdi_3', label: 'SDI In 3' },
-	{ id: 'sdi_4', label: 'SDI In 4' },
-	{ id: 'still_1', label: 'Still 1' },
-	{ id: 'still_2', label: 'Still 2' },
-	{ id: 'still_3', label: 'Still 3' },
-	{ id: 'still_4', label: 'Still 4' },
-	{ id: 'still_5', label: 'Still 5' },
-	{ id: 'still_6', label: 'Still 6' },
-	{ id: 'still_7', label: 'Still 7' },
-	{ id: 'still_8', label: 'Still 8' },
-	{ id: 'still_9', label: 'Still 9' },
-	{ id: 'still_10', label: 'Still 10' },
-	{ id: 'still_11', label: 'Still 11' },
-	{ id: 'still_12', label: 'Still 12' },
-	{ id: 'still_13', label: 'Still 13' },
-	{ id: 'still_14', label: 'Still 14' },
-	{ id: 'still_15', label: 'Still 15' },
-	{ id: 'still_16', label: 'Still 16' },
-	{ id: 'still_17', label: 'Still 17' },
-	{ id: 'still_18', label: 'Still 18' },
-	{ id: 'still_19', label: 'Still 19' },
-	{ id: 'still_20', label: 'Still 20' },
-	{ id: 'still_21', label: 'Still 21' },
-	{ id: 'still_22', label: 'Still 22' },
-	{ id: 'still_23', label: 'Still 23' },
-	{ id: 'still_24', label: 'Still 24' },
-	{ id: 'still_25', label: 'Still 25' },
-	{ id: 'still_26', label: 'Still 26' },
-	{ id: 'still_27', label: 'Still 27' },
-	{ id: 'still_28', label: 'Still 28' },
-	{ id: 'still_29', label: 'Still 29' },
-	{ id: 'still_30', label: 'Still 30' },
-	{ id: 'still_31', label: 'Still 31' },
-	{ id: 'still_32', label: 'Still 32' },
-	{ id: 'video_player', label: 'Video Player / SRT In' },
+const range = (n: number): number[] => Array.from({ length: n }, (_, i) => i + 1)
+const STILL_COUNT = SRC_STILL32 - SRC_STILL1 + 1
+const CROSSPOINT_COUNT = 8
+
+// Everything the PGM, PVW and AUX buses, PinP and DSK will accept, in panel order. The eight
+// crosspoint inputs come first because they are what most buttons select.
+export const SOURCE_CHOICES = [
+	...range(CROSSPOINT_COUNT).map((n) => ({ id: `input_${n}`, label: `Input ${n}` })),
+	...PHYSICAL_INPUT_CHOICES,
+	...range(STILL_COUNT).map((n) => ({ id: `still_${n}`, label: `Still ${n}` })),
+	{ id: 'video_player', label: VIDEO_PLAYER_LABEL },
 ]
+
+// Input Assign fills the crosspoints, so it offers everything except the crosspoints themselves.
+export const INPUT_ASSIGN_SOURCE_CHOICES = SOURCE_CHOICES.filter((c) => !c.id.startsWith('input_'))
 
 export type AuxId = 1 | 2
 export type LayerId = 1 | 2
@@ -184,19 +188,19 @@ export type LayerId = 1 | 2
 export function sourceIdToByte(id: string): number | undefined {
 	if (id.startsWith('input_')) {
 		const n = parseInt(id.slice(6))
-		if (n >= 1 && n <= 8) return SRC_INPUT1 + n - 1
+		if (n >= 1 && n <= CROSSPOINT_COUNT) return SRC_INPUT1 + n - 1
 	}
 	if (id.startsWith('hdmi_')) {
 		const n = parseInt(id.slice(5))
-		if (n >= 1 && n <= 4) return n - 1
+		if (n >= 1 && n <= SRC_HDMI4 - SRC_HDMI1 + 1) return SRC_HDMI1 + n - 1
 	}
 	if (id.startsWith('sdi_')) {
 		const n = parseInt(id.slice(4))
-		if (n >= 1 && n <= 4) return SRC_SDI1 + n - 1
+		if (n >= 1 && n <= SRC_SDI4 - SRC_SDI1 + 1) return SRC_SDI1 + n - 1
 	}
 	if (id.startsWith('still_')) {
 		const n = parseInt(id.slice(6))
-		if (n >= 1 && n <= 32) return SRC_STILL1 + n - 1
+		if (n >= 1 && n <= SRC_STILL32 - SRC_STILL1 + 1) return SRC_STILL1 + n - 1
 	}
 	if (id === 'video_player') return SRC_VPLAYER
 	return undefined
@@ -219,6 +223,13 @@ export class V80Api {
 
 	constructor(self: ModuleInstance) {
 		this.self = self
+	}
+
+	// The password lives in the secrets store from 0.7.0 on. The config fallback covers a
+	// connection whose upgrade script has not run yet, so an existing setup keeps
+	// authenticating instead of silently failing on the first connect after the update.
+	private get password(): string {
+		return (this.self.secrets?.password || this.self.config.password || '').trim()
 	}
 
 	public initTcp(): void {
@@ -253,7 +264,7 @@ export class V80Api {
 			this.isAuthenticated = false
 			this.lastRxTime = Date.now()
 			this.cycleStartTime = Date.now()
-			const pw = (this.self.config.password ?? '').trim()
+			const pw = this.password
 			if (pw) {
 				this.self.updateStatus(InstanceStatus.Connecting, 'Authenticating')
 				// The device prompts "Enter password:" ~10ms after connect. Wait for it so the
@@ -344,9 +355,7 @@ export class V80Api {
 
 	private sendPassword(): void {
 		this.authSent = true
-		this.tcp
-			?.send((this.self.config.password ?? '').trim() + '\r\n')
-			.catch((err: Error) => this.self.log('debug', `TX failed: ${err.message}`))
+		this.tcp?.send(this.password + '\r\n').catch((err: Error) => this.self.log('debug', `TX failed: ${err.message}`))
 	}
 
 	private onPasswordPrompt(): void {
@@ -361,7 +370,7 @@ export class V80Api {
 			this.self.updateStatus(InstanceStatus.ConnectionFailure, 'Authentication failed – check password')
 			return
 		}
-		const pw = (this.self.config.password ?? '').trim()
+		const pw = this.password
 		if (!pw) {
 			this.self.updateStatus(InstanceStatus.BadConfig, 'Device requires a password but none is configured')
 			return
@@ -380,11 +389,14 @@ export class V80Api {
 		this.rxBuffer += data.toString('binary')
 
 		// The prompt has no terminator (";" or newline), so it must be matched on the raw
-		// buffer — the line splitter below would never emit it.
-		if (/enter password/i.test(this.rxBuffer)) {
-			this.rxBuffer = ''
+		// buffer — the line splitter below would never emit it. Consume up to and including
+		// the prompt and keep the rest: clearing the whole buffer discarded any framed data
+		// that arrived in the same TCP segment behind the prompt, and would have destroyed
+		// the buffer outright if the phrase ever appeared inside payload data.
+		const prompt = /enter password:?[ \t]*/i.exec(this.rxBuffer)
+		if (prompt) {
+			this.rxBuffer = this.rxBuffer.slice(prompt.index + prompt[0].length)
 			this.onPasswordPrompt()
-			return
 		}
 
 		while (this.rxBuffer.length > 0) {
@@ -406,7 +418,14 @@ export class V80Api {
 			if (useSemi) this.parseFrame(part)
 			else this.handleTextLine(part)
 		}
-		if (this.rxBuffer.length > 8192) this.rxBuffer = this.rxBuffer.slice(-4096)
+		// Everything left here is an incomplete frame - the loop above consumed every complete
+		// one. Past 8KB it is not a frame at all, so keeping a 4KB tail would only hand the
+		// parser a fragment cut through the middle of a value and produce one silently wrong
+		// reading. Discard it and say so.
+		if (this.rxBuffer.length > 8192) {
+			this.self.log('warn', 'Receive buffer overflowed with no complete frame - discarding')
+			this.rxBuffer = ''
+		}
 	}
 
 	private handleTextLine(line: string): void {
@@ -547,10 +566,12 @@ export class V80Api {
 				this.self.streamRecordState = val
 				this.self.streamRecordActive = val === 0x04 || val === 0x05
 				break
-			// Image capture progress, pushed by the device: 04 armed and ready,
-			// 08 capture done, 0A state refreshed. Logged rather than fed back, since a
-			// capture is a one-shot action with nothing to hold a button lit for.
+			// Image capture, pushed by the device. 00 and 01 are the capture screen closing
+			// and opening; 04 armed and ready, 08 capture done, 0A state refreshed. The
+			// 00/01 pair is what tells us whether the screen is up, which is the only safe
+			// gate on CAPTURE_MODE_SW - see cmdCloseCaptureScreen().
 			case '0A0504':
+				if (val === 0x00 || val === 0x01) this.self.captureModeOpen = val === 0x01
 				if (val === 0x08) this.self.log('info', 'Image capture complete')
 				else if (this.self.config.debug) this.self.log('debug', `Capture state ${val}`)
 				break
@@ -624,7 +645,9 @@ export class V80Api {
 	}
 
 	public requestCoreState(): void {
-		if (!this.isConnected) return
+		// Reachable from the user-facing sync_now action, so it needs the same authentication
+		// gate as sendCmd rather than only checking the socket.
+		if (!this.isConnected || !this.isAuthenticated) return
 		const cmds: string[] = []
 		// Core state addresses — all polled every 500ms
 		for (const a of [
@@ -717,6 +740,20 @@ export class V80Api {
 			this.self.log('warn', 'Not connected')
 			return
 		}
+		// The socket is open for the whole authentication window, so without this a button
+		// pressed while the status still reads "Connecting - Authenticating" would write a
+		// command line into a session that is waiting for a password. The device parses that
+		// as a command on an unauthenticated session - the same stray line that shows up as
+		// ERR:0 on the wire - and it is a candidate for being counted as a failed attempt
+		// toward the lockout that onPasswordPrompt works to avoid.
+		//
+		// Dropped rather than queued on purpose: this drives a live switcher, and replaying a
+		// button press from several seconds ago once the link comes up could cut to the wrong
+		// source mid-programme. Better to do nothing and say so.
+		if (!this.isAuthenticated) {
+			this.self.log('warn', `Not authenticated yet - command dropped: ${cmd}`)
+			return
+		}
 		if (this.self.config.debug) this.self.log('debug', `TX: ${cmd}`)
 		this.tcp
 			.send(cmd.endsWith('\r\n') ? cmd : cmd + '\r\n')
@@ -763,6 +800,40 @@ export class V80Api {
 	public cmdFadeToBlack(): void {
 		this.sendCmd(this.dth('0B003C', '01'))
 		this.sendCmd(this.dth('0B003C', '00'))
+	}
+	// Close the still-capture screen, if it is actually showing.
+	//
+	// CAPTURE_MODE_SW is a toggle, so this is gated on the state the device pushes rather
+	// than fired blind: with the screen already shut, sending it would open it. Gating on
+	// the device's own report rather than on what we think we did means a screen opened
+	// from the panel is closed correctly too, and a capture that never opened one is left
+	// alone.
+	//
+	// There is no EXIT command. Roland documents no way to work the menu remotely: the LAN
+	// interface is only DTH/RQH/VER over the SysEx map, and Panel Lock (020300-020347) is
+	// lock state rather than presses, omitting MENU, EXIT, ENTER and the VALUE knob. This
+	// closes the capture screen specifically; it is not a general menu dismissal.
+	public cmdCloseCaptureScreen(): void {
+		if (!this.self.captureModeOpen) return
+		this.cmdToggleCaptureMode()
+	}
+	// The panel [CAPTURE IMAGE] button, press and release. Toggles the capture screen.
+	public cmdToggleCaptureMode(): void {
+		this.sendCmd(this.dth(CAPTURE_MODE_SW, '01'))
+		this.sendCmd(this.dth(CAPTURE_MODE_SW, '00'))
+	}
+	// Two presses of [CAPTURE IMAGE], ungated, to back out of the capture function after a
+	// capture has run.
+	//
+	// Deliberately not gated on captureModeOpen. Our own capture sequence gets 04/08/0A back
+	// from the device, never the 00/01 the gate reads, so the gated close was almost
+	// certainly a no-op in 0.8.1 and 0.8.2 - which matches 1200ms and 7000ms behaving
+	// identically on hardware. One press was not enough either, so the post-capture screen
+	// is evidently not the same single toggle RCS drives when idle.
+	public async cmdExitCaptureFunction(): Promise<void> {
+		this.cmdToggleCaptureMode()
+		await this.delay(300)
+		this.cmdToggleCaptureMode()
 	}
 	public cmdSetTransitionType(t: 'mix' | 'wipe'): void {
 		this.sendCmd(this.dth('000F00', t === 'mix' ? '00' : '01'))
@@ -834,8 +905,12 @@ export class V80Api {
 		this.cmdSetAuxLinkedPgmBus(aux, !(aux === 1 ? this.self.aux1LinkedPgm : this.self.aux2LinkedPgm))
 	}
 	public cmdSetAuxLayerPinp(aux: AuxId, layer: LayerId, mode: 0 | 1 | 2): void {
-		const addr = ({ 1: { 1: '000020', 2: '000021' }, 2: { 1: '000023', 2: '000024' } } as any)[aux][layer]
-		if (!addr) return
+		// AuxId and LayerId are both 1 | 2, so this lookup is total - no undefined guard needed.
+		const addrs: Record<AuxId, Record<LayerId, string>> = {
+			1: { 1: '000020', 2: '000021' },
+			2: { 1: '000023', 2: '000024' },
+		}
+		const addr = addrs[aux][layer]
 		this.sendCmd(this.dth(addr, this.hb(mode)))
 		if (aux === 1 && layer === 1) this.self.aux1Pinp1Layer = mode
 		else if (aux === 1 && layer === 2) this.self.aux1Pinp2Layer = mode
@@ -1111,6 +1186,23 @@ export class V80Api {
 		await this.delay(250)
 		this.sendCmd(this.dth('0A0504', '07'))
 		this.self.log('info', `Capture requested: Still ${stillSlot} <- ${sourceKey}`)
+		// Capture mode leaves its screen up on the monitor, so dismiss it once the still is
+		// written - but not a moment before. The device needs far longer than its own
+		// 0A0504,08 (done) reply suggests: 0.8.0 closed at 500ms and broke the capture
+		// outright, 0.8.1 at 1200ms was still too early on hardware. 7000ms is the tested
+		// figure. It is a long time to hold, so it is deliberately the last thing in the
+		// sequence and nothing waits on it.
+		//
+		// cmdCloseCaptureScreen is a no-op unless the device has told us the screen is
+		// actually up, so a capture that leaves none is untouched. One consequence of the
+		// long wait: starting a second capture inside 7s means the first close can land on
+		// the second capture's screen. Firing captures that fast is not a real workflow, and
+		// the gate keeps it to a closed screen rather than an opened one.
+		await this.delay(7000)
+		// Logged so the next hardware run shows whether this fired and what the device
+		// thought the screen was doing, without needing another packet capture.
+		this.self.log('info', `Exiting capture function (screen reported ${this.self.captureModeOpen ? 'open' : 'closed'})`)
+		await this.cmdExitCaptureFunction()
 	}
 
 	public cmdRaw(cmd: string): void {

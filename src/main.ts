@@ -1,15 +1,24 @@
 // src/main.ts — Roland V-80HD
 import { InstanceBase, runEntrypoint, type SomeCompanionConfigField } from '@companion-module/base'
-import { GetConfigFields, type ModuleConfig } from './config.js'
+import { GetConfigFields, type ModuleConfig, type ModuleSecrets } from './config.js'
 import { UpdateVariableDefinitions } from './variables.js'
 import { UpgradeScripts } from './upgrades.js'
 import { UpdateActions } from './actions.js'
 import { UpdateFeedbacks } from './feedbacks.js'
 import { UpdatePresets } from './presets.js'
-import { V80Api, AUDIO_CH, INPUT_FREEZE_IDX, TALLY_IDX, type AuxId, type LayerId } from './api.js'
+import {
+	V80Api,
+	AUDIO_CH,
+	INPUT_FREEZE_IDX,
+	TALLY_IDX,
+	WIPE_TYPE_NAMES,
+	WIPE_DIRECTION_NAMES,
+	AUX_LINK_MODE_NAMES,
+} from './api.js'
 
-export class ModuleInstance extends InstanceBase<ModuleConfig> {
+export class ModuleInstance extends InstanceBase<ModuleConfig, ModuleSecrets> {
 	public config!: ModuleConfig
+	public secrets!: ModuleSecrets
 	public api!: V80Api
 
 	public programSource = 0x29
@@ -49,6 +58,10 @@ export class ModuleInstance extends InstanceBase<ModuleConfig> {
 	// True only while a fade is running. The engaged state is not yet known - see working_doc.
 	public ftbFading = false
 	public freezeActive = false
+	// Whether the still-capture screen is showing. Set only from the device's own 0A0504
+	// 00/01 push, never optimistically - it is the gate that stops a CAPTURE IMAGE toggle
+	// being sent into a closed screen and opening it.
+	public captureModeOpen = false
 	// Stream & Record. streamRecordState is the raw 030800 byte the device pushes:
 	// 02 stopped, 03 stopping, 04 starting, 05 running. Defaults to stopped.
 	public streamRecordState = 0x02
@@ -62,20 +75,24 @@ export class ModuleInstance extends InstanceBase<ModuleConfig> {
 		super(internal)
 	}
 
-	async init(config: ModuleConfig): Promise<void> {
+	// The api is built before the definitions are registered, because the action callbacks
+	// reach through to it directly and `api` is declared with a definite assignment.
+	async init(config: ModuleConfig, _isFirstInit: boolean, secrets: ModuleSecrets): Promise<void> {
 		this.config = config
-		this.setupModule()
+		this.secrets = secrets ?? { password: '' }
 		this.api = new V80Api(this)
+		this.setupModule()
 		this.api.initTcp()
 	}
 	async destroy(): Promise<void> {
-		this.api?.destroyTcp()
+		this.api.destroyTcp()
 	}
-	async configUpdated(config: ModuleConfig): Promise<void> {
+	async configUpdated(config: ModuleConfig, secrets: ModuleSecrets): Promise<void> {
 		this.config = config
-		this.setupModule()
-		this.api?.destroyTcp()
+		this.secrets = secrets ?? { password: '' }
+		this.api.destroyTcp()
 		this.api = new V80Api(this)
+		this.setupModule()
 		this.api.initTcp()
 	}
 	getConfigFields(): SomeCompanionConfigField[] {
@@ -107,18 +124,6 @@ export class ModuleInstance extends InstanceBase<ModuleConfig> {
 	}
 
 	public updateAllVariables(): void {
-		const wipeTypes = [
-			'Horizontal',
-			'Vertical',
-			'Upper Left',
-			'Upper Right',
-			'Lower Left',
-			'Lower Right',
-			'H-Center',
-			'V-Center',
-		]
-		const wipeDirs = ['Normal', 'Reverse', 'Round Trip']
-		const auxLinks = ['Off', 'Auto Link', 'Manual Link']
 		const tpName =
 			[
 				'Off',
@@ -146,8 +151,8 @@ export class ModuleInstance extends InstanceBase<ModuleConfig> {
 			aux2_source: this.aux2Source.toString(16).toUpperCase().padStart(2, '0'),
 			transition_type: this.transitionType.toUpperCase(),
 			mix_time: `${this.mixTime * 100}ms`,
-			wipe_type: wipeTypes[this.wipeType] ?? `${this.wipeType}`,
-			wipe_direction: wipeDirs[this.wipeDirection] ?? `${this.wipeDirection}`,
+			wipe_type: WIPE_TYPE_NAMES[this.wipeType] ?? `${this.wipeType}`,
+			wipe_direction: WIPE_DIRECTION_NAMES[this.wipeDirection] ?? `${this.wipeDirection}`,
 			pinp1_pgm: this.pinp1Pgm ? 'ON' : 'OFF',
 			pinp1_pvw: this.pinp1Pvw ? 'ON' : 'OFF',
 			pinp2_pgm: this.pinp2Pgm ? 'ON' : 'OFF',
@@ -156,7 +161,7 @@ export class ModuleInstance extends InstanceBase<ModuleConfig> {
 			dsk_pvw: this.dskPvw ? 'ON' : 'OFF',
 			split1: this.split1Active ? 'ON' : 'OFF',
 			split2: this.split2Active ? 'ON' : 'OFF',
-			aux_linked_pgm: auxLinks[this.auxLinkedPgm] ?? 'Off',
+			aux_linked_pgm: AUX_LINK_MODE_NAMES[this.auxLinkedPgm] ?? 'Off',
 			aux1_linked_pgm: this.aux1LinkedPgm ? 'ON' : 'OFF',
 			aux2_linked_pgm: this.aux2LinkedPgm ? 'ON' : 'OFF',
 			main_bus_mute: this.mainBusMute ? 'ON' : 'OFF',
@@ -185,181 +190,6 @@ export class ModuleInstance extends InstanceBase<ModuleConfig> {
 				]),
 			),
 		})
-	}
-
-	public requestCoreState(): void {
-		this.api?.requestCoreState()
-	}
-	public cmdCut(): void {
-		this.api?.cmdCut()
-	}
-	public cmdAuto(): void {
-		this.api?.cmdAuto()
-	}
-	public cmdFadeToBlack(): void {
-		this.api?.cmdFadeToBlack()
-	}
-	public cmdSetTransitionType(t: 'mix' | 'wipe'): void {
-		this.api?.cmdSetTransitionType(t)
-	}
-	public cmdSetMixTime(tenths: number): void {
-		this.api?.cmdSetMixTime(tenths)
-	}
-	public cmdSetWipeType(type: number): void {
-		this.api?.cmdSetWipeType(type)
-	}
-	public cmdSetWipeDirection(dir: number): void {
-		this.api?.cmdSetWipeDirection(dir)
-	}
-	public cmdSetProgramSource(sourceId: string): void {
-		this.api?.cmdSetProgramSource(sourceId)
-	}
-	public cmdSetPreviewSource(sourceId: string): void {
-		this.api?.cmdSetPreviewSource(sourceId)
-	}
-	public cmdSetInputAssignSource(slot: number, sourceId: string): void {
-		this.api?.cmdSetInputAssignSource(slot, sourceId)
-	}
-	public cmdSetAuxSource(aux: AuxId, sourceId: string): void {
-		this.api?.cmdSetAuxSource(aux, sourceId)
-	}
-	public cmdSetAuxLinkedPgm(mode: 0 | 1 | 2): void {
-		this.api?.cmdSetAuxLinkedPgm(mode)
-	}
-	public cmdSetAuxLayerPinp(aux: AuxId, layer: LayerId, mode: 0 | 1 | 2): void {
-		this.api?.cmdSetAuxLayerPinp(aux, layer, mode)
-	}
-	public cmdToggleAuxLayerPinp(aux: AuxId, layer: LayerId): void {
-		this.api?.cmdToggleAuxLayerPinp(aux, layer)
-	}
-	public cmdToggleAuxLayerPinpAlwaysOn(aux: AuxId, layer: LayerId): void {
-		this.api?.cmdToggleAuxLayerPinpAlwaysOn(aux, layer)
-	}
-	public cmdSplit1(on: boolean): void {
-		this.api?.cmdSplit1(on)
-	}
-	public cmdSplit2(on: boolean): void {
-		this.api?.cmdSplit2(on)
-	}
-	public cmdSplit1Toggle(): void {
-		this.api?.cmdSplit1Toggle()
-	}
-	public cmdSplit2Toggle(): void {
-		this.api?.cmdSplit2Toggle()
-	}
-	public cmdPinpSetSource(layer: LayerId, sourceId: string): void {
-		this.api?.cmdPinpSetSource(layer, sourceId)
-	}
-	public cmdPinpPgm(layer: LayerId, on: boolean): void {
-		this.api?.cmdPinpPgm(layer, on)
-	}
-	public cmdPinpPvw(layer: LayerId, on: boolean): void {
-		this.api?.cmdPinpPvw(layer, on)
-	}
-	public cmdPinpPgmToggle(layer: LayerId): void {
-		this.api?.cmdPinpPgmToggle(layer)
-	}
-	public cmdPinpPvwToggle(layer: LayerId): void {
-		this.api?.cmdPinpPvwToggle(layer)
-	}
-	public cmdPinpPositionH(layer: LayerId, pct: number): void {
-		this.api?.cmdPinpPositionH(layer, pct)
-	}
-	public cmdPinpPositionV(layer: LayerId, pct: number): void {
-		this.api?.cmdPinpPositionV(layer, pct)
-	}
-	public cmdPinpSize(layer: LayerId, pct: number): void {
-		this.api?.cmdPinpSize(layer, pct)
-	}
-	public cmdPinpCroppingH(layer: LayerId, pct: number): void {
-		this.api?.cmdPinpCroppingH(layer, pct)
-	}
-	public cmdPinpCroppingV(layer: LayerId, pct: number): void {
-		this.api?.cmdPinpCroppingV(layer, pct)
-	}
-	public cmdPinpViewPositionH(layer: LayerId, pct: number): void {
-		this.api?.cmdPinpViewPositionH(layer, pct)
-	}
-	public cmdPinpViewPositionV(layer: LayerId, pct: number): void {
-		this.api?.cmdPinpViewPositionV(layer, pct)
-	}
-	public cmdPinpViewZoom(layer: LayerId, pct: number): void {
-		this.api?.cmdPinpViewZoom(layer, pct)
-	}
-	public cmdDskSetSource(sourceId: string): void {
-		this.api?.cmdDskSetSource(sourceId)
-	}
-	public cmdDskPgm(on: boolean): void {
-		this.api?.cmdDskPgm(on)
-	}
-	public cmdDskPvw(on: boolean): void {
-		this.api?.cmdDskPvw(on)
-	}
-	public cmdDskPgmToggle(): void {
-		this.api?.cmdDskPgmToggle()
-	}
-	public cmdDskPvwToggle(): void {
-		this.api?.cmdDskPvwToggle()
-	}
-	public cmdAudioInputMute(ch: string, on: boolean): void {
-		this.api?.cmdAudioInputMute(ch, on)
-	}
-	public cmdAudioInputMuteToggle(ch: string): void {
-		this.api?.cmdAudioInputMuteToggle(ch)
-	}
-	public cmdMainBusMute(on: boolean): void {
-		this.api?.cmdMainBusMute(on)
-	}
-	public cmdMainBusMuteToggle(): void {
-		this.api?.cmdMainBusMuteToggle()
-	}
-	public cmdAuxBusMute(aux: AuxId, on: boolean): void {
-		this.api?.cmdAuxBusMute(aux, on)
-	}
-	public cmdAuxBusMuteToggle(aux: AuxId): void {
-		this.api?.cmdAuxBusMuteToggle(aux)
-	}
-	public cmdFreezeOn(): void {
-		this.api?.cmdFreezeOn()
-	}
-	public cmdFreezeOff(): void {
-		this.api?.cmdFreezeOff()
-	}
-	public cmdFreezeToggle(): void {
-		this.api?.cmdFreezeToggle()
-	}
-	public cmdSetInputFreeze(key: string, on: boolean): void {
-		this.api?.cmdSetInputFreeze(key, on)
-	}
-	public cmdSetInputFreezeToggle(key: string): void {
-		this.api?.cmdSetInputFreezeToggle(key)
-	}
-	public cmdTestPattern(id: string): void {
-		this.api?.cmdTestPattern(id)
-	}
-	public cmdTestPatternOff(): void {
-		this.api?.cmdTestPatternOff()
-	}
-	public cmdToggleAuxLinkedPgmMode(mode: 1 | 2): void {
-		this.api?.cmdToggleAuxLinkedPgmMode(mode)
-	}
-	public cmdSetAuxLinkedPgmBus(aux: AuxId, on: boolean): void {
-		this.api?.cmdSetAuxLinkedPgmBus(aux, on)
-	}
-	public cmdToggleAuxLinkedPgmBus(aux: AuxId): void {
-		this.api?.cmdToggleAuxLinkedPgmBus(aux)
-	}
-	public cmdStreamRecordStart(): void {
-		this.api?.cmdStreamRecordStart()
-	}
-	public cmdStreamRecordStop(): void {
-		this.api?.cmdStreamRecordStop()
-	}
-	public async cmdCaptureImage(slot: number, source: string): Promise<void> {
-		await this.api?.cmdCaptureImage(slot, source)
-	}
-	public cmdRaw(cmd: string): void {
-		this.api?.cmdRaw(cmd)
 	}
 }
 

@@ -4,10 +4,21 @@ import { type SomeCompanionConfigField } from '@companion-module/base'
 export interface ModuleConfig {
 	host: string
 	port: number
-	password: string
+	// Legacy. Before 0.7.0 the device password was stored here, in the plaintext config store.
+	// The 0.7.0 upgrade script moves it to the secrets store and blanks this, but it stays
+	// declared so a connection whose upgrade has not run can still authenticate - see the
+	// password getter in api.ts.
+	password?: string
 	polling: boolean
 	debug: boolean
 	showAdvanced: boolean
+}
+
+// Kept out of ModuleConfig on purpose. Companion routes any field whose type starts with
+// "secret" into this separate store, which is not round-tripped to the web UI with the rest
+// of the config.
+export interface ModuleSecrets {
+	password: string
 }
 
 // Poll interval fixed at 500ms — confirmed stable on hardware.
@@ -18,13 +29,19 @@ export function GetConfigFields(): SomeCompanionConfigField[] {
 	return [
 		{ type: 'textinput', id: 'host', label: 'Device IP address', width: 8, default: '192.168.0.1' },
 		{ type: 'number', id: 'port', label: 'Port', width: 4, default: 8023, min: 1, max: 65535 },
-		{ type: 'textinput', id: 'password', label: 'Network password (must be set on device)', width: 8, default: '' },
-		{ type: 'checkbox', id: 'polling', label: 'Enable polling (keeps feedbacks in sync)', width: 12, default: true },
+		{ type: 'secret-text', id: 'password', label: 'Network password (must be set on device)', width: 8, default: '' },
+		{
+			type: 'checkbox',
+			id: 'polling',
+			label: 'Enable polling (required — turning it off leaves about half the feedbacks stale, see Help)',
+			width: 12,
+			default: true,
+		},
 		{ type: 'checkbox', id: 'debug', label: 'Enable debug logging (verbose TX/RX)', width: 6, default: false },
 		{
 			type: 'checkbox',
 			id: 'showAdvanced',
-			label: 'Show advanced actions (raw LAN command)',
+			label: 'Allow advanced actions (raw LAN command)',
 			width: 12,
 			default: false,
 		},
