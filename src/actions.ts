@@ -411,11 +411,11 @@ export function UpdateActions(self: ModuleInstance): void {
 		raw_command: {
 			name: 'Send raw LAN command',
 			description:
-				'Expert use only. Requires "Show advanced actions" in the connection config. Incorrect commands can overwrite mixer state. Example: DTH:001500,29; sets Program to Input 1.',
+				'Expert use only. Requires "Allow advanced actions" in the connection config. Incorrect commands can overwrite mixer state. Example: DTH:001500,29; sets Program to Input 1.',
 			options: [{ id: 'cmd', type: 'textinput', label: 'Command string', default: '' }],
 			callback: async (e) => {
 				if (!self.config.showAdvanced) {
-					self.log('warn', 'Raw LAN command ignored - enable "Show advanced actions" in the connection config')
+					self.log('warn', 'Raw LAN command ignored - enable "Allow advanced actions" in the connection config')
 					return
 				}
 				const cmd = String(e.options.cmd ?? '').trim()

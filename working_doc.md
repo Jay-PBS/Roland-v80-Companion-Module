@@ -26,7 +26,7 @@ Last reviewed: 2026-09-08 · Working version: 0.8.5
 Full sheet in `TESTING.md`. Verdict was merge: no regressions against 0.6.5, soak passed, image
 capture and the whole of section G2 passed. These are what did not.
 
-- **PinP position does nothing — four actions, all of them (C7).** `pinp_window_position_h`,
+- **Four of the eight PinP geometry actions do nothing (C7).** `pinp_window_position_h`,
   `pinp_window_position_v`, `pinp_view_position_h`, `pinp_view_position_v`. Nothing moves at any
   value, positive or negative. The four unsigned neighbours all pass: Size (`09`), Cropping H
   (`0B`), Cropping V (`0D`), View Zoom (`1C`).

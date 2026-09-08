@@ -134,7 +134,9 @@ after a fresh clone run `yarn husky` once to enable it. Without that step commit
 
 ## Known Issues
 
-PinP position does not work. Window Position H and V, and View Position H and V, send their commands but the window does not move, at any value. The four unsigned geometry actions next to them — Window Size, Cropping H and V, and View Zoom — all work, and the addresses and byte encoding both match the control specification exactly, so the cause is not yet understood. This is long-standing rather than new; the only change ever made to those lines was code formatting. Diagnosing it needs a packet capture of the Roland RCS software moving a PinP window.
+Four PinP geometry actions do not work: Window Position H and V, and View Position H and V. The rest of PinP is fine — source selection, PGM and PVW on, off and toggle, Window Size, Cropping H and V, and View Zoom were all confirmed working on hardware on 2026-09-08.
+
+The four that fail send their commands but the window does not move. Their addresses and byte encoding both match the control specification exactly, and the working actions sit on adjacent addresses, so the cause is not yet understood. This is long-standing rather than new; the only change ever made to those lines was code formatting. Diagnosing it needs a packet capture of the Roland RCS software moving a PinP window.
 
 Fade To Black feedback is unreliable. It lights while the fade is running rather than while Fade To Black is engaged, because it reads a transition-in-progress flag rather than the steady state. Under investigation.
 

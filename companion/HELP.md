@@ -1,4 +1,4 @@
-# Roland V-80HD — Companion Module v0.6.5
+# Roland V-80HD — Companion Module v0.8.5
 
 This module is currently in beta. It has been tested on physical hardware with firmware v1.20.201 and is provided for evaluation purposes. Use in production environments is at the operator's own discretion and risk.
 
@@ -12,7 +12,7 @@ Tested firmware: v1.20.201
 2. A network password must be configured on the device before LAN control will function. This is set via Menu, Network, Network Password on the unit itself.
 3. In Companion, enter the device IP address, port 8023, and the password configured on the device.
 4. Leave polling enabled. It is what keeps feedbacks in sync — see Network Behaviour for what turning it off costs.
-5. Enable Show advanced actions if you need the raw LAN command action. The action is always listed, but it refuses to send and logs a warning unless this is ticked.
+5. Enable Allow advanced actions if you need the raw LAN command action. The action is always listed, but it refuses to send and logs a warning unless this is ticked.
 
 ---
 
@@ -72,11 +72,16 @@ The V-80HD applies a brute-force lockout after repeated failed password attempts
 - Set Source per layer — full source list
 - PGM On, Off, Toggle per layer
 - PVW On, Off, Toggle per layer
-- Window Position H and V (-100 to +100%)
+- Window Position H and V (-100 to +100%) — **not working, see below**
 - Window Size (0 to 100%)
 - Window Cropping H and V (0 to 100%) — 100% is no crop, 0% is fully cropped
-- View Position H and V (-50 to +50%)
+- View Position H and V (-50 to +50%) — **not working, see below**
 - View Zoom (100 to 400%)
+
+**Window Position and View Position do not move the inset screen.** They send their commands and the
+device accepts them, but nothing happens. Everything else in this section works. The cause is not yet
+understood and it is being investigated — the actions are left in place rather than hidden so the fix
+does not change anyone's button layout. Use the unit's POSITION H and V knobs in the meantime.
 
 ### DSK
 
@@ -125,13 +130,21 @@ automatically.
 
 - Capture Image to Still — captures the selected input into a still memory slot (1 to 32)
 - Sources: HDMI In 1 to 4, SDI In 1 to 4, Video Player
+- Capture Mode (toggle) — works the unit's CAPTURE IMAGE button, opening or closing the capture screen
+- Capture Mode, close if open — closes the capture screen, and does nothing if it is not showing
 
-The capture takes roughly 1.5 seconds and overwrites the target slot without confirmation.
+The capture takes roughly 10 seconds and overwrites the target slot without confirmation. Most of
+that is a deliberate 7-second wait: capture mode leaves its screen up on the monitor, and the unit
+needs far longer than its own "capture done" reply suggests before it will accept the button press
+that dismisses it. The action does that for you, so no button press on the unit is needed.
+
+Do not fire two captures less than 7 seconds apart, or the first one's dismissal can land on the
+second one's screen.
 
 ### Utility
 
 - Sync state now — forces an immediate poll
-- Send raw LAN command — visible when Show advanced actions is enabled
+- Send raw LAN command — always listed, but only sends when Allow advanced actions is ticked
 
 ---
 
