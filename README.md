@@ -8,7 +8,7 @@ Repository: https://github.com/Jay-PBS/Roland-v80-Companion-Module
 
 This module is currently in beta. It has been tested on physical hardware and is provided for evaluation. Use in production environments is at the operator's own discretion and risk.
 
-Current version: 0.8.4
+Current version: 0.8.5
 
 ---
 
@@ -149,6 +149,17 @@ If you want the advanced audio controls, please raise an issue on GitHub (https:
 ---
 
 ## Changelog
+
+### 0.8.5 — clearer active and inactive buttons
+
+The first release merged to `main` after a full hardware run. Everything from 0.7.0 and the 0.8.x line is in it.
+
+- **Active and inactive button states are now clearly different.** Every same-hue pair in the preset palette sat between 1.7:1 and 2.3:1 background contrast, against the 3:1 where a state change reads at a glance — the palette paired Tailwind 700 with 500, only two steps apart. All seven pairs now sit at roughly 4:1
+- **Active states carry black text.** White failed on every bright colour in the palette (1.53–3.96 against the 4.5 threshold) while black passes on all of them, so a lit button used to be _harder_ to read rather than easier
+
+Each new deep is the bright colour scaled down in RGB, so the hue is preserved exactly and an inactive button still reads as "the red one" instead of going near-black and losing its colour coding. Contrast figures are WCAG relative luminance.
+
+`working_doc.md` was also cut from 357 lines to 136, removing six sections of finished work that the hardware run confirmed.
 
 ### 0.8.4 — presets and wording
 
