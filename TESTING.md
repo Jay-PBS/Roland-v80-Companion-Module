@@ -1,14 +1,43 @@
-# Hardware Test Sheet — 0.8.3
+# Hardware Test Sheet — COMPLETED, 2026-09-08
 
-**Build:** `roland-v80hd-0.8.3.tgz` · **Branch:** `exp/code-review-0.7.0` @ `8cf5d5e` + uncommitted 0.8.1 changes
-**Base:** 0.6.5 (`main` @ `68787f8`)
-**Tester:** Jay · **Date:** 2026-09-08 · **Device firmware:** \***\*\_\_\_\*\*** · **Companion version:** \***\*\_\_\_\*\***
+> **This run is finished and its results shipped as v0.8.5.** The sheet is kept as the record of
+> what was actually tested and observed — **do not blank it to reuse.** Copy it to a new file for the
+> next run, so this one stays intact as evidence.
+
+**Tested build:** `roland-v80hd-0.8.3.tgz` · **Tester:** Jay · **Date:** 2026-09-08
+**Base:** 0.6.5 (`main` @ `68787f8`) · **Shipped as:** 0.8.5, tagged `v0.8.5` at the merge commit
+
+## Outcome
+
+**Verdict: merge.** No regressions against 0.6.5. The 0.7.0 password migration worked with no
+re-entry, every action, feedback, variable and preset category checked out, and a 30-minute soak was
+clean. That closed the three "can only be judged on hardware" unknowns that had been open since
+0.7.0 was written.
+
+**What failed, and where it went:**
+
+| Finding                                                                     | Status                                       |
+| --------------------------------------------------------------------------- | -------------------------------------------- |
+| C7 — 4 of 8 PinP geometry actions do nothing (Window/View Position H and V) | Open. README Known Issues + `working_doc.md` |
+| A4 — a corrected password is not retried until the connection is toggled    | Logged, not fixed                            |
+| C67 — `sync_now` gives the operator no feedback at all                      | Logged, not fixed                            |
+| C5 — Split actions sit in an odd order in the list                          | Logged, not fixed                            |
+| A5 / A7 — untestable rather than passing; the auth window is under 100ms    | Needs a different method                     |
+| G — FTB block read returned nothing, so that approach does not work         | Open, harder than thought                    |
+
+Changes made **after** this run and therefore **not** covered by it: the 0.8.5 palette work, the
+0.8.4 wording changes, and the HELP.md / raw-command label fixes. Those need their own pass.
+
+---
+
+## Original brief
 
 0.8.1 is the code review branch plus the capture-screen fix — see `CODE_REVIEW.md` §0 for the review
-changes and why. The review changes have still not been near a V-80HD; 0.8.0 was tried and broke
-Image Capture, which 0.8.1 fixes. The 0.7.0 definitions were diffed against the 0.6.5 build and 108
+changes and why. The review changes had not been near a V-80HD; 0.8.0 was tried and broke Image
+Capture, which 0.8.1 fixed. The 0.7.0 definitions were diffed against the 0.6.5 build and 108
 presets, 67 actions and 28 of 29 feedbacks came out byte-identical, so most of this sheet is
-regression cover rather than new ground. 0.8.1 adds two actions on top, taking the total to 70. **Section A is where the real risk is** — do it first and stop if it fails. **Section G2 is the new
+regression cover rather than new ground. 0.8.1 adds two actions on top, taking the total to 70.
+**Section A is where the real risk is** — do it first and stop if it fails. **Section G2 is the new
 work**, and C66 is the regression that 0.8.0 caused.
 
 ## How to use this sheet
