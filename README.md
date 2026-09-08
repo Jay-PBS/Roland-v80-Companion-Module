@@ -112,6 +112,10 @@ Added in 0.6.3: aux1_linked_pgm, aux2_linked_pgm, and tally_hdmi_1 to tally_hdmi
 
 ---
 
+## Installing a prebuilt module
+
+If you just want to run it, download **`roland-v80hd-0.8.5.tgz`** from the root of this repository and install it in Companion via Settings, Module store, Install from file. Confirm the version shows 0.8.5 afterwards — Companion caches modules by version number, and a stale copy of an earlier version will silently keep running.
+
 ## Build Instructions
 
 ```
@@ -121,6 +125,8 @@ yarn install
 yarn build
 yarn package
 ```
+
+Built `.tgz` files are gitignored, so a rebuild does not show up as a repository change. The current release is the exception: `roland-v80hd-0.8.5.tgz` was added to the repository deliberately so there is something to download without building. If you rebuild that exact version the tracked file will show as modified — later versions stay ignored unless they are added the same way.
 
 `companion/manifest.json` carries `"version": "0.0.0"` deliberately. `yarn package` injects the real
 version from `package.json` into the packaged manifest and names the `.tgz` from it, so `package.json`
