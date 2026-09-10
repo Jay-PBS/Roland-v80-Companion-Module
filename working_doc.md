@@ -26,21 +26,27 @@ Last reviewed: 2026-09-08 · Working version: 0.8.5
 Full sheet in `TESTING.md`. Verdict was merge: no regressions against 0.6.5, soak passed, image
 capture and the whole of section G2 passed. These are what did not.
 
-- **Four of the eight PinP geometry actions do nothing (C7).** `pinp_window_position_h`,
-  `pinp_window_position_v`, `pinp_view_position_h`, `pinp_view_position_v`. Nothing moves at any
-  value, positive or negative. The four unsigned neighbours all pass: Size (`09`), Cropping H
-  (`0B`), Cropping V (`0D`), View Zoom (`1C`).
+- **Two PinP geometry actions are unresolved (C7).** `pinp_view_position_h` and
+  `pinp_view_position_v` showed no visible movement at any value, positive or negative.
+  **Corrected 2026-09-10:** this was previously written up as four actions including
+  `pinp_window_position_h` and `pinp_window_position_v` — those two do work. The six passing
+  actions are Window Position H and V, Size (`09`), Cropping H (`0B`), Cropping V (`0D`) and
+  View Zoom (`1C`).
 
-  Everything checks out on paper, which is why this needs observation rather than another guess:
-  the addresses are right (anchored on Size working at `09`, the params before it fill `00`-`08`
-  exactly, putting Position H at `05` and V at `07`); the encoder emits the spec's own printed
-  bytes (`-100%` -> `78H 18H`, `+100%` -> `07H 68H`); the action option ranges permit negatives.
-  **Not a regression** — `git log -L 985,1020:src/api.ts` shows prettier reformatting as the only
-  change ever made to those lines, so this has been broken since at least 0.6.5. Size passing
-  proves the layer was visible and writable, so it is not a "nothing on air" artefact.
+  **Open question: did the actions fail, or does the range just not move the image?** This has not
+  been told apart yet and it changes what the fix is. View Position is a -50 to +50 option; if the
+  visible effect over that span is small, or only shows at particular zoom or crop settings, then
+  "nothing moved" may be an observation problem rather than a protocol one. Establish this first.
 
-  **Next step: capture RCS dragging a PinP window** and read what it really sends. Same method
-  that identified `0B002A` in a single recording — tshark against `10.100.20.229` on Ethernet 4.
+  On paper the commands check out: the addresses are right (anchored on Size working at `09`, the
+  params before it fill `00`-`08` exactly); the encoder emits the spec's own printed bytes; the
+  action option ranges permit negatives. **Not a regression** — `git log -L 985,1020:src/api.ts`
+  shows prettier reformatting as the only change ever made to those lines.
+
+  **Next steps:** (1) re-test View Position at extremes with View Zoom raised, so any movement is
+  as visible as it can be; (2) if still nothing, capture RCS dragging a PinP view and read what it
+  really sends — same method that identified `0B002A` in a single recording, tshark against
+  `10.100.20.229` on Ethernet 4.
 
 - **A corrected password is not retried (A4).** After an auth failure, saving the right password
   leaves the connection sitting at failed; it only recovers if the connection is toggled off and

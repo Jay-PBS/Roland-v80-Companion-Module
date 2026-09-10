@@ -37,10 +37,10 @@ Current version: 0.8.5
 | Split 1 and 2                       | Confirmed working                          |
 | PinP and Key Source                 | Confirmed working                          |
 | PinP PGM and PVW On, Off, Toggle    | Confirmed working                          |
-| PinP Window Position H and V        | **Not working** — no movement, see below   |
+| PinP Window Position H and V        | Confirmed working                          |
 | PinP Window Size                    | Confirmed working                          |
 | PinP Window Cropping H and V        | Confirmed working                          |
-| PinP View Position H and V          | **Not working** — no movement, see below   |
+| PinP View Position H and V          | Not finalized — see below                  |
 | PinP View Zoom                      | Confirmed working                          |
 | DSK Source, PGM, PVW                | Confirmed working                          |
 | Audio Input Mute all channels       | Confirmed working                          |
@@ -140,9 +140,9 @@ after a fresh clone run `yarn husky` once to enable it. Without that step commit
 
 ## Known Issues
 
-Four PinP geometry actions do not work: Window Position H and V, and View Position H and V. The rest of PinP is fine — source selection, PGM and PVW on, off and toggle, Window Size, Cropping H and V, and View Zoom were all confirmed working on hardware on 2026-09-08.
+PinP is functional. Six of the eight geometry actions were confirmed working on hardware on 2026-09-08, along with source selection and PGM and PVW on, off and toggle. Two are not finalized: **View Position H and V**.
 
-The four that fail send their commands but the window does not move. Their addresses and byte encoding both match the control specification exactly, and the working actions sit on adjacent addresses, so the cause is not yet understood. This is long-standing rather than new; the only change ever made to those lines was code formatting. Diagnosing it needs a packet capture of the Roland RCS software moving a PinP window.
+View Position H and V produced no visible movement during testing. It is not yet established whether the actions themselves are at fault or whether the range they are given simply does not shift the image perceptibly — the two have not been told apart, so treat these as unverified rather than confirmed broken. Their addresses and byte encoding match the control specification, and the neighbouring actions on adjacent addresses all work. This is long-standing rather than new; the only change ever made to those lines was code formatting. Settling it needs a packet capture of the Roland RCS software moving a PinP view, and a check of what value range produces visible movement.
 
 Fade To Black feedback is unreliable. It lights while the fade is running rather than while Fade To Black is engaged, because it reads a transition-in-progress flag rather than the steady state. Under investigation.
 
@@ -178,7 +178,7 @@ No protocol changes.
 
 ### 0.8.3 — confirmed working on hardware, 2026-09-08
 
-**The 0.8.x line and the whole 0.7.0 code review have now been tested on a V-80HD.** The run passed with no regressions against 0.6.5: the password migration worked with no re-entry, every action, feedback, variable and preset category checked out, and a 30-minute soak was clean. Four PinP geometry actions failed and are recorded in `working_doc.md` — Window Position H/V and View Position H/V do nothing at any value. They are a pre-existing fault, not a regression; the only change ever made to those lines was prettier reformatting.
+**The 0.8.x line and the whole 0.7.0 code review have now been tested on a V-80HD.** The run passed with no regressions against 0.6.5: the password migration worked with no re-entry, every action, feedback, variable and preset category checked out, and a 30-minute soak was clean. Two PinP geometry actions are outstanding and are recorded in `working_doc.md` — View Position H and V showed no visible movement. Whether the actions fail or the value range simply does not move the image noticeably is not yet established. Either way it is pre-existing, not a regression; the only change ever made to those lines was prettier reformatting.
 
 - **Image Capture now clears its own screen, confirmed on hardware.** Exiting the capture function is two presses of `[CAPTURE IMAGE]` 300ms apart, ungated, after a 7-second wait
 

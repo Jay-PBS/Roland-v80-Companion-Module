@@ -72,16 +72,17 @@ The V-80HD applies a brute-force lockout after repeated failed password attempts
 - Set Source per layer — full source list
 - PGM On, Off, Toggle per layer
 - PVW On, Off, Toggle per layer
-- Window Position H and V (-100 to +100%) — **not working, see below**
+- Window Position H and V (-100 to +100%)
 - Window Size (0 to 100%)
 - Window Cropping H and V (0 to 100%) — 100% is no crop, 0% is fully cropped
-- View Position H and V (-50 to +50%) — **not working, see below**
+- View Position H and V (-50 to +50%) — **not finalized, see below**
 - View Zoom (100 to 400%)
 
-**Window Position and View Position do not move the inset screen.** They send their commands and the
-device accepts them, but nothing happens. Everything else in this section works. The cause is not yet
-understood and it is being investigated — the actions are left in place rather than hidden so the fix
-does not change anyone's button layout. Use the unit's POSITION H and V knobs in the meantime.
+**View Position H and V are not finalized.** They showed no visible movement in hardware testing, but
+it is not yet established whether the actions are at fault or whether the range they are given is too
+small to shift the image noticeably. Everything else in this section works, including Window Position.
+The actions are left in place rather than hidden so that settling this does not change anyone's button
+layout. If you need view positioning before then, use the unit's own controls.
 
 ### DSK
 

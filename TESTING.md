@@ -16,14 +16,14 @@ clean. That closed the three "can only be judged on hardware" unknowns that had 
 
 **What failed, and where it went:**
 
-| Finding                                                                     | Status                                       |
-| --------------------------------------------------------------------------- | -------------------------------------------- |
-| C7 — 4 of 8 PinP geometry actions do nothing (Window/View Position H and V) | Open. README Known Issues + `working_doc.md` |
-| A4 — a corrected password is not retried until the connection is toggled    | Logged, not fixed                            |
-| C67 — `sync_now` gives the operator no feedback at all                      | Logged, not fixed                            |
-| C5 — Split actions sit in an odd order in the list                          | Logged, not fixed                            |
-| A5 / A7 — untestable rather than passing; the auth window is under 100ms    | Needs a different method                     |
-| G — FTB block read returned nothing, so that approach does not work         | Open, harder than thought                    |
+| Finding                                                                    | Status                                       |
+| -------------------------------------------------------------------------- | -------------------------------------------- |
+| C7 — View Position H and V show no visible movement (see correction below) | Open. README Known Issues + `working_doc.md` |
+| A4 — a corrected password is not retried until the connection is toggled   | Logged, not fixed                            |
+| C67 — `sync_now` gives the operator no feedback at all                     | Logged, not fixed                            |
+| C5 — Split actions sit in an odd order in the list                         | Logged, not fixed                            |
+| A5 / A7 — untestable rather than passing; the auth window is under 100ms   | Needs a different method                     |
+| G — FTB block read returned nothing, so that approach does not work        | Open, harder than thought                    |
 
 Changes made **after** this run and therefore **not** covered by it: the 0.8.5 palette work, the
 0.8.4 wording changes, and the HELP.md / raw-command label fixes. Those need their own pass.
@@ -198,19 +198,26 @@ Test each against **layer 1 and layer 2**.
 
 ### C7. PinP geometry
 
-| #   | Action id                | Name                             | Result | Notes |
-| --- | ------------------------ | -------------------------------- | ------ | ----- |
-| 32  | `pinp_window_position_h` | Window Position H (-100 to +100) |        | FAIL  |
-| 33  | `pinp_window_position_v` | Window Position V (-100 to +100) |        | FAIL  |
-| 34  | `pinp_window_size`       | Window Size (0 to 100)           | PASS   |       |
-| 35  | `pinp_window_cropping_h` | Window Cropping H (0 to 100)     |        | PASS  |
-| 36  | `pinp_window_cropping_v` | Window Cropping V (0 to 100)     |        | PASS  |
-| 37  | `pinp_view_position_h`   | View Position H (-50 to +50)     |        | FAIL  |
-| 38  | `pinp_view_position_v`   | View Position V (-50 to +50)     |        | FAIL  |
-| 39  | `pinp_view_zoom`         | View Zoom (100 to 400)           |        | PASS  |
+| #   | Action id                | Name                             | Result | Notes                                                     |
+| --- | ------------------------ | -------------------------------- | ------ | --------------------------------------------------------- |
+| 32  | `pinp_window_position_h` | Window Position H (-100 to +100) | PASS   | Recorded FAIL on the day; corrected 2026-09-10 — see note |
+| 33  | `pinp_window_position_v` | Window Position V (-100 to +100) | PASS   | Recorded FAIL on the day; corrected 2026-09-10 — see note |
+| 34  | `pinp_window_size`       | Window Size (0 to 100)           | PASS   |                                                           |
+| 35  | `pinp_window_cropping_h` | Window Cropping H (0 to 100)     |        | PASS                                                      |
+| 36  | `pinp_window_cropping_v` | Window Cropping V (0 to 100)     |        | PASS                                                      |
+| 37  | `pinp_view_position_h`   | View Position H (-50 to +50)     |        | FAIL                                                      |
+| 38  | `pinp_view_position_v`   | View Position V (-50 to +50)     |        | FAIL                                                      |
+| 39  | `pinp_view_zoom`         | View Zoom (100 to 400)           |        | PASS                                                      |
 
 Check the extremes as well as the middle — the signed encoding is the risky part. Cropping at
 100% means _no crop_; 0% is fully cropped and the window disappears.
+
+> **Correction, 2026-09-10 (Jay).** This section originally recorded four failures. Only two
+> are real: `pinp_view_position_h` and `pinp_view_position_v`. Window Position H and V do work
+> and have been re-marked PASS above. It is also unsettled whether the two remaining ones are
+> genuinely failing or whether the -50 to +50 range does not move the image visibly enough to
+> judge by eye. The original day-of results are left visible in the Notes column rather than
+> erased.
 
 ### C8. DSK
 
