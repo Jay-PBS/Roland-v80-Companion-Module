@@ -7,3 +7,9 @@ DEBUG-*
 /.yarn
 /.vscode
 TESING NOTES.xlsx
+
+# Reference material: keep the small LAN/RS-232 command doc, exclude the bulk.
+# Roland's GPL source release (~445MB, two files exceed GitHub's 100MB limit)
+# and the 20MB reference manual are kept locally only.
+/Reference Docs/v80 source code/
+/Reference Docs/V-80HD_Reference_eng03_W.pdf
