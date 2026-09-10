@@ -41,6 +41,11 @@ jobs:
           yarn lint
         env:
           CI: true
+      - name: Run tests
+        run: |
+          yarn test
+        env:
+          CI: true
       - name: Check formatting
         run: |
           yarn prettier --check .

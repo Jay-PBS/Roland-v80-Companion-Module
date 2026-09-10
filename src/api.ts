@@ -461,6 +461,10 @@ export class V80Api {
 	}
 
 	private onAuthenticated(): void {
+		// A login exchange can expose more than one readiness marker (for example,
+		// Welcome followed by VER). Only the first marker should trigger the full
+		// initial poll; replaying it can send more than a hundred commands at once.
+		if (this.isAuthenticated) return
 		this.stopAuthTimer()
 		this.isAuthenticated = true
 		this.authFailed = false

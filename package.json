@@ -10,6 +10,7 @@
 		"build": "rimraf dist && yarn build:main",
 		"build:main": "tsc -p tsconfig.build.json",
 		"dev": "tsc -p tsconfig.build.json --watch",
+		"test": "yarn build && node --test test/*.test.mjs",
 		"lint:raw": "eslint",
 		"lint": "yarn lint:raw ."
 	},
