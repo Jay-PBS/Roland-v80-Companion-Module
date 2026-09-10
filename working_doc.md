@@ -70,7 +70,9 @@ including the blind fix and the changes that shipped after that run, is in
   **After any `nvm use`, run `corepack enable`** — switching Node majors drops the yarn shim, and
   `yarn` is simply missing until corepack is re-enabled.
 
-  _Still to check: the laptop's Node major, which may differ._
+  _Open, deferred to w/c 2026-09-14: check the laptop's Node major, which may differ. `.nvmrc`
+  tells it to use 22.20.0 but will not switch it — run `nvm use` in the repo directory there.
+  If 22 is not installed on that machine: `nvm install 22.20.0`, then `corepack enable`._
 
 ## Not yet implemented
 
