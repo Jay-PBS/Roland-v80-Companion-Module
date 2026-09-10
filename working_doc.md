@@ -44,8 +44,14 @@ including the blind fix and the changes that shipped after that run, is in
 
 ## Open — needs a decision
 
-- **Tagging.** Tags are `v0.4.0`, `v0.6.5` and `v0.8.5`. 0.6.0, 0.6.2, 0.6.3 and 0.6.4 all went
-  untagged. Decide whether to backfill or leave the gaps.
+- **Tagging — resolved 2026-09-10, no backfill.** Tags are `v0.4.0`, `v0.6.5` and `v0.8.5`, and
+  those are the states worth keeping. The earlier note claimed 0.6.2, 0.6.3 and 0.6.4 went untagged;
+  they cannot be tagged, because they were never committed. Committed history runs
+  0.4.0 → 0.6.0 → 0.6.5 → 0.7.0 → 0.8.2 → 0.8.4 → 0.8.5; 0.6.1, 0.6.2, 0.6.3, 0.6.4, 0.8.0, 0.8.1
+  and 0.8.3 exist in no commit's `package.json` and were local builds only. Of the four that could
+  be tagged (0.6.0, 0.7.0, 0.8.2, 0.8.4), none is worth retrieving — 0.8.2 and 0.8.4 were steps
+  toward 0.8.5 inside two days, 0.7.0 was the experimental hardware-run build, 0.6.0 is superseded.
+  **Going forward: tag at release, once `yarn preflight` passes.**
 - **Whether this file ships.** If the module is ever submitted upstream to bitfocus, consider
   gitignoring `working_doc.md` and `TESTING*.md`.
 - **Node version drift.** `engines` requires `^22.20`; this machine runs v24.11.0. Nothing has

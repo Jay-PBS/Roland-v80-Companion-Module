@@ -182,6 +182,11 @@ If you want the advanced audio controls or the level meters, please raise an iss
 
 ## Changelog
 
+Not every version below is a commit. Only 0.4.0, 0.6.0, 0.6.5, 0.7.0, 0.8.2, 0.8.4 and 0.8.5 were
+ever committed; the rest — 0.6.1 to 0.6.4, 0.8.0, 0.8.1 and 0.8.3 — were local builds that went
+straight to hardware, so their entries record what changed rather than something you can check out.
+Tags exist for `v0.4.0`, `v0.6.5` and `v0.8.5`, which are the states worth returning to.
+
 ### 0.8.5 — clearer active and inactive buttons
 
 The first release merged to `main` after a full hardware run. Everything from 0.7.0 and the 0.8.x line is in it.
