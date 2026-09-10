@@ -57,9 +57,27 @@ including the blind fix and the changes that shipped after that run, is in
   in the build that broke". **From 1.0: tag every release, once `yarn preflight` passes.**
 - **Whether this file ships.** If the module is ever submitted upstream to bitfocus, consider
   gitignoring `working_doc.md` and `TESTING*.md`.
-- **Node version drift.** `engines` requires `^22.20`; this machine runs v24.11.0. Nothing has
-  failed because of it, and CI selects Node 22 from the manifest, so local and CI are not building
-  on the same major version.
+- **Node version drift — corrected 2026-09-10.** The earlier note said this machine runs v24.11.0.
+  It does not: it runs **v20.19.0** (nvm-for-windows, with only 20.19.0 and 20.16.0 installed).
+  Three layers get conflated here, so to be explicit:
+
+  | Layer                                 | Declares                    | Actual          |
+  | ------------------------------------- | --------------------------- | --------------- |
+  | This machine                          | builds the code only        | v20.19.0        |
+  | `package.json` → `engines`            | `^22.20`                    | unmet           |
+  | `companion/manifest.json` → `runtime` | `node22` — **what runs it** | Companion's own |
+
+  The module never runs on the developer's Node. Companion launches it in the runtime named by
+  `runtime.type`, so local Node only affects tsc, eslint, prettier and packaging — all tolerant
+  enough that nothing has failed while building two majors below the declared target.
+
+  **Moving to Node 24 is not available.** `runtime.type` must name a runtime Companion actually
+  ships, which is bitfocus's decision, and `@companion-module/base@1.14.1` declares
+  `engines: ^18.12 || ^22.8` — 24 is outside its stated support.
+
+  **Worth doing instead:** `nvm install 22.20.0` and use it for this project, so the build Node
+  matches the declared runtime. Low priority — nothing is broken — but it removes a real gap
+  between what is built and what will run.
 
 ## Not yet implemented
 
