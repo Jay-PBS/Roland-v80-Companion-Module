@@ -51,7 +51,10 @@ including the blind fix and the changes that shipped after that run, is in
   and 0.8.3 exist in no commit's `package.json` and were local builds only. Of the four that could
   be tagged (0.6.0, 0.7.0, 0.8.2, 0.8.4), none is worth retrieving — 0.8.2 and 0.8.4 were steps
   toward 0.8.5 inside two days, 0.7.0 was the experimental hardware-run build, 0.6.0 is superseded.
-  **Going forward: tag at release, once `yarn preflight` passes.**
+  **These are all pre-release dev versions, so backfill only if something specific needs
+  retrieving.** That changes at 1.0: once the module is submitted to bitfocus and people are running
+  released builds, a tag per release stops being tidiness and becomes how you answer "which code was
+  in the build that broke". **From 1.0: tag every release, once `yarn preflight` passes.**
 - **Whether this file ships.** If the module is ever submitted upstream to bitfocus, consider
   gitignoring `working_doc.md` and `TESTING*.md`.
 - **Node version drift.** `engines` requires `^22.20`; this machine runs v24.11.0. Nothing has
