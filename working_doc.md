@@ -57,27 +57,20 @@ including the blind fix and the changes that shipped after that run, is in
   in the build that broke". **From 1.0: tag every release, once `yarn preflight` passes.**
 - **Whether this file ships.** If the module is ever submitted upstream to bitfocus, consider
   gitignoring `working_doc.md` and `TESTING*.md`.
-- **Node version drift — corrected 2026-09-10.** The earlier note said this machine runs v24.11.0.
-  It does not: it runs **v20.19.0** (nvm-for-windows, with only 20.19.0 and 20.16.0 installed).
-  Three layers get conflated here, so to be explicit:
+- **Node — resolved 2026-09-10, standardised on 22.** This machine now runs **v22.20.0**
+  (nvm-for-windows; 20.19.0 and 20.16.0 remain installed but unused). `.nvmrc` pins it, `engines`
+  (`^22.20`) is satisfied for the first time, and `yarn preflight` passes end to end on it.
 
-  | Layer                                 | Declares                    | Actual          |
-  | ------------------------------------- | --------------------------- | --------------- |
-  | This machine                          | builds the code only        | v20.19.0        |
-  | `package.json` → `engines`            | `^22.20`                    | unmet           |
-  | `companion/manifest.json` → `runtime` | `node22` — **what runs it** | Companion's own |
+  **22 is a ceiling, not a preference.** `@companion-module/base`'s manifest schema accepts only
+  `node16`, `node18`, `node20` and `node22` for `runtime.type` — `node24` is not a valid value, so
+  moving to 24 is unavailable until bitfocus ships one. `@companion-module/base@1.14.1` declares
+  `engines: ^18.12 || ^22.8` and `@companion-module/tools@2.8.0` declares `^18.18 || ^22.18`; both
+  agree 22 is the top.
 
-  The module never runs on the developer's Node. Companion launches it in the runtime named by
-  `runtime.type`, so local Node only affects tsc, eslint, prettier and packaging — all tolerant
-  enough that nothing has failed while building two majors below the declared target.
+  **After any `nvm use`, run `corepack enable`** — switching Node majors drops the yarn shim, and
+  `yarn` is simply missing until corepack is re-enabled.
 
-  **Moving to Node 24 is not available.** `runtime.type` must name a runtime Companion actually
-  ships, which is bitfocus's decision, and `@companion-module/base@1.14.1` declares
-  `engines: ^18.12 || ^22.8` — 24 is outside its stated support.
-
-  **Worth doing instead:** `nvm install 22.20.0` and use it for this project, so the build Node
-  matches the declared runtime. Low priority — nothing is broken — but it removes a real gap
-  between what is built and what will run.
+  _Still to check: the laptop's Node major, which may differ._
 
 ## Not yet implemented
 

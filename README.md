@@ -118,13 +118,20 @@ If you just want to run it, download **`roland-v80hd-0.8.5.tgz`** from the root 
 
 ## Build Instructions
 
+Build on **Node 22**. `.nvmrc` pins 22.20.0, and `companion/manifest.json` declares
+`runtime.type: node22` — the newest runtime the Companion manifest schema allows. The only valid
+values are node16, node18, node20 and node22, so 22 is a ceiling rather than a preference.
+
 ```
 cd \path\to\version\folder
-yarn set version 4.12.0
+nvm use            # or: nvm install 22.20.0 && nvm use 22.20.0
+corepack enable    # restores yarn, which a Node switch removes
 yarn install
-yarn build
-yarn package
+yarn preflight
 ```
+
+Companion runs the module in its own embedded runtime, not the Node you build with, so
+`runtime.type` decides execution. Building on the matching major keeps the two aligned.
 
 Built `.tgz` files are gitignored, so a rebuild does not show up as a repository change. The current release is the exception: `roland-v80hd-0.8.5.tgz` was added to the repository deliberately so there is something to download without building. If you rebuild that exact version the tracked file will show as modified — later versions stay ignored unless they are added the same way.
 
