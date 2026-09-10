@@ -11,7 +11,9 @@
 		"build:main": "tsc -p tsconfig.build.json",
 		"dev": "tsc -p tsconfig.build.json --watch",
 		"lint:raw": "eslint",
-		"lint": "yarn lint:raw ."
+		"lint": "yarn lint:raw .",
+		"lint:fix": "yarn lint:raw --fix .",
+		"preflight": "yarn format && yarn lint:fix && yarn build && yarn package"
 	},
 	"license": "MIT",
 	"repository": "https://github.com/Jay-PBS/Roland-v80-Companion-Module",

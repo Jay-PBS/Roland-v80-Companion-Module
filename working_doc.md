@@ -18,6 +18,7 @@ Last reviewed: 2026-09-10 · Working version: 0.8.5
 | `prettier --check .` | Passing                            |
 | `yarn package`       | Passing — `roland-v80hd-0.8.5.tgz` |
 | GitHub Actions       | **Never run** — see below          |
+| `yarn preflight`     | Passing — the pre-release gate     |
 
 ---
 
@@ -43,10 +44,6 @@ including the blind fix and the changes that shipped after that run, is in
 
 ## Open — needs a decision
 
-- **`enableScripts: false`** came in from upstream's `.yarnrc.yml`. It is a deliberate safety
-  setting, but it stops `postinstall: husky` running, so git hooks do not self-install on a fresh
-  clone. Existing `.husky/` is intact and working on this machine. Decide whether to document the
-  manual step or drop husky. _Jay has asked for this to be explained before deciding._
 - **Tagging.** Tags are `v0.4.0`, `v0.6.5` and `v0.8.5`. 0.6.0, 0.6.2, 0.6.3 and 0.6.4 all went
   untagged. Decide whether to backfill or leave the gaps.
 - **Whether this file ships.** If the module is ever submitted upstream to bitfocus, consider
@@ -95,8 +92,8 @@ in `package.json`, `companion/manifest.json` and README point at it, so everythi
 consistent.
 
 **What was given up:** that workflow also ran install, build, package and a launch test. Nothing now
-catches a broken package before it reaches hardware, so `yarn build`, `yarn lint`,
-`prettier --check` and `yarn package` passing locally is the whole gate.
+catches a broken package before it reaches hardware, so `yarn preflight` passing locally is the whole
+gate. Run it before releasing a version.
 
 **If the module is ever pushed upstream**, the naming rule applies on whatever repository the work
 lands in. `bitfocus/companion-module-roland-v80hd` already satisfies it, so this only matters if a
