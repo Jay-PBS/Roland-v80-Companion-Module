@@ -16,14 +16,18 @@ clean. That closed the three "can only be judged on hardware" unknowns that had 
 
 **What failed, and where it went:**
 
-| Finding                                                                    | Status                                       |
-| -------------------------------------------------------------------------- | -------------------------------------------- |
-| C7 — View Position H and V show no visible movement (see correction below) | Open. README Known Issues + `working_doc.md` |
-| A4 — a corrected password is not retried until the connection is toggled   | Logged, not fixed                            |
-| C67 — `sync_now` gives the operator no feedback at all                     | Logged, not fixed                            |
-| C5 — Split actions sit in an odd order in the list                         | Logged, not fixed                            |
-| A5 / A7 — untestable rather than passing; the auth window is under 100ms   | Needs a different method                     |
-| G — FTB block read returned nothing, so that approach does not work        | Open, harder than thought                    |
+| Finding                                                                    | Status                                                                                          |
+| -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| C7 — View Position H and V show no visible movement (see correction below) | **Open.** Carried to the next run — retest at extremes with View Zoom raised                    |
+| A4 — a corrected password is not retried until the connection is toggled   | **Closed 2026-09-10** — passed on retest                                                        |
+| C67 — `sync_now` gives the operator no feedback at all                     | **Closed 2026-09-10** — redundant while polling runs. Kept as an action, deliberately no preset |
+| C5 — Split actions sit in an odd order in the list                         | **Fixed 2026-09-10** — Split moved after PinP & Key. Verify in the next run                     |
+| A5 / A7 — untestable rather than passing; the auth window is under 100ms   | **Closed 2026-09-10** — recorded in README as untested; needs an automated harness              |
+| G — FTB block read returned nothing, so that approach does not work        | **Parked 2026-09-10** — looks like a device limit. README asks for input                        |
+
+**Dispositions applied 2026-09-10.** The Status column above records where each finding went after
+Jay reviewed them. Three are closed, one fixed in code, one parked, one carried forward. The carried
+and fixed items are queued for the next hardware session in `TESTING-NEXT.md`.
 
 Changes made **after** this run and therefore **not** covered by it: the 0.8.5 palette work, the
 0.8.4 wording changes, and the HELP.md / raw-command label fixes. Those need their own pass.

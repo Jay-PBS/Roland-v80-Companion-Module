@@ -188,13 +188,6 @@ export function UpdateActions(self: ModuleInstance): void {
 			callback: async (e) => self.api.cmdToggleAuxLayerPinpAlwaysOn(A(e), L(e)),
 		},
 
-		split1_on: { name: 'Split 1 – On', options: [], callback: async () => self.api.cmdSplit1(true) },
-		split1_off: { name: 'Split 1 – Off', options: [], callback: async () => self.api.cmdSplit1(false) },
-		split1_toggle: { name: 'Split 1 – Toggle', options: [], callback: async () => self.api.cmdSplit1Toggle() },
-		split2_on: { name: 'Split 2 – On', options: [], callback: async () => self.api.cmdSplit2(true) },
-		split2_off: { name: 'Split 2 – Off', options: [], callback: async () => self.api.cmdSplit2(false) },
-		split2_toggle: { name: 'Split 2 – Toggle', options: [], callback: async () => self.api.cmdSplit2Toggle() },
-
 		pinp_set_source: {
 			name: 'PinP and Key – Set Source',
 			options: [
@@ -276,6 +269,13 @@ export function UpdateActions(self: ModuleInstance): void {
 			options: [LAYER_OPT, { id: 'pct', type: 'number', label: 'Zoom %', default: 100, min: 100, max: 400 }],
 			callback: async (e) => self.api.cmdPinpViewZoom(L(e), Number(e.options.pct)),
 		},
+
+		split1_on: { name: 'Split 1 – On', options: [], callback: async () => self.api.cmdSplit1(true) },
+		split1_off: { name: 'Split 1 – Off', options: [], callback: async () => self.api.cmdSplit1(false) },
+		split1_toggle: { name: 'Split 1 – Toggle', options: [], callback: async () => self.api.cmdSplit1Toggle() },
+		split2_on: { name: 'Split 2 – On', options: [], callback: async () => self.api.cmdSplit2(true) },
+		split2_off: { name: 'Split 2 – Off', options: [], callback: async () => self.api.cmdSplit2(false) },
+		split2_toggle: { name: 'Split 2 – Toggle', options: [], callback: async () => self.api.cmdSplit2Toggle() },
 
 		dsk_set_source: {
 			name: 'DSK – Set Source',

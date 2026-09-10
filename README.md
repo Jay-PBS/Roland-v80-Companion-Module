@@ -144,7 +144,13 @@ PinP is functional. Six of the eight geometry actions were confirmed working on 
 
 View Position H and V produced no visible movement during testing. It is not yet established whether the actions themselves are at fault or whether the range they are given simply does not shift the image perceptibly — the two have not been told apart, so treat these as unverified rather than confirmed broken. Their addresses and byte encoding match the control specification, and the neighbouring actions on adjacent addresses all work. This is long-standing rather than new; the only change ever made to those lines was code formatting. Settling it needs a packet capture of the Roland RCS software moving a PinP view, and a check of what value range produces visible movement.
 
-Fade To Black feedback is unreliable. It lights while the fade is running rather than while Fade To Black is engaged, because it reads a transition-in-progress flag rather than the steady state. Under investigation.
+Fade To Black feedback reports a fade in progress, not the engaged state. It lights while the fade is running rather than while Fade To Black is held on, because `030207` is a transition-in-progress flag. The address that carries the engaged state has not been found: a block read of `RQH:030200,000030;` returns nothing at all, so the approach that would have located it does not work on this device. This looks like a limit of what the unit exposes rather than a module fault, so it is parked. **If you know how to read the engaged Fade To Black state over LAN, please say so on the issue tracker** — it is the one piece missing.
+
+Transition type feedback is partial. It follows the module and responds to panel activity, but driving the transition from the front panel directly can leave it showing an unexpected state. Not a show-stopper, and the root cause is not yet established. It is on the list for the next session with hardware.
+
+Two authentication behaviours could not be tested. The window between connecting and the device accepting a password is under 100ms, which is too short to press a button inside by hand, so the "command sent during authentication" cases could not be exercised by any method available during the 2026-09-08 run. They are neither passing nor failing — untested. Reaching them needs an automated harness rather than an operator.
+
+There is no known EXIT or MENU command. Nothing in the documented command set backs out of an on-screen menu, and none was found by packet capture. This blocks nothing today — the Image Capture screen is closed by a different route that is confirmed working — but a general-purpose way to leave a menu would be useful. Reports welcome.
 
 The Stream & Record actions may start a livestream, not only a recording. On the V-80HD the livestream, audio recording and video recording all start and stop together and cannot be triggered separately; only whether each one occurs is separately configurable, and only on the unit itself under Menu, Stream&Record. If Live Streaming is enabled there, the module's Start action begins a livestream — the unit supports RTMP and RTMPS to YouTube Live, Facebook Live and Twitch as well as custom RTMP and SRT destinations. Check the device's Stream&Record settings before assigning this to a button.
 
@@ -152,7 +158,9 @@ Scene Memory control is not provided and is not planned.
 
 Audio control is limited to mute on purpose. The V-80HD exposes full audio control over LAN — input levels, bus levels and the rest — and it does work, but the front-panel level knobs are not motorised, so a level set from Companion cannot be reflected on the unit and the two will silently disagree. Mute is the only audio control the module surfaces.
 
-If you want the advanced audio controls, please raise an issue on GitHub (https://github.com/Jay-PBS/Roland-v80-Companion-Module/issues). They are not planned otherwise, as the effort is hard to justify without someone who actually needs them.
+Audio level metering is not implemented either, though the device does supply it. The unit pushes meter data unprompted on three registers — `0F0000`, `0F0300` and `0F0600`, most likely Main, AUX 1 and AUX 2 — as 36-byte payloads in L/R pairs, arriving only while audio is present and without any polling. Turning that into Companion variables would need a multi-byte payload decoder the module does not currently have, so it is recorded rather than built.
+
+If you want the advanced audio controls or the level meters, please raise an issue on GitHub (https://github.com/Jay-PBS/Roland-v80-Companion-Module/issues). They are not planned otherwise, as the effort is hard to justify without someone who actually needs them.
 
 ---
 
