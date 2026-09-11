@@ -4,7 +4,7 @@ Live working notes: **open items only**.
 
 Once something is done and verified on hardware, delete it from this file. Anything worth keeping permanently belongs in [README.md](README.md) (project-facing) or [companion/HELP.md](companion/HELP.md) (user-facing), not here. This file is not a changelog and holds no logs — the changelog lives in the README.
 
-Last reviewed: 2026-09-10 · Working version: 0.8.5
+Last reviewed: 2026-09-11 · Working version: 0.8.8
 
 ---
 
@@ -16,7 +16,7 @@ Last reviewed: 2026-09-10 · Working version: 0.8.5
 | `yarn build`         | Passing                            |
 | `yarn lint`          | Passing — clean, 0 errors          |
 | `prettier --check .` | Passing                            |
-| `yarn package`       | Passing — `roland-v80hd-0.8.5.tgz` |
+| `yarn package`       | Passing — `roland-v80hd-0.8.8.tgz` |
 | GitHub Actions       | **Never run** — see below          |
 | `yarn preflight`     | Passing — the pre-release gate     |
 
@@ -129,7 +129,7 @@ Closed as work items on 2026-09-10, kept because it was expensive to obtain and 
 rediscover. Nothing here needs doing.
 
 - **The capture screen does not block the unit's other menus.** Observed 2026-09-08. Open a menu while a capture is running and the menu stays up, the capture visibly continuing behind it. That is why the delayed close in `cmdCaptureImage` is safe: `0B002A` addresses the `[CAPTURE IMAGE]` function directly — a panel switch, not a menu key — so it cannot disturb an unrelated menu. **The live caution: do not fire captures less than 7 seconds apart**, or the first close lands on the second capture's screen.
-- **`0B002A` is the `[CAPTURE IMAGE]` panel switch**, identified 2026-09-08 by packet capture against RCS over 16 open/close cycles. Closing the screen a capture leaves behind needs **two** presses 300ms apart, ungated, **7 seconds** after the capture executes. All four had to be right at once, which is why 0.8.0-0.8.2 each failed differently. Confirmed working in 0.8.3 and the current build. The gate on the pushed `0A0504` `00`/`01` state is wrong for this path — our own sequence gets `04`/`08`/`0A` back, never `01` — but remains correct for the hand-driven `capture_screen_close` action. If a cleaner exit than pressing Image Capture twice ever turns up, this is the place to change it.
+- **`0B002A` is the `[CAPTURE IMAGE]` panel switch**, identified 2026-09-08 by packet capture against RCS over 16 open/close cycles. Closing the screen a capture leaves behind needs **two** presses 300ms apart, ungated, **7 seconds** after the capture executes. All four had to be right at once, which is why 0.8.0-0.8.2 each failed differently. Confirmed working in 0.8.3 and the current build. The gate on the pushed `0A0504` `00`/`01` state is wrong for this path — our own sequence gets `04`/`08`/`0A` back, never `01`. It used to remain correct for the hand-driven `capture_screen_close` action, but that action and its gated method were removed in 0.8.8, so nothing gates on `0A0504` now and the pushed state survives only as a diagnostic log. If a cleaner exit than pressing Image Capture twice ever turns up, this is the place to change it.
 - **The device pushes state unprompted, extensively.** After every capture it dumps its entire parameter set, `000000` through `600xxx`, bracketed by `0E0001,01` and `0E0002`. So it does push without polling, but as a full reload rather than per-parameter deltas. Could reduce the 500ms poll one day; would need the multi-byte parser. Efficiency only — the current build performs well from an operator's point of view.
 - **Two things the captures disproved:** the device does _not_ echo physical panel presses (ten presses, zero `0B0400` frames), and RCS sends a _single_ press/release pair per action.
 - **No known EXIT or MENU command.** Nothing in the documented set backs out of a menu and none was found by capture. Blocks nothing today; noted in the README in case anyone knows one.

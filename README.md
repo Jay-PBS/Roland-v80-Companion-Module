@@ -8,7 +8,7 @@ Repository: https://github.com/Jay-PBS/Roland-v80-Companion-Module
 
 This module is currently in beta. It has been tested on physical hardware and is provided for evaluation. Use in production environments is at the operator's own discretion and risk.
 
-Current version: 0.8.5
+Current version: 0.8.8
 
 ---
 
@@ -114,7 +114,7 @@ Added in 0.6.3: aux1_linked_pgm, aux2_linked_pgm, and tally_hdmi_1 to tally_hdmi
 
 ## Installing a prebuilt module
 
-If you just want to run it, download **`roland-v80hd-0.8.5.tgz`** from the root of this repository and install it in Companion via Settings, Module store, Install from file. Confirm the version shows 0.8.5 afterwards — Companion caches modules by version number, and a stale copy of an earlier version will silently keep running.
+If you just want to run it, download **`roland-v80hd-0.8.8.tgz`** from the root of this repository and install it in Companion via Settings, Module store, Install from file. Confirm the version shows 0.8.8 afterwards — Companion caches modules by version number, and a stale copy of an earlier version will silently keep running.
 
 ## Build Instructions
 
@@ -133,7 +133,7 @@ yarn preflight
 Companion runs the module in its own embedded runtime, not the Node you build with, so
 `runtime.type` decides execution. Building on the matching major keeps the two aligned.
 
-Built `.tgz` files are gitignored, so a rebuild does not show up as a repository change. The current release is the exception: `roland-v80hd-0.8.5.tgz` was added to the repository deliberately so there is something to download without building. If you rebuild that exact version the tracked file will show as modified — later versions stay ignored unless they are added the same way.
+Built `.tgz` files are gitignored, so a rebuild does not show up as a repository change. The current release is the exception: `roland-v80hd-0.8.8.tgz` was added to the repository deliberately so there is something to download without building. Only the current one is kept — 0.8.5 was untracked when 0.8.8 replaced it. If you rebuild that exact version the tracked file will show as modified — later versions stay ignored unless they are added the same way.
 
 `companion/manifest.json` carries `"version": "0.0.0"` deliberately. `yarn package` injects the real
 version from `package.json` into the packaged manifest and names the `.tgz` from it, so `package.json`
@@ -189,10 +189,40 @@ If you want the advanced audio controls or the level meters, please raise an iss
 
 ## Changelog
 
-Not every version below is a commit. Only 0.4.0, 0.6.0, 0.6.5, 0.7.0, 0.8.2, 0.8.4 and 0.8.5 were
-ever committed; the rest — 0.6.1 to 0.6.4, 0.8.0, 0.8.1 and 0.8.3 — were local builds that went
-straight to hardware, so their entries record what changed rather than something you can check out.
-Tags exist for `v0.4.0`, `v0.6.5` and `v0.8.5`, which are the states worth returning to.
+Not every version below is a commit. Only 0.4.0, 0.6.0, 0.6.5, 0.7.0, 0.8.2, 0.8.4, 0.8.5, 0.8.6, 0.8.7 and
+0.8.8 were ever committed; the rest — 0.6.1 to 0.6.4, 0.8.0, 0.8.1 and 0.8.3 — were local builds that
+went straight to hardware, so their entries record what changed rather than something you can check
+out. Tags exist for `v0.4.0`, `v0.6.5` and `v0.8.5`, which are the states worth returning to.
+
+### 0.8.8 — fewer capture actions, and shorter descriptions throughout
+
+**Breaking: two actions were removed.** `Capture Mode (toggle)` and `Capture Mode – close if open` are gone. `Capture Image to Still` already opens the capture screen, takes the still and closes the screen again by itself, so the hand-driven pair were redundant surface area on a screen that is easy to leave open by accident. Any button built on either one will show as an unknown action and needs deleting by hand — Companion's upgrade API can remap an action id but has no way to remove an action from a button, and there is no surviving action to remap these to. Same call as `record_toggle` in 0.6.4.
+
+Pruned alongside them: `cmdCloseCaptureScreen()` in `src/api.ts`, which had no callers left. **`cmdToggleCaptureMode()` was deliberately kept** — it looks orphaned once both its actions go, but `cmdCaptureImage` reaches it through `cmdExitCaptureFunction`, and it is the only thing that emits `0B002A`. Removing it would have broken image capture entirely. The `0A0504` handler stays too: nothing gates on it now, but it still carries the "Image capture complete" log.
+
+- **Six more actions moved to the one-line description pattern** introduced in 0.8.7 — both AUX Linked PGM actions, Capture Image to Still, Stream & Record Start and Stop, and Test Pattern. The detail now appears on the button, above the options, instead of filling the browse list
+- **Stream & Record keeps its hazard in the browse list.** It is the one action where that text is doing safety work, since firing Start can put a stream on air, so the short line names the risk rather than merely being brief. The full warning is unchanged, just relocated
+- **Capture Image to Still now carries the 7-second caution on the button**, where it is actually needed. It was previously only in the help file
+
+### 0.8.7 — Aux preset categories, and a shorter action description
+
+Presentation only. No protocol changes, no action or feedback ids changed, and no behaviour change to any existing button.
+
+- **The `AUX 1`, `AUX 2` and `AUX Link` preset categories are now `Aux 1`, `Aux 2` and `Aux Link`.** Companion sorts preset categories with a case-sensitive comparison where uppercase beats lowercase, so `AU` sorted above both `Ad` and `Au` — the three AUX categories sat above `Advanced` and `Audio` and read as though the list was broken. Title-casing them drops the whole A-block into proper alphabetical order: `Advanced, Audio, Aux 1, Aux 2, Aux Link`
+- **`Advanced – Send raw LAN command` now shows one line in the action browse list.** The warning and worked example moved into a `static-text` option, which Companion renders only once the action is on a button
+
+Only the preset **category** labels changed. Preset names and button faces (`AUX1 3`, `AUX LINK OFF`), the action and feedback names, and the `AUX 1` / `AUX 2` dropdown labels are all untouched — the categories are browse-time grouping that Companion does not retain once a preset is dropped onto a button, so nothing needed an upgrade script.
+
+A module cannot vary a description by context: `CompanionActionDefinition` carries one `description` string and it is serialized once. A `static-text` option is the only way to show more on the configured action than in the browse list, and there is no way to do the reverse.
+
+### 0.8.6 — raw LAN command moved to Advanced
+
+Housekeeping only. No protocol changes and no behaviour change to any existing button.
+
+- **`Send raw LAN command` is now listed as `Advanced – Send raw LAN command`.** It now carries the same `Group – Name` prefix the rest of the list uses, so it reads as its own Advanced block rather than sitting loose next to `Sync state now`. It is still defined last in `actions.ts`
+- **It has a preset, in a new `Advanced` preset category of its own.** The button ships with an empty command string to fill in after dropping it on a page. Nothing else lives in that category, so it is not picked up by accident while browsing the ordinary presets
+
+The action id is unchanged (`raw_command`), so buttons already built against it are unaffected — the rename is the display name only. "Allow advanced actions" still gates whether the command is actually sent.
 
 ### 0.8.5 — clearer active and inactive buttons
 

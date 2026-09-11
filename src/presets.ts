@@ -136,7 +136,7 @@ export function UpdatePresets(self: ModuleInstance): void {
 	for (let i = 1; i <= 8; i++) {
 		presets[`aux1_${i}`] = {
 			type: 'button',
-			category: 'AUX 1',
+			category: 'Aux 1',
 			name: `AUX1 ${i}`,
 			style: { text: `AUX1\n${i}`, size: sz, color: c.white, bgcolor: c.aux, show_topbar: false },
 			steps: [{ down: [{ actionId: 'set_aux_source', options: { aux: '1', source: `input_${i}` } }], up: [] }],
@@ -147,7 +147,7 @@ export function UpdatePresets(self: ModuleInstance): void {
 	}
 	presets['aux1_pinp1_en'] = {
 		type: 'button',
-		category: 'AUX 1',
+		category: 'Aux 1',
 		name: 'AUX1 PiP1 En',
 		style: { text: 'PiP 1\nEN', size: sz, color: c.white, bgcolor: c.layer, show_topbar: false },
 		steps: [{ down: [{ actionId: 'toggle_aux_layer_pinp', options: { aux: '1', layer: '1' } }], up: [] }],
@@ -161,7 +161,7 @@ export function UpdatePresets(self: ModuleInstance): void {
 	}
 	presets['aux1_pinp1_on'] = {
 		type: 'button',
-		category: 'AUX 1',
+		category: 'Aux 1',
 		name: 'AUX1 PiP1 AlwOn',
 		style: { text: 'PiP 1\nALW ON', size: sz, color: c.white, bgcolor: c.layer, show_topbar: false },
 		steps: [{ down: [{ actionId: 'toggle_aux_layer_pinp_always_on', options: { aux: '1', layer: '1' } }], up: [] }],
@@ -175,7 +175,7 @@ export function UpdatePresets(self: ModuleInstance): void {
 	}
 	presets['aux1_pinp2_en'] = {
 		type: 'button',
-		category: 'AUX 1',
+		category: 'Aux 1',
 		name: 'AUX1 PiP2 En',
 		style: { text: 'PiP 2\nEN', size: sz, color: c.white, bgcolor: c.layer, show_topbar: false },
 		steps: [{ down: [{ actionId: 'toggle_aux_layer_pinp', options: { aux: '1', layer: '2' } }], up: [] }],
@@ -189,7 +189,7 @@ export function UpdatePresets(self: ModuleInstance): void {
 	}
 	presets['aux1_pinp2_on'] = {
 		type: 'button',
-		category: 'AUX 1',
+		category: 'Aux 1',
 		name: 'AUX1 PiP2 AlwOn',
 		style: { text: 'PiP 2\nALW ON', size: sz, color: c.white, bgcolor: c.layer, show_topbar: false },
 		steps: [{ down: [{ actionId: 'toggle_aux_layer_pinp_always_on', options: { aux: '1', layer: '2' } }], up: [] }],
@@ -203,7 +203,7 @@ export function UpdatePresets(self: ModuleInstance): void {
 	}
 	presets['aux1_pinp1_layout'] = {
 		type: 'button',
-		category: 'AUX 1',
+		category: 'Aux 1',
 		name: 'AUX1 PiP1 Layout',
 		style: { text: 'PiP1\nLAYOUT', size: sz, color: c.white, bgcolor: c.pinp, show_topbar: false },
 		steps: [{ down: pinpTemplateActions(1), up: [] }],
@@ -211,7 +211,7 @@ export function UpdatePresets(self: ModuleInstance): void {
 	}
 	presets['aux1_pinp2_layout'] = {
 		type: 'button',
-		category: 'AUX 1',
+		category: 'Aux 1',
 		name: 'AUX1 PiP2 Layout',
 		style: { text: 'PiP2\nLAYOUT', size: sz, color: c.white, bgcolor: c.pinp, show_topbar: false },
 		steps: [{ down: pinpTemplateActions(2), up: [] }],
@@ -222,7 +222,7 @@ export function UpdatePresets(self: ModuleInstance): void {
 	for (let i = 1; i <= 8; i++) {
 		presets[`aux2_${i}`] = {
 			type: 'button',
-			category: 'AUX 2',
+			category: 'Aux 2',
 			name: `AUX2 ${i}`,
 			style: { text: `AUX2\n${i}`, size: sz, color: c.white, bgcolor: c.aux, show_topbar: false },
 			steps: [{ down: [{ actionId: 'set_aux_source', options: { aux: '2', source: `input_${i}` } }], up: [] }],
@@ -233,7 +233,7 @@ export function UpdatePresets(self: ModuleInstance): void {
 	}
 	presets['aux2_pinp1_en'] = {
 		type: 'button',
-		category: 'AUX 2',
+		category: 'Aux 2',
 		name: 'AUX2 PiP1 En',
 		style: { text: 'PiP 1\nEN', size: sz, color: c.white, bgcolor: c.layer, show_topbar: false },
 		steps: [{ down: [{ actionId: 'toggle_aux_layer_pinp', options: { aux: '2', layer: '1' } }], up: [] }],
@@ -247,7 +247,7 @@ export function UpdatePresets(self: ModuleInstance): void {
 	}
 	presets['aux2_pinp1_on'] = {
 		type: 'button',
-		category: 'AUX 2',
+		category: 'Aux 2',
 		name: 'AUX2 PiP1 AlwOn',
 		style: { text: 'PiP 1\nALW ON', size: sz, color: c.white, bgcolor: c.layer, show_topbar: false },
 		steps: [{ down: [{ actionId: 'toggle_aux_layer_pinp_always_on', options: { aux: '2', layer: '1' } }], up: [] }],
@@ -261,7 +261,7 @@ export function UpdatePresets(self: ModuleInstance): void {
 	}
 	presets['aux2_pinp2_en'] = {
 		type: 'button',
-		category: 'AUX 2',
+		category: 'Aux 2',
 		name: 'AUX2 PiP2 En',
 		style: { text: 'PiP 2\nEN', size: sz, color: c.white, bgcolor: c.layer, show_topbar: false },
 		steps: [{ down: [{ actionId: 'toggle_aux_layer_pinp', options: { aux: '2', layer: '2' } }], up: [] }],
@@ -275,7 +275,7 @@ export function UpdatePresets(self: ModuleInstance): void {
 	}
 	presets['aux2_pinp2_on'] = {
 		type: 'button',
-		category: 'AUX 2',
+		category: 'Aux 2',
 		name: 'AUX2 PiP2 AlwOn',
 		style: { text: 'PiP 2\nALW ON', size: sz, color: c.white, bgcolor: c.layer, show_topbar: false },
 		steps: [{ down: [{ actionId: 'toggle_aux_layer_pinp_always_on', options: { aux: '2', layer: '2' } }], up: [] }],
@@ -289,7 +289,7 @@ export function UpdatePresets(self: ModuleInstance): void {
 	}
 	presets['aux2_pinp1_layout'] = {
 		type: 'button',
-		category: 'AUX 2',
+		category: 'Aux 2',
 		name: 'AUX2 PiP1 Layout',
 		style: { text: 'PiP1\nLAYOUT', size: sz, color: c.white, bgcolor: c.pinp, show_topbar: false },
 		steps: [{ down: pinpTemplateActions(1), up: [] }],
@@ -297,7 +297,7 @@ export function UpdatePresets(self: ModuleInstance): void {
 	}
 	presets['aux2_pinp2_layout'] = {
 		type: 'button',
-		category: 'AUX 2',
+		category: 'Aux 2',
 		name: 'AUX2 PiP2 Layout',
 		style: { text: 'PiP2\nLAYOUT', size: sz, color: c.white, bgcolor: c.pinp, show_topbar: false },
 		steps: [{ down: pinpTemplateActions(2), up: [] }],
@@ -318,7 +318,7 @@ export function UpdatePresets(self: ModuleInstance): void {
 	// driving AUX sources.
 	presets['aux_link_off'] = {
 		type: 'button',
-		category: 'AUX Link',
+		category: 'Aux Link',
 		name: 'AUX Link Off',
 		style: { text: 'AUX LINK\nOFF', size: sz, color: c.white, bgcolor: c.aux, show_topbar: false },
 		steps: [{ down: [{ actionId: 'set_aux_linked_pgm', options: { mode: '0' } }], up: [] }],
@@ -326,7 +326,7 @@ export function UpdatePresets(self: ModuleInstance): void {
 	}
 	presets['aux_link_auto'] = {
 		type: 'button',
-		category: 'AUX Link',
+		category: 'Aux Link',
 		name: 'AUX Link Auto (toggle)',
 		style: { text: 'AUX LINK\nAUTO', size: sz, color: c.white, bgcolor: c.aux, show_topbar: false },
 		steps: [{ down: [{ actionId: 'toggle_aux_linked_pgm_mode', options: { mode: '1' } }], up: [] }],
@@ -336,7 +336,7 @@ export function UpdatePresets(self: ModuleInstance): void {
 	}
 	presets['aux_link_manual'] = {
 		type: 'button',
-		category: 'AUX Link',
+		category: 'Aux Link',
 		name: 'AUX Link Manual (toggle)',
 		style: { text: 'AUX LINK\nMANUAL', size: sz, color: c.white, bgcolor: c.aux, show_topbar: false },
 		steps: [{ down: [{ actionId: 'toggle_aux_linked_pgm_mode', options: { mode: '2' } }], up: [] }],
@@ -347,7 +347,7 @@ export function UpdatePresets(self: ModuleInstance): void {
 	for (const aux of [1, 2]) {
 		presets[`aux${aux}_link_follow`] = {
 			type: 'button',
-			category: 'AUX Link',
+			category: 'Aux Link',
 			name: `AUX ${aux} follows PGM (toggle)`,
 			style: { text: `AUX ${aux}\nFOLLOW`, size: sz, color: c.white, bgcolor: c.aux, show_topbar: false },
 			steps: [{ down: [{ actionId: 'toggle_aux_linked_pgm_bus', options: { aux: String(aux) } }], up: [] }],
@@ -581,6 +581,20 @@ export function UpdatePresets(self: ModuleInstance): void {
 				up: [],
 			},
 		],
+		feedbacks: [],
+	}
+
+	// ── Advanced ──────────────────────────────────────────────────────────────
+	// Expert use only, and alone in its own category on purpose so it cannot be dropped onto a
+	// page while browsing the ordinary ones. The button ships with an empty command string —
+	// fill it in on the button itself — and "Allow advanced actions" has to be ticked in the
+	// connection config or the action refuses to send and logs a warning instead.
+	presets['raw_command'] = {
+		type: 'button',
+		category: 'Advanced',
+		name: 'Send raw LAN command',
+		style: { text: 'RAW\nLAN\nCMD', size: sz, color: c.white, bgcolor: c.util, show_topbar: false },
+		steps: [{ down: [{ actionId: 'raw_command', options: { cmd: '' } }], up: [] }],
 		feedbacks: [],
 	}
 

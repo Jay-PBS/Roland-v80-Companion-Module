@@ -1,4 +1,4 @@
-# Roland V-80HD — Companion Module v0.8.5
+# Roland V-80HD — Companion Module v0.8.8
 
 This module is currently in beta. It has been tested on physical hardware with firmware v1.20.201 and is provided for evaluation purposes. Use in production environments is at the operator's own discretion and risk.
 
@@ -131,8 +131,9 @@ automatically.
 
 - Capture Image to Still — captures the selected input into a still memory slot (1 to 32)
 - Sources: HDMI In 1 to 4, SDI In 1 to 4, Video Player
-- Capture Mode (toggle) — works the unit's CAPTURE IMAGE button, opening or closing the capture screen
-- Capture Mode, close if open — closes the capture screen, and does nothing if it is not showing
+
+Capture Image to Still is the only capture action. It opens the capture screen, takes the still and
+closes the screen again by itself, so there is nothing to drive by hand.
 
 The capture takes roughly 10 seconds and overwrites the target slot without confirmation. Most of
 that is a deliberate 7-second wait: capture mode leaves its screen up on the monitor, and the unit
@@ -145,7 +146,19 @@ second one's screen.
 ### Utility
 
 - Sync state now — forces an immediate poll
-- Send raw LAN command — always listed, but only sends when Allow advanced actions is ticked
+
+### Advanced
+
+- Advanced – Send raw LAN command — always listed, but only sends when Allow advanced actions is ticked
+
+There is a matching preset in its own **Advanced** preset category. It ships with an empty command
+string, so fill the command in on the button after dropping it on a page. It is kept in a category
+of its own so it is not picked up by accident while browsing the ordinary presets.
+
+Several actions work this way now. The action list shows a single short line, and the fuller note
+or warning appears once the action is on a button, above its options — Send raw LAN command,
+Capture Image to Still, Stream & Record Start and Stop, Test Pattern, and the two AUX Linked PGM
+actions.
 
 ---
 

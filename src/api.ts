@@ -568,8 +568,9 @@ export class V80Api {
 				break
 			// Image capture, pushed by the device. 00 and 01 are the capture screen closing
 			// and opening; 04 armed and ready, 08 capture done, 0A state refreshed. The
-			// 00/01 pair is what tells us whether the screen is up, which is the only safe
-			// gate on CAPTURE_MODE_SW - see cmdCloseCaptureScreen().
+			// 00/01 pair is what tells us whether the screen is up. Nothing gates on it now
+			// that the hand-driven close action is gone; it feeds the diagnostic log in
+			// cmdCaptureImage and the 08 completion message below.
 			case '0A0504':
 				if (val === 0x00 || val === 0x01) this.self.captureModeOpen = val === 0x01
 				if (val === 0x08) this.self.log('info', 'Image capture complete')
@@ -800,22 +801,6 @@ export class V80Api {
 	public cmdFadeToBlack(): void {
 		this.sendCmd(this.dth('0B003C', '01'))
 		this.sendCmd(this.dth('0B003C', '00'))
-	}
-	// Close the still-capture screen, if it is actually showing.
-	//
-	// CAPTURE_MODE_SW is a toggle, so this is gated on the state the device pushes rather
-	// than fired blind: with the screen already shut, sending it would open it. Gating on
-	// the device's own report rather than on what we think we did means a screen opened
-	// from the panel is closed correctly too, and a capture that never opened one is left
-	// alone.
-	//
-	// There is no EXIT command. Roland documents no way to work the menu remotely: the LAN
-	// interface is only DTH/RQH/VER over the SysEx map, and Panel Lock (020300-020347) is
-	// lock state rather than presses, omitting MENU, EXIT, ENTER and the VALUE knob. This
-	// closes the capture screen specifically; it is not a general menu dismissal.
-	public cmdCloseCaptureScreen(): void {
-		if (!this.self.captureModeOpen) return
-		this.cmdToggleCaptureMode()
 	}
 	// The panel [CAPTURE IMAGE] button, press and release. Toggles the capture screen.
 	public cmdToggleCaptureMode(): void {
@@ -1193,11 +1178,10 @@ export class V80Api {
 		// figure. It is a long time to hold, so it is deliberately the last thing in the
 		// sequence and nothing waits on it.
 		//
-		// cmdCloseCaptureScreen is a no-op unless the device has told us the screen is
-		// actually up, so a capture that leaves none is untouched. One consequence of the
-		// long wait: starting a second capture inside 7s means the first close can land on
-		// the second capture's screen. Firing captures that fast is not a real workflow, and
-		// the gate keeps it to a closed screen rather than an opened one.
+		// The close below is cmdExitCaptureFunction, which is deliberately ungated - see the
+		// comment on it. One consequence of the long wait: starting a second capture inside
+		// 7s means the first close can land on the second capture's screen. Firing captures
+		// that fast is not a real workflow, and the action description now says so.
 		await this.delay(7000)
 		// Logged so the next hardware run shows whether this fired and what the device
 		// thought the screen was doing, without needing another packet capture.

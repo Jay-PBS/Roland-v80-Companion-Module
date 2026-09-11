@@ -19,6 +19,16 @@ import {
 const STREAM_RECORD_WARNING =
 	"On the V-80HD livestreaming, video recording and audio recording share one trigger and cannot be started separately. Whichever of Live Streaming, Video Rec and Audio Rec are enabled in the unit's menu will start, so this WILL begin a livestream — including to YouTube, Facebook or Twitch — if Live Streaming is on. Check Stream&Record settings on the device before assigning this to a button."
 
+// Start and Stop share one warning, and it is the one piece of action text doing real safety
+// work - firing Start can put a stream on air. The short description keeps that risk visible in
+// the browse list; this carries the full explanation onto the button.
+const STREAM_RECORD_INFO = {
+	id: 'info',
+	type: 'static-text' as const,
+	label: 'Warning',
+	value: STREAM_RECORD_WARNING,
+}
+
 const LAYER_OPT = { id: 'layer', type: 'number' as const, label: 'Layer (1 or 2)', default: 1, min: 1, max: 2 }
 const AUX_LAYER_MODE = [
 	{ id: '0', label: 'Disable' },
@@ -34,20 +44,6 @@ export function UpdateActions(self: ModuleInstance): void {
 		cut: { name: 'CUT', options: [], callback: async () => self.api.cmdCut() },
 		auto: { name: 'AUTO', options: [], callback: async () => self.api.cmdAuto() },
 		fade_to_black: { name: 'Fade To Black (tap)', options: [], callback: async () => self.api.cmdFadeToBlack() },
-		capture_mode_toggle: {
-			name: 'Capture Mode (toggle)',
-			description:
-				"Works the unit's [CAPTURE IMAGE] button, opening or closing the still-capture screen. It is a toggle, so it opens the screen if it is shut. Capture Image to Still already closes the screen on its own.",
-			options: [],
-			callback: async () => self.api.cmdToggleCaptureMode(),
-		},
-		capture_screen_close: {
-			name: 'Capture Mode – close if open',
-			description:
-				'Closes the still-capture screen, and does nothing if it is not showing. Safer than the toggle for a blind button press.',
-			options: [],
-			callback: async () => self.api.cmdCloseCaptureScreen(),
-		},
 		set_transition_type: {
 			name: 'Set Transition Type',
 			options: [
@@ -124,9 +120,15 @@ export function UpdateActions(self: ModuleInstance): void {
 		},
 		toggle_aux_linked_pgm_mode: {
 			name: 'AUX Linked PGM mode (toggle)',
-			description:
-				'Sets the chosen mode, or returns to Off if it is already active. The mode must not be Off for the bus follow settings to do anything.',
+			description: 'Toggles a link mode, or returns to Off.',
 			options: [
+				{
+					id: 'info',
+					type: 'static-text',
+					label: 'Note',
+					value:
+						'Sets the chosen mode, or returns to Off if it is already active. The mode must not be Off for the bus follow settings to do anything.',
+				},
 				{
 					id: 'mode',
 					type: 'dropdown',
@@ -140,8 +142,14 @@ export function UpdateActions(self: ModuleInstance): void {
 		},
 		set_aux_linked_pgm_bus: {
 			name: 'Set AUX Linked PGM – bus follow',
-			description: 'Chooses which AUX bus follows PGM. This is what Manual Link mode selects between.',
+			description: 'Chooses which AUX bus follows PGM.',
 			options: [
+				{
+					id: 'info',
+					type: 'static-text',
+					label: 'Note',
+					value: 'This is what Manual Link mode selects between.',
+				},
 				{ id: 'aux', type: 'dropdown', label: 'AUX Bus', default: '1', choices: AUX_CHOICES },
 				{
 					id: 'state',
@@ -358,8 +366,13 @@ export function UpdateActions(self: ModuleInstance): void {
 
 		test_pattern: {
 			name: 'Test Pattern All Outputs (toggle)',
-			description: 'Pressing again while the same pattern is active turns it off',
 			options: [
+				{
+					id: 'info',
+					type: 'static-text',
+					label: 'Note',
+					value: 'Pressing again while the same pattern is active turns it off.',
+				},
 				{
 					id: 'pattern',
 					type: 'dropdown',
@@ -374,21 +387,28 @@ export function UpdateActions(self: ModuleInstance): void {
 
 		stream_record_start: {
 			name: 'Stream & Record - Start',
-			description: STREAM_RECORD_WARNING,
-			options: [],
+			description: 'Starts a livestream as well as recording. Check the device first.',
+			options: [STREAM_RECORD_INFO],
 			callback: async () => self.api.cmdStreamRecordStart(),
 		},
 		stream_record_stop: {
 			name: 'Stream & Record - Stop',
-			description: STREAM_RECORD_WARNING,
-			options: [],
+			description: 'Stops livestreaming and recording together.',
+			options: [STREAM_RECORD_INFO],
 			callback: async () => self.api.cmdStreamRecordStop(),
 		},
 
 		capture_image: {
 			name: 'Capture Image to Still',
-			description: 'Captures the selected input into a still memory slot. Takes 10 seconds and overwrites the slot.',
+			description: 'Captures an input into a still slot.',
 			options: [
+				{
+					id: 'info',
+					type: 'static-text',
+					label: 'Note',
+					value:
+						'Takes about 10 seconds and overwrites the slot without asking. Do not fire two captures less than 7 seconds apart, or the first screen close can land on the second capture.',
+				},
 				{ id: 'slot', type: 'number', label: 'Still slot', default: 1, min: 1, max: 32 },
 				{
 					id: 'source',
@@ -408,11 +428,25 @@ export function UpdateActions(self: ModuleInstance): void {
 		// while existing buttons still referenced it, leaving them in an unknown-action
 		// state. The checkbox now gates execution instead, so the safety catch remains and
 		// a button that was already built keeps its identity either way.
+		//
+		// Companion renders `description` in both the action browse list and the configured
+		// action row on a button, from a single string - there is no per-context variant.
+		// A static-text option, though, only renders once the action is on a button, because
+		// the browse list has no option values to draw yet. So the short line below warns at
+		// pick time and the detail waits until it is actually needed.
 		raw_command: {
-			name: 'Send raw LAN command',
-			description:
-				'Expert use only. Requires "Allow advanced actions" in the connection config. Incorrect commands can overwrite mixer state. Example: DTH:001500,29; sets Program to Input 1.',
-			options: [{ id: 'cmd', type: 'textinput', label: 'Command string', default: '' }],
+			name: 'Advanced – Send raw LAN command',
+			description: 'Expert use only.',
+			options: [
+				{
+					id: 'info',
+					type: 'static-text',
+					label: 'Warning',
+					value:
+						'Requires "Allow advanced actions" in the connection config. Incorrect commands can overwrite mixer state. Example: DTH:001500,29; sets Program to Input 1.',
+				},
+				{ id: 'cmd', type: 'textinput', label: 'Command string', default: '' },
+			],
 			callback: async (e) => {
 				if (!self.config.showAdvanced) {
 					self.log('warn', 'Raw LAN command ignored - enable "Allow advanced actions" in the connection config')
