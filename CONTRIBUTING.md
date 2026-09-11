@@ -20,6 +20,8 @@ If the problem is with Companion itself rather than this module, report it again
 
 **Unsolicited pull requests are closed unmerged.** This is not a comment on their quality. Code that cannot be verified on the bench is not merged, and hardware sessions are scheduled rather than continuous, so an open pull request would sit unactionable for weeks and then be re-implemented anyway to fit the capture evidence behind the surrounding code.
 
-If you have found a genuine defect, open an issue describing it. That is the useful contribution — the diagnosis is the hard part, and a clear report is acted on. If you would like to work on something, ask in an issue first and it can be agreed before you spend the time.
+If you have found a genuine defect, open an issue describing it. That is the useful contribution — the diagnosis is the hard part, and a clear report is acted on. If you would like to work on something, ask first and it can be agreed before you spend the time.
 
-Security issues are the exception to the public-issue rule — see [SECURITY.md](SECURITY.md).
+## Anything else
+
+Questions, behaviour you are not sure is a bug, feature ideas, or anything that does not fit the bug report form — raise it in [issues](https://github.com/Jay-PBS/Roland-v80-Companion-Module/issues) or [discussions](https://github.com/Jay-PBS/Roland-v80-Companion-Module/discussions). Both are read.
