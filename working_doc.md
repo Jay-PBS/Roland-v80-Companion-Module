@@ -55,8 +55,6 @@ including the blind fix and the changes that shipped after that run, is in
   retrieving.** That changes at 1.0: once the module is submitted to bitfocus and people are running
   released builds, a tag per release stops being tidiness and becomes how you answer "which code was
   in the build that broke". **From 1.0: tag every release, once `yarn preflight` passes.**
-- **Whether this file ships.** If the module is ever submitted upstream to bitfocus, consider
-  gitignoring `working_doc.md` and `TESTING*.md`.
 - **Node — resolved 2026-09-10, standardised on 22.** This machine now runs **v22.20.0**
   (nvm-for-windows; 20.19.0 and 20.16.0 remain installed but unused). `.nvmrc` pins it, `engines`
   (`^22.20`) is satisfied for the first time, and `yarn preflight` passes end to end on it.
@@ -74,26 +72,137 @@ including the blind fix and the changes that shipped after that run, is in
   tells it to use 22.20.0 but will not switch it — run `nvm use` in the repo directory there.
   If 22 is not installed on that machine: `nvm install 22.20.0`, then `corepack enable`._
 
+## Queued for 1.0 release prep
+
+Decided 2026-09-14, to be done as one pass before submission — not now, because both remove files
+the current workflow still reads and downloads.
+
+- **Internal working docs stop shipping.** `working_doc.md`, `TESTING.md`, `TESTING-NEXT.md` and
+  `CODE_REVIEW.md` go into `.gitignore` and come out of the index. They are internal working files
+  and do not belong in a public module repo. Supersedes the old "consider it" note. Untracking needs
+  `git rm --cached` on each — confirm before running it, the files stay on disk.
+  **Knock-on:** `README.md` and this file cross-reference all four by name; those links break for
+  anyone reading the repo and need removing in the same pass.
+- **Built `.tgz` files stop shipping.** Bitfocus do not want build artifacts in the tree.
+  `/*.tgz` already covers every untracked one; `roland-v80hd-0.8.8.tgz` is tracked deliberately and
+  needs `git rm --cached` as well.
+  **Knock-on:** [README.md](README.md) line 117 tells users to download the `.tgz` from the repo
+  root, and line 136 explains why it is tracked. Both have to change, and 1.0 needs somewhere else to
+  be downloadable from — a GitHub Release asset is the obvious answer, since releases currently carry
+  only `v0.4.0` with no assets at all.
+
+## Follow-on from PROTOCOL.md — logged 2026-09-14
+
+The protocol knowledge itself now lives in [PROTOCOL.md](PROTOCOL.md). Only the actions are here.
+
+- **Try the Fade To Black query before 1.0.** Recorded as a lead in `PROTOCOL.md` §10.1 — Roland's
+  other command set, over the same socket, documents a direct query for the engaged state. Untested.
+  If it works it closes the public appeal in `README.md` and retires the block-read hunt; if it does
+  not, say so in §10.1 so nobody tries it twice. One line in a terminal.
+- **Settle the block-read contradiction 2026-09-15** — `TESTING-NEXT.md` §1b. Once it lands, update
+  `PROTOCOL.md` §8.6 from **Contested** to a fact and revisit `README.md`'s "parked as a device
+  limit" position.
+
+---
+
+## Queued — once hardware testing clears
+
+Held deliberately until `TESTING-NEXT.md` is signed off, so nothing renames under the tester.
+
+- **Rewrite "layout" / "layer" / "PinP" for clarity.** The three words are used for three different
+  things and the naming does not separate them. Established 2026-09-14 by reading the addresses:
+  - **PinP 1 and PinP 2 are real hardware layers**, not a module abstraction. Two separate address
+    blocks, `0012xx` and `0013xx`, each carrying its own independent source, PGM/PVW, window
+    position, size, cropping, view position and view zoom. `pinpAddr()` in `src/api.ts` is the whole
+    abstraction — it picks `12` or `13`. They composite simultaneously; the AUX routing proves it,
+    needing four addresses for bus × layer (`000020`/`000021`, `000023`/`000024`).
+  - **The device has no PinP layout store.** Nothing in the protocol saves or recalls a geometry set.
+    Scene Memory (`0A0000`, 32 slots) is the only store-and-recall and it is whole-scene, not
+    PinP-scoped — and it is not implemented, see "Decided against" below.
+  - **The four "Layout" presets are a hardcoded macro**, not a device slot. `pinpTemplateActions()`
+    in `src/presets.ts` fires eight geometry writes at fixed values — position 0/0, size 25%,
+    cropping 100/100, view position 0/0, zoom 100%. It is a "reset this layer to a default box"
+    button and the name does not say so.
+
+  **This also settles CODE_REVIEW §6.2, which was logged as an open design question.** It is not:
+  `pinpTemplateActions()` takes only a `layer` argument, no `aux`, so `aux1_pinp1_layout` and
+  `aux2_pinp1_layout` emit byte-for-byte identical commands, as do the PiP2 pair. Four presets, two
+  behaviours, two exact duplicates — and all four are named and categorised as AUX-scoped when PinP
+  geometry belongs to the layer, not to the bus displaying it. There is no per-AUX geometry in the
+  protocol at all. The remaining choice is only what to do: collapse to two presets under a PinP
+  category, or keep four for panel convenience and rename so they stop implying AUX scoping.
+
+  **Live caution for the section 1 testing:** the Layout preset writes `pinp_view_position_h/v` at
+  **0**, the exact parameter under investigation. Keep it off the panel while chasing View Position.
+
+- **Clean up the browse action list — one line per action.** Decided 2026-09-14. **Next build, not
+  now.**
+
+  **The rule: no action carries a `description` except `raw_command`.** The second line makes the
+  browse list a mess to scan, and the browse list's job is to let you find an action, not to explain
+  it. Where an action genuinely needs explaining, the explanation belongs **inside the action** — a
+  `static-text` option, which renders on the button where the operator is actually configuring it.
+
+  **`raw_command` is the one exception**, and only because a wrong command there can crash the unit.
+  A hazard that severe earns a warning at pick time, before the action is chosen. `'Expert use
+only.'` stays exactly as it is.
+
+  This works because `description` is a single string rendered in **both** the browse list and the
+  configured action row on a button — there is no per-context variant — whereas a `static-text`
+  option renders only once the action is placed. So moving text from one to the other removes it
+  from the list without losing it.
+
+  **Nine descriptions come out. Five already have a `static-text` block, so they are a straight
+  delete:**
+
+  | Action                       | Line  |
+  | ---------------------------- | ----- |
+  | `toggle_aux_linked_pgm_mode` | `123` |
+  | `set_aux_linked_pgm_bus`     | `145` |
+  | `stream_record_start`        | `390` |
+  | `stream_record_stop`         | `396` |
+  | `capture_image`              | `403` |
+
+  **Four have no `static-text` behind them. Move the text into one rather than dropping it** — each
+  of these is the only place the module explains a genuinely confusing control:
+
+  | Action                   | Line  | Why it has to survive on the button                            |
+  | ------------------------ | ----- | -------------------------------------------------------------- |
+  | `set_mix_time`           | `65`  | Units key — the option takes tenths, so `4` means 0.4s, not 4s |
+  | `set_aux_layer_pinp`     | `174` | Explains AUX-bus PinP overlay working independently of PGM     |
+  | `pinp_window_cropping_h` | `255` | Inverted scale — 100% means _no_ crop                          |
+  | `pinp_window_cropping_v` | `261` | Same inversion, vertical                                       |
+
+  **Knock-on — `TESTING-NEXT.md` §7, still untested.** Item 29 enumerates which actions show a
+  one-line description and is void once this lands. Item 31 checks the livestream hazard is visible
+  in the browse list _before_ the action is picked; under this rule it moves to the button, where
+  `STREAM_RECORD_INFO` already carries the full warning, so item 31 needs rewriting to check the
+  button rather than the list. Item 24 survives and gets more true. **Clear §7 against the current
+  0.8.8 build first, or rewrite 29 and 31 before the change lands** — do not test the sheet as
+  written against a build that has already been cleaned up.
+
+---
+
 ## Not yet implemented
 
-| Feature           | Blocker                                            |
-| ----------------- | -------------------------------------------------- |
-| Stream Start/Stop | Probably already implemented as Record — see below |
+Addresses, payloads and the reasoning are all in [PROTOCOL.md](PROTOCOL.md) §9. Only the intent is
+here.
 
-Wanted, not started:
+**Wanted, worth building:**
 
-- **Pull the operator's own source and still names.** `0220xx` returns 8-byte ASCII: `022000` =
-  "HDMI 1", `022400` = "SDI 1", `022800` onward = "Still 1", "Still 2"… Dropdowns and button labels
-  could carry the operator's names instead of fixed text. Needs an ASCII payload decoder, which
-  `parseDth` cannot do today — it truncates to the first byte. **Kept deliberately: this is the one
-  banked capture finding still worth building.**
+- **Source and still names** (`0220xx`). Dropdowns and button labels carrying the operator's own
+  names instead of fixed text. Blocked only on an ASCII payload decoder — `parseDth` truncates every
+  reply to its first byte. **This is the one banked capture finding still worth building**, and the
+  same decoder unblocks audio levels and metering at the same time.
 
-Decided against, not blocked:
+**Decided against, not blocked:** Scene Memory, audio level control, audio metering, still tally.
+Each has a reason recorded in `PROTOCOL.md` §9 — respectively an unwritable save address,
+non-motorised panel knobs that would silently disagree with any remote value, the missing decoder,
+and the poll budget.
 
-- **Scene Memory control.** Pulled from the project and the docs. Never implemented in 0.6.0 anyway — the "code exists but is unexposed" claim was carried forward from 0.2.x, and `cmdLoadMemory`/`cmdSaveMemory` were dropped in the TypeScript rewrite. If it is ever wanted back: Load is one write to `0A0000` (00H-1FH = Memory 1-32) and is easy; Save is not, because the spec marks `0A0001` **Read Only**, so the old 0.2.x save almost certainly did nothing and would need a Wireshark capture of a panel-driven save first.
-- **Audio level control.** The level knobs are not motorised, so a level set from Companion cannot be reflected on the panel and the two silently disagree. Mute stays the only audio control. The address is documented if it is ever wanted: `01 xx 03`, three bytes, `7E 00 00` = -INF, `00 00 00` = 0.0dB, `00 00 64` = +10.0dB, where xx is 01H-0FH matching the existing `AUDIO_CH` map.
-- **Audio level metering.** Readable and pushed unprompted, but needs the same multi-byte decoder. Recorded in the README audio section; raise an issue if anyone actually wants it.
-- **Still tally.** `0C0008` onward covers Still 1-32. Left out deliberately: 32 more reads would take the poll cycle from 61 commands to 93, and 250ms already locked the panel up once. Add behind a config toggle if anyone actually wants it.
+_Removed 2026-09-14: a stale row claiming Stream Start/Stop was "probably already implemented as
+Record". It is implemented, on `0A0800`, and confirmed on hardware — the note predated the
+2026-09-04 capture that established it._
 
 ---
 
@@ -123,16 +232,13 @@ differently-named intermediate fork is used.
 
 ---
 
-## Banked protocol knowledge — reference only, no action
+## Banked protocol knowledge — moved
 
-Closed as work items on 2026-09-10, kept because it was expensive to obtain and would be costly to
-rediscover. Nothing here needs doing.
+Everything that was here now lives in [PROTOCOL.md](PROTOCOL.md), which is the permanent public
+record and goes further than this section did — it also recovers three findings that had been
+compressed out of this file and survived only in git history.
 
-- **The capture screen does not block the unit's other menus.** Observed 2026-09-08. Open a menu while a capture is running and the menu stays up, the capture visibly continuing behind it. That is why the delayed close in `cmdCaptureImage` is safe: `0B002A` addresses the `[CAPTURE IMAGE]` function directly — a panel switch, not a menu key — so it cannot disturb an unrelated menu. **The live caution: do not fire captures less than 7 seconds apart**, or the first close lands on the second capture's screen.
-- **`0B002A` is the `[CAPTURE IMAGE]` panel switch**, identified 2026-09-08 by packet capture against RCS over 16 open/close cycles. Closing the screen a capture leaves behind needs **two** presses 300ms apart, ungated, **7 seconds** after the capture executes. All four had to be right at once, which is why 0.8.0-0.8.2 each failed differently. Confirmed working in 0.8.3 and the current build. The gate on the pushed `0A0504` `00`/`01` state is wrong for this path — our own sequence gets `04`/`08`/`0A` back, never `01`. It used to remain correct for the hand-driven `capture_screen_close` action, but that action and its gated method were removed in 0.8.8, so nothing gates on `0A0504` now and the pushed state survives only as a diagnostic log. If a cleaner exit than pressing Image Capture twice ever turns up, this is the place to change it.
-- **The device pushes state unprompted, extensively.** After every capture it dumps its entire parameter set, `000000` through `600xxx`, bracketed by `0E0001,01` and `0E0002`. So it does push without polling, but as a full reload rather than per-parameter deltas. Could reduce the 500ms poll one day; would need the multi-byte parser. Efficiency only — the current build performs well from an operator's point of view.
-- **Two things the captures disproved:** the device does _not_ echo physical panel presses (ten presses, zero `0B0400` frames), and RCS sends a _single_ press/release pair per action.
-- **No known EXIT or MENU command.** Nothing in the documented set backs out of a menu and none was found by capture. Blocks nothing today; noted in the README in case anyone knows one.
-- **`0E0000`** is a 1 Hz keepalive both directions; **`030604`** a 1 Hz clock counter. Neither is state.
-
-Captures kept at `scratchpad/v80_exit_hunt.pcapng` and `scratchpad/v80_toggle_test.pcapng`.
+Raw capture files are kept locally at `scratchpad/v80_exit_hunt.pcapng` and
+`scratchpad/v80_toggle_test.pcapng`. **`scratchpad/` is gitignored, so those are the one piece of
+evidence with no backup.** Everything derived from them is written up; the recordings themselves are
+not recoverable if that directory is cleared.
