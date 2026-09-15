@@ -62,8 +62,15 @@ export function UpdateActions(self: ModuleInstance): void {
 		},
 		set_mix_time: {
 			name: 'Set Mix/Wipe Time (0.0 to 4.0 seconds)',
-			description: '0 = 0.0s, 10 = 1.0s, 20 = 2.0s, 40 = 4.0s',
-			options: [{ id: 'tenths', type: 'number', label: 'Tenths of a second (0 to 40)', default: 10, min: 0, max: 40 }],
+			options: [
+				{
+					id: 'info',
+					type: 'static-text',
+					label: 'Note',
+					value: 'This value is in tenths of a second: 0 = 0.0s, 10 = 1.0s, 20 = 2.0s, 40 = 4.0s (the maximum).',
+				},
+				{ id: 'tenths', type: 'number', label: 'Tenths of a second (0 to 40)', default: 10, min: 0, max: 40 },
+			],
 			callback: async (e) => self.api.cmdSetMixTime(Number(e.options.tenths)),
 		},
 		set_wipe_type: {
@@ -120,7 +127,6 @@ export function UpdateActions(self: ModuleInstance): void {
 		},
 		toggle_aux_linked_pgm_mode: {
 			name: 'AUX Linked PGM mode (toggle)',
-			description: 'Toggles a link mode, or returns to Off.',
 			options: [
 				{
 					id: 'info',
@@ -142,7 +148,6 @@ export function UpdateActions(self: ModuleInstance): void {
 		},
 		set_aux_linked_pgm_bus: {
 			name: 'Set AUX Linked PGM – bus follow',
-			description: 'Chooses which AUX bus follows PGM.',
 			options: [
 				{
 					id: 'info',
@@ -171,8 +176,13 @@ export function UpdateActions(self: ModuleInstance): void {
 		},
 		set_aux_layer_pinp: {
 			name: 'Set AUX Layer – PinP and Key',
-			description: 'Controls PinP overlay on the AUX bus output independently from PGM',
 			options: [
+				{
+					id: 'info',
+					type: 'static-text',
+					label: 'Note',
+					value: 'Controls whether a PinP layer appears on the AUX bus output, independently of PGM.',
+				},
 				{ id: 'aux', type: 'dropdown', label: 'AUX Bus', default: '1', choices: AUX_CHOICES },
 				{ id: 'layer', type: 'dropdown', label: 'PinP Layer', default: '1', choices: AUX_LAYER_CHOICES },
 				{ id: 'mode', type: 'dropdown', label: 'Mode', default: '1', choices: AUX_LAYER_MODE },
@@ -252,14 +262,32 @@ export function UpdateActions(self: ModuleInstance): void {
 		},
 		pinp_window_cropping_h: {
 			name: 'PinP – Window Cropping H (0 to 100%)',
-			description: '100% = no crop (full width). 0% = fully cropped. Reduce to crop left and right edges.',
-			options: [LAYER_OPT, { id: 'pct', type: 'number', label: 'Cropping %', default: 100, min: 0, max: 100 }],
+			options: [
+				{
+					id: 'info',
+					type: 'static-text',
+					label: 'Note',
+					value:
+						'The scale is inverted: 100% = no crop (full width), 0% = fully cropped. Reduce to crop the left and right edges.',
+				},
+				LAYER_OPT,
+				{ id: 'pct', type: 'number', label: 'Cropping %', default: 100, min: 0, max: 100 },
+			],
 			callback: async (e) => self.api.cmdPinpCroppingH(L(e), Number(e.options.pct)),
 		},
 		pinp_window_cropping_v: {
 			name: 'PinP – Window Cropping V (0 to 100%)',
-			description: '100% = no crop (full height). 0% = fully cropped. Reduce to crop top and bottom edges.',
-			options: [LAYER_OPT, { id: 'pct', type: 'number', label: 'Cropping %', default: 100, min: 0, max: 100 }],
+			options: [
+				{
+					id: 'info',
+					type: 'static-text',
+					label: 'Note',
+					value:
+						'The scale is inverted: 100% = no crop (full height), 0% = fully cropped. Reduce to crop the top and bottom edges.',
+				},
+				LAYER_OPT,
+				{ id: 'pct', type: 'number', label: 'Cropping %', default: 100, min: 0, max: 100 },
+			],
 			callback: async (e) => self.api.cmdPinpCroppingV(L(e), Number(e.options.pct)),
 		},
 		pinp_view_position_h: {
@@ -387,20 +415,17 @@ export function UpdateActions(self: ModuleInstance): void {
 
 		stream_record_start: {
 			name: 'Stream & Record - Start',
-			description: 'Starts a livestream as well as recording. Check the device first.',
 			options: [STREAM_RECORD_INFO],
 			callback: async () => self.api.cmdStreamRecordStart(),
 		},
 		stream_record_stop: {
 			name: 'Stream & Record - Stop',
-			description: 'Stops livestreaming and recording together.',
 			options: [STREAM_RECORD_INFO],
 			callback: async () => self.api.cmdStreamRecordStop(),
 		},
 
 		capture_image: {
 			name: 'Capture Image to Still',
-			description: 'Captures an input into a still slot.',
 			options: [
 				{
 					id: 'info',
