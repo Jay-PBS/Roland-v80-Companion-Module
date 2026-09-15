@@ -1072,8 +1072,16 @@ export class V80Api {
 		this.cmdAuxBusMute(aux, aux === 1 ? !this.self.aux1BusMute : !this.self.aux2BusMute)
 	}
 
+	// Freeze is a boolean the device holds until told otherwise, so it follows the optimistic
+	// rule - the write updates local state and the feedback lights immediately, and the 500ms
+	// poll corrects it if the device disagreed. Setting it here rather than in the three public
+	// callers is what keeps On, Off and Toggle behaving identically: before this, only Toggle
+	// updated state, so freeze_active behaved differently depending on which of the three
+	// actions happened to be on the button. Input freeze already worked this way.
 	public cmdSetFreeze(on: boolean): void {
 		this.sendCmd(this.dth('020900', on ? '01' : '00'))
+		this.self.freezeActive = on
+		this.self.changedState()
 	}
 	public cmdFreezeOn(): void {
 		this.cmdSetFreeze(true)
@@ -1082,10 +1090,7 @@ export class V80Api {
 		this.cmdSetFreeze(false)
 	}
 	public cmdFreezeToggle(): void {
-		const n = !this.self.freezeActive
-		this.cmdSetFreeze(n)
-		this.self.freezeActive = n
-		this.self.changedState()
+		this.cmdSetFreeze(!this.self.freezeActive)
 	}
 
 	public cmdSetInputFreeze(inputKey: string, on: boolean): void {

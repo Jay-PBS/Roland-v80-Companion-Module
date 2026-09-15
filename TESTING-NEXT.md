@@ -63,7 +63,9 @@ identical downstream.
 **If bytes come back:** repeat with FTB engaged and settled, then diff. Whichever byte differs is the
 steady Fade To Black state — the one open question `README.md` publicly asks for help with.
 
----
+--26.09.15 09:51:38 Surface/Handler/streamdeck:A00SA4502K9QLM: Button 1/0/2 pressed
+--26.09.15 09:51:38 Surface/Handler/streamdeck:A00SA4502K9QLM: Button 1/0/2 released
+--Only thing from button press of raw RQH:030200,000030;
 
 ## 6. Aux preset categories — one item blocked
 
@@ -190,7 +192,7 @@ push that arrived and failed to parse. Settle it on the same re-run as §1b: deb
 look for any `0A0504` traffic at all.
 
 **If confirmed**, the options are to poll `0A0504` like `030800`, or to drop the completion log and
-the diagnostic as things that cannot work. `PROTOCOL.md` §4.11 and §7.3 currently list `0A0504` as
+the diagnostic as things that cannot work. `PROTOCOL.md` §4.11 and §7.4 currently list `0A0504` as
 pushed, on the strength of the RCS capture — both now carry a caveat pointing here.
 
 ---

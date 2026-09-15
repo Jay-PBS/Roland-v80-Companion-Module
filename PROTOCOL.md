@@ -720,7 +720,34 @@ Fixing it was measurable in the same terms: **18,838 sent, 15,518 returned**, ag
 > **Nothing between 1 and 63 commands per write has been tested.** If you need to reduce traffic,
 > find the chunk size the device tolerates on hardware rather than assuming one.
 
-### 7.3 What the device pushes unprompted
+### 7.3 Optimistic updates — when to trust your own write
+
+A client that lights its own feedback the moment a button is pressed feels better than one that
+waits up to 500 ms for the poll to confirm. Whether that is safe depends on the parameter, and the
+rule this module settled on is:
+
+**Booleans the device holds until told otherwise are updated optimistically. Value selections are
+not.**
+
+| Optimistic                                                                             | Not optimistic                                                                 |
+| -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Mutes, splits, PinP and DSK on-air, freeze, input freeze, test pattern, AUX layer mode | Source selection on every bus, all PinP geometry, Stream & Record, transitions |
+
+The reasoning is about the cost of a wrong guess. A mute that guesses wrong self-corrects within one
+poll and nobody notices. A **source** selection that guesses wrong shows the operator the wrong input
+lit on a tally button — briefly telling them something false about what is on air. Better to wait.
+
+**Two exceptions worth knowing:**
+
+- **AUX link follow (`020115` / `020116`) is never optimistic**, even though it is a boolean. The
+  device changes this on its own — selecting an AUX source by hand breaks the link, a transition or
+  a re-press restores it — so assuming a write stuck would make the feedback lie about a value the
+  device may have overridden. Read it back. See §4.9.
+- **With polling disabled**, the optimistic half keeps working from the client and the non-optimistic
+  half freezes permanently at whatever it last showed. Nothing corrects it. That is the real cost of
+  turning polling off, and it is larger than "feedbacks lag a bit".
+
+### 7.4 What the device pushes unprompted
 
 | Register                       | Behaviour                                                                                  |
 | ------------------------------ | ------------------------------------------------------------------------------------------ |
@@ -741,7 +768,7 @@ need a multi-byte parser first.
 Note the upper bound. The address space extends to `600xxx`, far beyond anything documented or
 anything this module touches.
 
-### 7.4 What the device does not do
+### 7.5 What the device does not do
 
 **It does not echo physical panel presses.** Ten presses of `[CAPTURE IMAGE]` produced zero frames
 attributable to the press — only the `0A0504` state change that follows. **Disproven**, definitively,
@@ -988,7 +1015,7 @@ is where it would go.
 
 ### 10.7 Open: could the full dump replace polling?
 
-The device dumps its entire parameter set after a capture (§7.3). Whether anything else triggers it,
+The device dumps its entire parameter set after a capture (§7.4). Whether anything else triggers it,
 and whether per-parameter deltas are ever sent, is unknown.
 
 ---

@@ -58,7 +58,7 @@ otherwise and needs correcting at the 1.0 docs pass.
   **Same trap as `030800`:** the 16-cycle capture that established `0A0504`'s behaviour recorded
   RCS's session, not ours. **Not yet proven** — verbose logging was off. Settle it alongside the §1b
   re-run. If confirmed, either poll `0A0504` or drop the completion log and the diagnostic.
-  `PROTOCOL.md` §4.11 and §7.3 carry the caveat.
+  `PROTOCOL.md` §4.11 and §7.4 carry the caveat.
 
 ## Open — needs a decision
 
