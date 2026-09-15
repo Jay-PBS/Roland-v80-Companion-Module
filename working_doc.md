@@ -4,21 +4,21 @@ Live working notes: **open items only**.
 
 Once something is done and verified on hardware, delete it from this file. Anything worth keeping permanently belongs in [README.md](README.md) (project-facing) or [companion/HELP.md](companion/HELP.md) (user-facing), not here. This file is not a changelog and holds no logs — the changelog lives in the README.
 
-Last reviewed: 2026-09-15 · Working version: 0.8.9
+Last reviewed: 2026-09-15 · Working version: 0.8.10
 
 ---
 
 ## Build status
 
-| Check                | State                                                      |
-| -------------------- | ---------------------------------------------------------- |
-| `yarn install`       | Passing                                                    |
-| `yarn build`         | Passing                                                    |
-| `yarn lint`          | Passing — clean, 0 errors                                  |
-| `prettier --check .` | Passing                                                    |
-| `yarn package`       | Passing — `roland-v80hd-0.8.9.tgz` (untracked, local only) |
-| GitHub Actions       | Passing — Node CI, green on `main`                         |
-| `yarn preflight`     | Passing — the pre-release gate                             |
+| Check                | State                                                       |
+| -------------------- | ----------------------------------------------------------- |
+| `yarn install`       | Passing                                                     |
+| `yarn build`         | Passing                                                     |
+| `yarn lint`          | Passing — clean, 0 errors                                   |
+| `prettier --check .` | Passing                                                     |
+| `yarn package`       | Passing — `roland-v80hd-0.8.10.tgz` (untracked, local only) |
+| GitHub Actions       | Passing — Node CI, green on `main`                          |
+| `yarn preflight`     | Passing — the pre-release gate                              |
 
 ---
 
@@ -89,6 +89,14 @@ session; `TESTING-NEXT.md` §V has the checks. **Bump the version before packagi
   If 22 is not installed on that machine: `nvm install 22.20.0`, then `corepack enable`._
 
 ## Queued — next build cycle
+
+- **Rewrite HELP's Image Capture section — after final testing.** The current text describes the
+  button as busy for the full ten seconds, which the timeout fix changed: it returns in about a
+  second and the screen clears itself later. A corrected version was written and **reverted on
+  2026-09-15 deliberately** — the observed behaviour needs confirming on hardware first, and the
+  section will want rewriting once around the final result rather than twice. Also move the
+  "overwrites without confirmation" warning out of the timing paragraph; it is the part that loses
+  someone's work and it is currently buried.
 
 - **Point `repository` and `bugs` at the Bitfocus repo.** Decided 2026-09-15. Both fields in
   **`companion/manifest.json`** and **`package.json`** currently name this fork:

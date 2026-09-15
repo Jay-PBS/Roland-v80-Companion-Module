@@ -1,4 +1,4 @@
-# Roland V-80HD — Companion Module v0.8.9
+# Roland V-80HD — Companion Module v0.8.10
 
 This module is currently in beta. It has been tested on physical hardware with firmware v1.20.201 and is provided for evaluation purposes. Use in production environments is at the operator's own discretion and risk.
 
@@ -137,15 +137,10 @@ automatically.
 Capture Image to Still is the only capture action. It opens the capture screen, takes the still and
 closes the screen again by itself, so there is nothing to drive by hand.
 
-**The button returns straight away.** The still is written within a second or two, and the capture
-screen then clears itself about seven seconds later without anything further from you. There is no
-need to wait on the button or press anything on the unit.
-
-That seven-second wait is deliberate. Capture mode leaves its screen up on the monitor, and the unit
-needs far longer than its own "capture done" reply suggests before it will accept the press that
-dismisses it. The action handles that in the background.
-
-**The target slot is overwritten without confirmation.**
+The capture takes roughly 10 seconds and overwrites the target slot without confirmation. Most of
+that is a deliberate 7-second wait: capture mode leaves its screen up on the monitor, and the unit
+needs far longer than its own "capture done" reply suggests before it will accept the button press
+that dismisses it. The action does that for you, so no button press on the unit is needed.
 
 Do not fire two captures less than 7 seconds apart, or the first one's dismissal can land on the
 second one's screen.

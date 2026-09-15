@@ -8,7 +8,7 @@ Repository: https://github.com/Jay-PBS/Roland-v80-Companion-Module
 
 This module is currently in beta. It has been tested on physical hardware and is provided for evaluation. Use in production environments is at the operator's own discretion and risk.
 
-Current version: 0.8.9
+Current version: 0.8.10
 
 ---
 
@@ -197,6 +197,14 @@ Not every version below is a commit. Only 0.4.0, 0.6.0, 0.6.5, 0.7.0, 0.8.2, 0.8
 0.8.8 were ever committed; the rest — 0.6.1 to 0.6.4, 0.8.0, 0.8.1 and 0.8.3 — were local builds that
 went straight to hardware, so their entries record what changed rather than something you can check
 out. Tags exist for `v0.4.0`, `v0.6.5` and `v0.8.5`, which are the states worth returning to.
+
+### 0.8.10 — PinP preset tidy-up, and a note that would have saved two test sessions
+
+**The four duplicate PinP geometry presets are gone.** There were six, not four: two already sat correctly under PinP & Key, and the other four were AUX-scoped copies in Aux 1 and Aux 2 that emitted byte-for-byte identical commands. They had to be identical — PinP geometry belongs to the layer, and there is no per-AUX geometry in the protocol at all, so the AUX scoping those presets implied did not exist. Aux 1 and Aux 2 now hold only genuinely AUX-scoped presets.
+
+**The two survivors are renamed from Layout to Reset.** "Layout" implied a stored arrangement being recalled, and the device has no layout store — Scene Memory is the only store-and-recall and it is whole-scene. What these buttons do is write eight fixed geometry values, which is a reset to a default box. Existing buttons are unaffected: presets are copied when dropped, not referenced.
+
+**Both View Position actions now carry a note explaining what they do.** View Position moves the image inside the PinP window; Window Position moves the window itself. That is not obvious from the names, and at the default 100% zoom the travel over the -50 to +50 range is too small to see — which is why View Position was recorded as a defect across two hardware sessions before anyone raised the zoom. The note says to raise View Zoom first.
 
 ### 0.8.9 — capture no longer errors, one line per action, four fixes
 

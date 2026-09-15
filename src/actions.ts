@@ -29,6 +29,18 @@ const STREAM_RECORD_INFO = {
 	value: STREAM_RECORD_WARNING,
 }
 
+// View Position moves the image inside the PinP window; Window Position moves the window itself.
+// The distinction is not obvious from the names alone, and the travel is small enough at 100% zoom
+// that View Position reads as broken - it was recorded as a defect across two hardware sessions
+// before anyone raised the zoom. Both View Position actions carry this.
+const VIEW_POSITION_NOTE = {
+	id: 'info',
+	type: 'static-text' as const,
+	label: 'Note',
+	value:
+		'This moves the image inside the PinP window. To move the window itself, use Window Position. Raise View Zoom above 100% first - at default zoom the travel over this range is too small to see, which makes the action look like it is doing nothing.',
+}
+
 const LAYER_OPT = { id: 'layer', type: 'number' as const, label: 'Layer (1 or 2)', default: 1, min: 1, max: 2 }
 const AUX_LAYER_MODE = [
 	{ id: '0', label: 'Disable' },
@@ -292,12 +304,20 @@ export function UpdateActions(self: ModuleInstance): void {
 		},
 		pinp_view_position_h: {
 			name: 'PinP – View Position H (-50 to +50%)',
-			options: [LAYER_OPT, { id: 'pct', type: 'number', label: 'Position %', default: 0, min: -50, max: 50 }],
+			options: [
+				VIEW_POSITION_NOTE,
+				LAYER_OPT,
+				{ id: 'pct', type: 'number', label: 'Position %', default: 0, min: -50, max: 50 },
+			],
 			callback: async (e) => self.api.cmdPinpViewPositionH(L(e), Number(e.options.pct)),
 		},
 		pinp_view_position_v: {
 			name: 'PinP – View Position V (-50 to +50%)',
-			options: [LAYER_OPT, { id: 'pct', type: 'number', label: 'Position %', default: 0, min: -50, max: 50 }],
+			options: [
+				VIEW_POSITION_NOTE,
+				LAYER_OPT,
+				{ id: 'pct', type: 'number', label: 'Position %', default: 0, min: -50, max: 50 },
+			],
 			callback: async (e) => self.api.cmdPinpViewPositionV(L(e), Number(e.options.pct)),
 		},
 		pinp_view_zoom: {

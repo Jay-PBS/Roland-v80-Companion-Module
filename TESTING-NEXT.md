@@ -5,15 +5,14 @@
 
 **Last updated:** 2026-09-15 · **Tester:** Jay · **Device firmware:** v1.20.201
 
-**The build under test is about to change.** Everything here except §B was verified against
-`roland-v80hd-0.8.8.tgz`. Four code changes have since landed unbuilt — see §V. **Bump the version
-before packaging**, or Companion will serve a cached 0.8.8.
+**Build under test: `roland-v80hd-0.8.10.tgz`**, packaged 2026-09-15. It carries seven code changes,
+**none of them hardware-verified** — §V has the checks.
 
 ---
 
-## V. Verify the four unbuilt changes
+## V. Verify the seven unbuilt changes
 
-Written 2026-09-15, typechecked and linted, **never run**. One build, one session.
+Written 2026-09-15, typechecked and linted, **never run**. One session clears all ten checks.
 
 | #   | Change              | What to check                                                                                                     | Result |
 | --- | ------------------- | ----------------------------------------------------------------------------------------------------------------- | ------ |
@@ -23,6 +22,8 @@ Written 2026-09-15, typechecked and linted, **never run**. One build, one sessio
 | V4  | Freeze consistency  | Freeze On, Off and Toggle on three buttons — all three light the feedback identically                             |        |
 | V5  | Browse list         | Every action shows **one line**. Only `Advanced – Send raw LAN command` has a second                              |        |
 | V8  | Raw command echo    | Fire any raw command — `Raw TX:` and `Raw RX [Nb]:` both appear at info level                                     |        |
+| V9  | PinP presets        | `PinP & Key` holds `PiP1 Reset` and `PiP2 Reset`. **Aux 1 and Aux 2 no longer contain any PiP Layout buttons**    |        |
+| V10 | View Position note  | Both View Position actions show a `Note` on the button telling you to raise View Zoom first                       |        |
 | V6  | Browse list         | Mix/Wipe Time, AUX Layer PinP and both Croppings show a `Note` block **on the button**                            |        |
 | V7  | Browse list         | Stream & Record Start still shows its livestream `Warning` **on the button**                                      |        |
 
