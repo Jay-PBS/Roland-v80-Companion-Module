@@ -8,7 +8,7 @@ Repository: https://github.com/Jay-PBS/Roland-v80-Companion-Module
 
 This module is currently in beta. It has been tested on physical hardware and is provided for evaluation. Use in production environments is at the operator's own discretion and risk.
 
-Current version: 0.8.8
+Current version: 0.8.9
 
 ---
 
@@ -114,7 +114,11 @@ Added in 0.6.3: aux1_linked_pgm, aux2_linked_pgm, and tally_hdmi_1 to tally_hdmi
 
 ## Installing a prebuilt module
 
-If you just want to run it, download **`roland-v80hd-0.8.8.tgz`** from the root of this repository and install it in Companion via Settings, Module store, Install from file. Confirm the version shows 0.8.8 afterwards — Companion caches modules by version number, and a stale copy of an earlier version will silently keep running.
+Build it yourself — see [Build Instructions](#build-instructions) below. It takes one command once the toolchain is in place, and `yarn package` writes a `.tgz` you install in Companion via Settings, Module store, Install from file.
+
+**Built packages are no longer committed to this repository.** They are build artifacts and do not belong in source control. From 1.0 each release will carry its `.tgz` as a GitHub Release asset, and the module is intended for the Companion module store, which is where most people should get it.
+
+Whichever route you use, **confirm the version Companion reports after installing**. Companion caches modules by version number, so reinstalling the same version number over itself will silently keep running the old code.
 
 ## Build Instructions
 
@@ -133,7 +137,7 @@ yarn preflight
 Companion runs the module in its own embedded runtime, not the Node you build with, so
 `runtime.type` decides execution. Building on the matching major keeps the two aligned.
 
-Built `.tgz` files are gitignored, so a rebuild does not show up as a repository change. The current release is the exception: `roland-v80hd-0.8.8.tgz` was added to the repository deliberately so there is something to download without building. Only the current one is kept — 0.8.5 was untracked when 0.8.8 replaced it. If you rebuild that exact version the tracked file will show as modified — later versions stay ignored unless they are added the same way.
+Built `.tgz` files are gitignored and none is committed, so a rebuild never shows up as a repository change. **Bump the version in `package.json` before packaging anything you intend to test** — Companion caches modules by version number, so rebuilding under a number it has already seen will leave it running the old code with no indication anything is wrong.
 
 `companion/manifest.json` carries `"version": "0.0.0"` deliberately. `yarn package` injects the real
 version from `package.json` into the packaged manifest and names the `.tgz` from it, so `package.json`
@@ -193,6 +197,22 @@ Not every version below is a commit. Only 0.4.0, 0.6.0, 0.6.5, 0.7.0, 0.8.2, 0.8
 0.8.8 were ever committed; the rest — 0.6.1 to 0.6.4, 0.8.0, 0.8.1 and 0.8.3 — were local builds that
 went straight to hardware, so their entries record what changed rather than something you can check
 out. Tags exist for `v0.4.0`, `v0.6.5` and `v0.8.5`, which are the states worth returning to.
+
+### 0.8.9 — capture no longer errors, one line per action, four fixes
+
+**Image capture no longer writes an error to the log.** The capture always worked, but the action awaited its own 7-second screen dismissal, so it did not resolve for about 8.5 seconds and Companion timed it out with a stack trace every time. The dismissal now runs detached and the action returns in about 1.3 seconds. Nothing about what reaches the device changed — same four commands, same timings, same ungated two-press exit.
+
+**The browse action list is one line per action.** The second line made it hard to scan, and the browse list's job is to help you find an action rather than explain it. Nine descriptions are gone; four of them — Mix/Wipe Time, Set AUX Layer PinP, and both Window Croppings — moved into a `Note` block that appears on the button, where you are actually configuring the thing. `Advanced – Send raw LAN command` keeps its one-line warning, because a wrong command there can crash the unit and that earns a caution before the action is picked.
+
+**Freeze On, Off and Toggle now behave identically.** Only Toggle updated the feedback locally, so `freeze_active` responded differently depending on which of the three actions was on the button. All three now share one path.
+
+**The state burst at connect no longer goes out twice.** The device sends both readiness markers in one exchange and each one triggered a full 64-command state request, so every connection opened with 128 writes and logged "Connection ready" twice. Reported by `iibaranov-IG`.
+
+**The raw LAN command action now reports both directions at info level** — `Raw TX:` and `Raw RX [Nb]:`. It is an expert tool behind its own config gate, and the only reason to use it is to see what the device does; hiding that behind a second debug checkbox cost three hardware sessions. The byte count matters: replies are truncated to their first byte everywhere else, so this is the only place a 48-byte block read is distinguishable from a 1-byte one.
+
+**PinP View Position works.** It was recorded as broken across two test sessions and it is not — the travel over the -50 to +50 span is simply too small to see at default zoom. Raise View Zoom first. README and HELP corrected.
+
+**Also:** `PROTOCOL.md` added at the repository root — a public reference for the V-80HD's LAN control protocol, covering transport, framing, the full address map, encodings, device behaviour, dead ends and open questions, with every claim marked by how it is known.
 
 ### 0.8.8 — fewer capture actions, and shorter descriptions throughout
 

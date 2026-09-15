@@ -1,6 +1,8 @@
 node_modules/
 package-lock.json
 /pkg
+# Built module packages. None is committed - they are build artifacts, and from 1.0 each
+# release carries its .tgz as a GitHub Release asset instead.
 /*.tgz
 /dist
 DEBUG-*

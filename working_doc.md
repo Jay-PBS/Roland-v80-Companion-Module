@@ -4,21 +4,21 @@ Live working notes: **open items only**.
 
 Once something is done and verified on hardware, delete it from this file. Anything worth keeping permanently belongs in [README.md](README.md) (project-facing) or [companion/HELP.md](companion/HELP.md) (user-facing), not here. This file is not a changelog and holds no logs — the changelog lives in the README.
 
-Last reviewed: 2026-09-11 · Working version: 0.8.8
+Last reviewed: 2026-09-15 · Working version: 0.8.9
 
 ---
 
 ## Build status
 
-| Check                | State                              |
-| -------------------- | ---------------------------------- |
-| `yarn install`       | Passing                            |
-| `yarn build`         | Passing                            |
-| `yarn lint`          | Passing — clean, 0 errors          |
-| `prettier --check .` | Passing                            |
-| `yarn package`       | Passing — `roland-v80hd-0.8.8.tgz` |
-| GitHub Actions       | Passing — Node CI, green on `main` |
-| `yarn preflight`     | Passing — the pre-release gate     |
+| Check                | State                                                      |
+| -------------------- | ---------------------------------------------------------- |
+| `yarn install`       | Passing                                                    |
+| `yarn build`         | Passing                                                    |
+| `yarn lint`          | Passing — clean, 0 errors                                  |
+| `prettier --check .` | Passing                                                    |
+| `yarn package`       | Passing — `roland-v80hd-0.8.9.tgz` (untracked, local only) |
+| GitHub Actions       | Passing — Node CI, green on `main`                         |
+| `yarn preflight`     | Passing — the pre-release gate                             |
 
 ---
 
@@ -99,13 +99,13 @@ the current workflow still reads and downloads.
   `git rm --cached` on each — confirm before running it, the files stay on disk.
   **Knock-on:** `README.md` and this file cross-reference all four by name; those links break for
   anyone reading the repo and need removing in the same pass.
-- **Built `.tgz` files stop shipping.** Bitfocus do not want build artifacts in the tree.
-  `/*.tgz` already covers every untracked one; `roland-v80hd-0.8.8.tgz` is tracked deliberately and
-  needs `git rm --cached` as well.
-  **Knock-on:** [README.md](README.md) line 117 tells users to download the `.tgz` from the repo
-  root, and line 136 explains why it is tracked. Both have to change, and 1.0 needs somewhere else to
-  be downloadable from — a GitHub Release asset is the obvious answer, since releases currently carry
-  only `v0.4.0` with no assets at all.
+- **Built `.tgz` files stopped shipping — done 2026-09-15.** `roland-v80hd-0.8.8.tgz` untracked with
+  `git rm --cached`; it stays on disk. `/*.tgz` covers everything now that nothing is excepted, and
+  carries a comment saying why. README's "download it from the repository root" section is rewritten
+  to point at building, with a note that releases will carry the asset from 1.0.
+
+  **Still to decide before 1.0:** whether 1.0 ships as a GitHub Release asset, or whether the module
+  store is the only route. Releases currently carry `v0.4.0` with no assets at all.
 
 ## Follow-on from PROTOCOL.md — logged 2026-09-14
 
