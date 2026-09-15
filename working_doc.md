@@ -111,10 +111,13 @@ session; `TESTING-NEXT.md` §V has the checks. **Bump the version before packagi
   at build time — CODE_REVIEW §3.3. So the update that goes upstream fixes their stale version
   string as well.
 
-- **Internal working docs stop shipping.** Moved here from the 1.0 pass on 2026-09-15 — do it with
-  the next build rather than at submission. `working_doc.md`, `TESTING.md`, `TESTING-NEXT.md` and
-  `CODE_REVIEW.md` go into `.gitignore` and come out of the index. They are internal working files
-  and do not belong in a public module repo. Closes CODE_REVIEW §4.3.
+- **Test sheets and the code review stop shipping.** Moved here from the 1.0 pass on 2026-09-15 —
+  do it with the next build rather than at submission. **`TESTING.md`, `TESTING-NEXT.md` and
+  `CODE_REVIEW.md`** go into `.gitignore` and come out of the index. Closes CODE_REVIEW §4.3.
+
+  **`working_doc.md` and `PROTOCOL.md` stay tracked, in both repos** — decided 2026-09-15.
+  `PROTOCOL.md` is public reference material by design, and `working_doc.md` carries the project's
+  reasoning in a form a future maintainer would want. Only the test sheets and the review go.
 
   `git rm --cached` on each — **confirm before running it.** The files stay on disk; only the index
   entries go, exactly as the `.tgz` did.
@@ -124,9 +127,9 @@ session; `TESTING-NEXT.md` §V has the checks. **Bump the version before packagi
   links — a reader would see a filename that is not in the repo, which is worth a light edit but
   breaks nothing. `PROTOCOL.md`, `HELP.md` and `CONTRIBUTING.md` reference none of them.
 
-  Changes to these files stop being versioned from that commit onward. **Accepted, 2026-09-15** —
-  everything already committed stays in history, and pre-1.0 the ongoing history of internal working
-  notes is not worth keeping. All four go in one pass.
+  Changes to the three stop being versioned from that commit onward. **Accepted, 2026-09-15** —
+  everything already committed stays in history, and pre-1.0 the ongoing history of test sheets is
+  not worth keeping.
 
 ## Queued for 1.0 release prep
 

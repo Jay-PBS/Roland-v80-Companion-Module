@@ -47,12 +47,12 @@ bisects to a single cause. A ninth carries the version bump and changelog.
 
 **Still not done, all deliberate:**
 
-| §   | Item                             | Why                                                                                                                                                                                                                                                       |
-| --- | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 4.1 | Repository name vs manifest `id` | **Not a defect — reassessed 2026-09-15.** `id` is `roland-v80hd`, and the upstream repo is `companion-module-roland-v80hd`. That matches exactly. The mismatch only ever existed against this personal fork's name, which is not where the check applies. |
-| 4.2 | `companion-module-checks.yaml`   | **Not applicable here, not blocked.** The check validates the _hosting repository's_ name, so it cannot pass in a fork named anything else and has no business being here. It passes upstream automatically.                                              |
-| 4.3 | `working_doc.md` is tracked      | **Queued for the next build cycle** (moved from the 1.0 pass, 2026-09-15). All four internal docs get gitignored and `git rm --cached`. Files stay on disk. Losing their ongoing history is accepted pre-1.0.                                             |
-| —   | 2.x API migration                | Out of scope, as the review says. 1.14.1 remains a fine place to submit from.                                                                                                                                                                             |
+| §   | Item                             | Why                                                                                                                                                                                                                                                                                          |
+| --- | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 4.1 | Repository name vs manifest `id` | **Not a defect — reassessed 2026-09-15.** `id` is `roland-v80hd`, and the upstream repo is `companion-module-roland-v80hd`. That matches exactly. The mismatch only ever existed against this personal fork's name, which is not where the check applies.                                    |
+| 4.2 | `companion-module-checks.yaml`   | **Not applicable here, not blocked.** The check validates the _hosting repository's_ name, so it cannot pass in a fork named anything else and has no business being here. It passes upstream automatically.                                                                                 |
+| 4.3 | `working_doc.md` is tracked      | **Queued for the next build cycle** (moved from the 1.0 pass, 2026-09-15). `TESTING.md`, `TESTING-NEXT.md` and `CODE_REVIEW.md` get gitignored and `git rm --cached`; `working_doc.md` and `PROTOCOL.md` stay tracked. Files stay on disk. Losing their ongoing history is accepted pre-1.0. |
+| —   | 2.x API migration                | Out of scope, as the review says. 1.14.1 remains a fine place to submit from.                                                                                                                                                                                                                |
 
 **The repository name was never a submission blocker**, and the original review overstated it. The
 check reads the name of the repo the workflow is running in. `bitfocus/companion-module-roland-v80hd`
@@ -610,7 +610,7 @@ see [§0](#0-status-of-this-review) for the full status table.
 7. ~~Restore `.github/workflows/node.yaml` (§4.2).~~ **Done** — `a167c4c`, plus a `prettier --check`
    step.
 8. Gitignore `working_doc.md` (§4.3). **Queued for the next build cycle** — moved from the 1.0
-   pass on 2026-09-15. All four internal docs go at once. The files stay on disk; what ends is their
+   pass on 2026-09-15. `TESTING.md`, `TESTING-NEXT.md` and this file go; `working_doc.md` and `PROTOCOL.md` stay. The files stay on disk; what ends is their
    version history from that commit onward.
 9. ~~Restore `.husky/pre-commit` (§7.2).~~ **Done** — `a167c4c`. It has run on every commit since,
    which is how we know it now works. The one-off `yarn husky` step is documented in the README,
