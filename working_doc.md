@@ -124,11 +124,9 @@ session; `TESTING-NEXT.md` §V has the checks. **Bump the version before packagi
   links — a reader would see a filename that is not in the repo, which is worth a light edit but
   breaks nothing. `PROTOCOL.md`, `HELP.md` and `CONTRIBUTING.md` reference none of them.
 
-  **The one real consequence:** changes to these files stop being versioned from that commit onward.
-  Everything already committed stays in history forever, but the safety net ends — and
-  `TESTING-NEXT.md` and this file both hold live, unfinished queues. `TESTING.md` and
-  `CODE_REVIEW.md` are closed records and lose nothing by going first, so splitting the pass is an
-  option if the live queues are not clear by then.
+  Changes to these files stop being versioned from that commit onward. **Accepted, 2026-09-15** —
+  everything already committed stays in history, and pre-1.0 the ongoing history of internal working
+  notes is not worth keeping. All four go in one pass.
 
 ## Queued for 1.0 release prep
 
