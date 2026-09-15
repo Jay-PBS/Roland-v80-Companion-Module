@@ -47,17 +47,20 @@ bisects to a single cause. A ninth carries the version bump and changelog.
 
 **Still not done, all deliberate:**
 
-| §   | Item                             | Why                                                                                                             |
-| --- | -------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| 4.1 | Repository name vs manifest `id` | Only matters at the point of upstream submission, and resolving it means renaming the repo. Jay's call.         |
-| 4.3 | `working_doc.md` is tracked      | Untracking it removes a live working file from the branch. Not done without asking; also only matters upstream. |
-| 4.2 | `companion-module-checks.yaml`   | It fails on the repository name (§4.1), so restoring it now would just add a permanently red check.             |
-| —   | 2.x API migration                | Out of scope, as the review says. 1.14.1 remains a fine place to submit from.                                   |
+| §   | Item                             | Why                                                                                                                                                                                                                                                       |
+| --- | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 4.1 | Repository name vs manifest `id` | **Not a defect — reassessed 2026-09-15.** `id` is `roland-v80hd`, and the upstream repo is `companion-module-roland-v80hd`. That matches exactly. The mismatch only ever existed against this personal fork's name, which is not where the check applies. |
+| 4.2 | `companion-module-checks.yaml`   | **Not applicable here, not blocked.** The check validates the _hosting repository's_ name, so it cannot pass in a fork named anything else and has no business being here. It passes upstream automatically.                                              |
+| 4.3 | `working_doc.md` is tracked      | Queued for the 1.0 prep pass. Untracking it removes a live working file from the branch, so it waits until the task queue it holds is clear.                                                                                                              |
+| —   | 2.x API migration                | Out of scope, as the review says. 1.14.1 remains a fine place to submit from.                                                                                                                                                                             |
 
-Everything left turns on the same thing: **4.1, the repository name.** It only matters at
-upstream submission, resolving it means renaming the repo, and 4.2 is blocked behind it because
-`companion-module-checks` fails on the name and would sit permanently red. 4.3 is queued for the 1.0
-prep pass, and the 2.x API migration remains out of scope — 1.14.1 is a fine place to submit from.
+**The repository name was never a submission blocker**, and the original review overstated it. The
+check reads the name of the repo the workflow is running in. `bitfocus/companion-module-roland-v80hd`
+already satisfies it, so nothing needs renaming and nothing is waiting on anything.
+
+The one genuine submission-time item is smaller: `repository` and `bugs` in both
+`companion/manifest.json` and `package.json` point at this fork. Whether they should move to the
+bitfocus repo is a decision about where bug reports land, not a defect.
 
 ### How it was verified
 

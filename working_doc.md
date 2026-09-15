@@ -173,18 +173,27 @@ Record". It is implemented, on `0A0800`, and confirmed on hardware — the note 
 requests: `yarn install --immutable`, `yarn build`, `yarn lint`, `prettier --check .` on Node 22.x,
 with `permissions: contents: read` and superseded runs cancelled. Green on `main`.
 
-**The `companion-module-checks` workflow remains deleted.** It failed at its first step because the
-repository name must begin with `companion-module-`:
+**The `companion-module-checks` workflow remains deleted, and that is correct — not a workaround.**
+It failed at its first step:
 
 ```
 Unknown repository name format: Roland-v80-Companion-Module.
 Repository name must start with companion-module- or companion-surface-
 ```
 
-Not a code fault — it never reached build or package. The repository keeps its name, and
-`repository` / `bugs` in `package.json`, `companion/manifest.json` and the README all point at it
-consistently. **If the module goes upstream the naming rule applies wherever the work lands**, and
-`bitfocus/companion-module-roland-v80hd` already satisfies it.
+**The check validates the name of the repository it is running in.** It is Bitfocus's own CI, meant
+to run in a Bitfocus module repo, and it cannot pass in a personal fork whatever the fork is called.
+Keeping it here would only add a permanently red check that proves nothing.
+
+**Nothing needs renaming.** `bitfocus/companion-module-roland-v80hd` already satisfies the rule, and
+`manifest.id` is `roland-v80hd`, which is exactly what that repo name resolves to. The two agree
+today. This was previously written up as a submission blocker waiting on a repo rename; it is not
+one, and never was.
+
+The one real submission-time item is smaller: `repository` and `bugs` in `companion/manifest.json`
+and `package.json` both point at this fork. Whether they move to the Bitfocus repo is a decision
+about where bug reports should land — issues currently come here, and `CONTRIBUTING.md` is written
+on that basis.
 
 `yarn preflight` (`format` → `lint:fix` → `build` → `package`) remains the local pre-release gate.
 
