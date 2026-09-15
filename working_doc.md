@@ -24,23 +24,41 @@ Last reviewed: 2026-09-11 · Working version: 0.8.8
 
 ## Open — needs hardware
 
-Only one finding from the 2026-09-08 run is still open. The full queue for the next session,
-including the blind fix and the changes that shipped after that run, is in
-[TESTING-NEXT.md](TESTING-NEXT.md).
+Two questions, both settled by one five-minute session — see `TESTING-NEXT.md` §1b and F3. Tick the
+connection's **Enable debug logging (verbose TX/RX)** checkbox first; the 2026-09-15 attempt produced
+no result because it was off.
 
-- **PinP View Position H and V show no visible movement (C7).** `pinp_view_position_h` and
-  `pinp_view_position_v`. The six other geometry actions pass — Window Position H and V, Size
-  (`09`), Cropping H (`0B`), Cropping V (`0D`), View Zoom (`1C`).
+- **Do block reads work?** Contradictory hardware results on record. Gates the Fade To Black search.
+- **Does `0A0504` reach our session?** See F3 above.
 
-  **Settle "would I see it if it worked" before assuming the commands are wrong.** View Position is
-  a -50 to +50 option; if the visible travel is small, or only shows at particular zoom or crop
-  settings, then "nothing moved" is an observation problem, not a protocol one. That changes the fix
-  entirely. Steps are written out in `TESTING-NEXT.md` §1.
+**C7 PinP View Position is closed, 2026-09-15** — it works; the travel is only visible once View Zoom
+is raised. It was an observation problem, not a protocol one. `README.md` Known Issues still says
+otherwise and needs correcting at the 1.0 docs pass.
 
-  On paper the commands check out: addresses anchored on Size working at `09`, the encoder emits the
-  spec's printed bytes, the option ranges permit negatives. **Not a regression** —
-  `git log -L 985,1020:src/api.ts` shows prettier reformatting as the only change ever made to those
-  lines.
+## Open — needs code, raised 2026-09-15
+
+- **F2 — every capture logs a Companion timeout error.** The capture works; Companion gives up on the
+  action and writes a stack trace each time (`Error executing action: Error: Call timed out`).
+  `cmdCaptureImage` awaits its whole sequence including the **7000 ms** hold and the two-press exit,
+  so the promise resolves ~8.5 s after the execute.
+
+  **The comment already describes the right design and the code does not follow it** —
+  `src/api.ts:1178` says the hold "is deliberately the last thing in the sequence and nothing waits
+  on it", but line 1185 is `await this.delay(7000)` inside the action's own chain. Fix: return after
+  the execute and let the dismissal run detached, so the action resolves in ~1.3 s while device
+  behaviour is unchanged. A detached promise must not swallow its own errors. **Should not ship at
+  1.0** — it puts a stack trace in the log on every capture.
+
+- **F3 — the device may not push `0A0504` to our session.** `Image capture complete` never appeared
+  on 2026-09-15. It is info level and ungated by the debug flag, so it would have shown had
+  `0A0504,08` arrived. `0A0504` is push-only and never polled, so if it does not reach us the module
+  never learns a capture finished — and `captureModeOpen` stays at its `false` default, which makes
+  the `screen reported closed` diagnostic meaningless.
+
+  **Same trap as `030800`:** the 16-cycle capture that established `0A0504`'s behaviour recorded
+  RCS's session, not ours. **Not yet proven** — verbose logging was off. Settle it alongside the §1b
+  re-run. If confirmed, either poll `0A0504` or drop the completion log and the diagnostic.
+  `PROTOCOL.md` §4.11 and §7.3 carry the caveat.
 
 ## Open — needs a decision
 

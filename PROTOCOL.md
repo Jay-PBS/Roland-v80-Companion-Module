@@ -304,9 +304,11 @@ has been attempted.
 > **Cropping is inverted.** `100 %` means _no crop_ — the full window. `0 %` is fully cropped and the
 > window disappears entirely. This catches everyone once.
 
-> **View Position H and V show no visible movement on hardware.** `18` and `1A`, both layers, tested
-> 2026-09-08 and again 2026-09-14. **Open** — and not yet established whether the commands are wrong
-> or the travel is simply too small to see at default zoom. See §10.2.
+> **View Position needs zoom to be visible.** `18` and `1A` appeared to do nothing across two
+> sessions, and the explanation turned out to be observational rather than protocol: the travel over
+> the -50…+50 span is small at default zoom. Raise View Zoom first and the movement is plainly
+> visible. **Confirmed 2026-09-15.** If you are testing these, change zoom before you conclude
+> anything.
 
 **The offsets were derived, not published.** Window Size working at `09` is the anchor; the
 parameters before it fill `00`–`08` exactly, which places Position H at `05` and V at `07`. The
@@ -428,6 +430,13 @@ not `00`.
 
 Capture source bytes: HDMI 1-4 = `00`–`03`, SDI 1-4 = `04`–`07`, Video Player = `08`. Note this is
 **not** the general source byte map — capture cannot take a still or a crosspoint as its source.
+
+> **Contested: does `0A0504` actually reach your session?** Its behaviour was established from a
+> 16-cycle recording of **RCS's** session, and `0A0504` is push-only — nothing polls it. A capture
+> run from this module on 2026-09-15 completed correctly but produced **no `0A0504,08`**, so the
+> client never learned the capture had finished. That is the `030800` trap again (§4.10). Not yet
+> proven — the run had verbose logging off, so a push that arrived and failed to parse would have
+> been invisible. **If you depend on capture completion, poll `0A0504` rather than waiting for it.**
 
 > **`0A0800` starts a livestream.** On the V-80HD, livestreaming, video recording and audio
 > recording share one trigger and cannot be started separately. Whichever of Live Streaming, Video
@@ -713,14 +722,14 @@ Fixing it was measurable in the same terms: **18,838 sent, 15,518 returned**, ag
 
 ### 7.3 What the device pushes unprompted
 
-| Register                       | Behaviour                                                       |
-| ------------------------------ | --------------------------------------------------------------- |
-| `0E0000`                       | 1 Hz keepalive, both directions                                 |
-| `030604`                       | 1 Hz clock counter                                              |
-| `0A0504`                       | Capture screen state, within ~60 ms of a toggle                 |
-| `0F0000` / `0F0300` / `0F0600` | Audio meters, 36-byte payloads, **only while audio is present** |
-| `0E0001,01` … `0E0002`         | Brackets a **full parameter dump** after every capture          |
-| `030800`                       | Stream & Record status — **to RCS's session, not yours**        |
+| Register                       | Behaviour                                                                                  |
+| ------------------------------ | ------------------------------------------------------------------------------------------ |
+| `0E0000`                       | 1 Hz keepalive, both directions                                                            |
+| `030604`                       | 1 Hz clock counter                                                                         |
+| `0A0504`                       | Capture screen state, within ~60 ms of a toggle — **but see §4.11, it may reach RCS only** |
+| `0F0000` / `0F0300` / `0F0600` | Audio meters, 36-byte payloads, **only while audio is present**                            |
+| `0E0001,01` … `0E0002`         | Brackets a **full parameter dump** after every capture                                     |
+| `030800`                       | Stream & Record status — **to RCS's session, not yours**                                   |
 
 **Captured.**
 
@@ -936,22 +945,26 @@ outright and the block-read hunt is unnecessary. **Spec** — read from Roland's
 **not tested here**, so treat it as a lead rather than a fact. It costs one line in a terminal to
 check, and it is the obvious thing to do before diffing 48-byte blocks.
 
-### 10.2 Open: PinP View Position
+### 10.2 Resolved: PinP View Position
 
-`0012`/`0013` offset `18` and `1A` produce no visible movement on hardware, tested twice.
+Kept as a worked example of a failure mode worth recognising.
 
-**The question is not "does it work" but "would I see it if it did."** View Position is a −50…+50
-option; if the visible travel is small, or only shows at particular zoom or crop settings, then
-"nothing moved" is an observation problem rather than a protocol one — and that changes the fix
-entirely.
+`0012`/`0013` offsets `18` and `1A` were recorded as producing no visible movement across two
+hardware sessions, and were within one session of being escalated to a packet capture on the
+assumption the commands were wrong.
 
-The test that settles it: raise View Zoom to 400 % **first**, then move View Position while that zoom
-is held, and compare against the same at 100 %. Escalate to capturing RCS dragging a PinP view only
-if that shows nothing.
+They were not. **The question was never "does it work" but "would I see it if it did"** — the visible
+travel over a -50…+50 span is small at default zoom, and the test had been run without changing zoom
+first. Raising View Zoom to 400 % and then moving View Position shows the movement immediately.
+**Confirmed 2026-09-15.**
 
-Against it being a protocol fault: the addresses are anchored on Window Size working at `09`, the
-encoder emits the byte pairs the specification prints, and the ranges permit negatives. The six
-neighbouring geometry parameters all work.
+The evidence that should have carried more weight at the time: the addresses are anchored on Window
+Size working at `09`, the encoder emits the byte pairs the specification prints, the ranges permit
+negatives, and the six neighbouring geometry parameters all worked. Every signal said the protocol
+was right.
+
+**The general lesson: before concluding a write does nothing, establish that you could see it if it
+did.** That is cheaper than a capture and it was the difference here.
 
 ### 10.3 Open: what is `0B0400`?
 
