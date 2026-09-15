@@ -1175,18 +1175,37 @@ export class V80Api {
 		// written - but not a moment before. The device needs far longer than its own
 		// 0A0504,08 (done) reply suggests: 0.8.0 closed at 500ms and broke the capture
 		// outright, 0.8.1 at 1200ms was still too early on hardware. 7000ms is the tested
-		// figure. It is a long time to hold, so it is deliberately the last thing in the
-		// sequence and nothing waits on it.
+		// figure.
 		//
-		// The close below is cmdExitCaptureFunction, which is deliberately ungated - see the
-		// comment on it. One consequence of the long wait: starting a second capture inside
-		// 7s means the first close can land on the second capture's screen. Firing captures
-		// that fast is not a real workflow, and the action description now says so.
-		await this.delay(7000)
-		// Logged so the next hardware run shows whether this fired and what the device
-		// thought the screen was doing, without needing another packet capture.
-		this.self.log('info', `Exiting capture function (screen reported ${this.self.captureModeOpen ? 'open' : 'closed'})`)
-		await this.cmdExitCaptureFunction()
+		// Deliberately NOT awaited. Companion times an action out well before 7s, so awaiting
+		// the dismissal made every capture log "Error executing action: Error: Call timed out"
+		// and a stack trace - observed on hardware 2026-09-15, with the capture itself
+		// completing correctly either side of it. The action now returns once the execute is
+		// away, in about 1.3s, and the dismissal finishes on its own. Device behaviour is
+		// unchanged; only the promise boundary moved.
+		//
+		// The close is cmdExitCaptureFunction, which is deliberately ungated - see the comment
+		// on it. One consequence of the long wait: starting a second capture inside 7s means
+		// the first close can land on the second capture's screen. Firing captures that fast is
+		// not a real workflow, and the action description says so.
+		void this.dismissCaptureScreen()
+	}
+
+	// Split out of cmdCaptureImage so the action can resolve without waiting on it. Nothing
+	// awaits this, so it has to swallow nothing: any failure is logged here or it is invisible.
+	private async dismissCaptureScreen(): Promise<void> {
+		try {
+			await this.delay(7000)
+			// Logged so a hardware run shows whether this fired and what the device thought the
+			// screen was doing, without needing another packet capture.
+			this.self.log(
+				'info',
+				`Exiting capture function (screen reported ${this.self.captureModeOpen ? 'open' : 'closed'})`,
+			)
+			await this.cmdExitCaptureFunction()
+		} catch (err) {
+			this.self.log('warn', `Capture screen dismissal failed: ${err instanceof Error ? err.message : String(err)}`)
+		}
 	}
 
 	public cmdRaw(cmd: string): void {
