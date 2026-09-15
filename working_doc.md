@@ -17,48 +17,46 @@ Last reviewed: 2026-09-11 · Working version: 0.8.8
 | `yarn lint`          | Passing — clean, 0 errors          |
 | `prettier --check .` | Passing                            |
 | `yarn package`       | Passing — `roland-v80hd-0.8.8.tgz` |
-| GitHub Actions       | **Never run** — see below          |
+| GitHub Actions       | Passing — Node CI, green on `main` |
 | `yarn preflight`     | Passing — the pre-release gate     |
 
 ---
 
 ## Open — needs hardware
 
-Two questions, both settled by one five-minute session — see `TESTING-NEXT.md` §1b and F3. Tick the
-connection's **Enable debug logging (verbose TX/RX)** checkbox first; the 2026-09-15 attempt produced
-no result because it was off.
+Two questions, one five-minute session — `TESTING-NEXT.md` §B has the steps.
 
-- **Do block reads work?** Contradictory hardware results on record. Gates the Fade To Black search.
-- **Does `0A0504` reach our session?** See F3 above.
+**Tick the connection's "Enable debug logging (verbose TX/RX)" checkbox first.** Both 2026-09-15
+attempts produced nothing because it was off. It is the fifth field in the connection config, between
+"Enable polling" and "Allow advanced actions" — not Companion's log-level filter. The absence of any
+warn line proves the command was sent; only `TX:` and `RX RAW:` are debug-gated.
 
-**C7 PinP View Position is closed, 2026-09-15** — it works; the travel is only visible once View Zoom
-is raised. It was an observation problem, not a protocol one. `README.md` Known Issues still says
-otherwise and needs correcting at the 1.0 docs pass.
+- **B1 — Do block reads work?** Contradictory hardware results on record. Gates the Fade To Black
+  search entirely.
+- **B2 — Does `0A0504` reach our session?** `Image capture complete` never appeared, and that log is
+  info level and ungated, so it would have shown had `0A0504,08` arrived. `0A0504` is push-only and
+  never polled, so if it does not reach us the module never learns a capture finished — which also
+  makes the `screen reported closed` diagnostic meaningless. **Same trap as `030800`:** the capture
+  that established its behaviour recorded RCS's session, not ours. If confirmed, either poll it or
+  drop the completion log and the diagnostic. `PROTOCOL.md` §4.11 and §7.4 carry the caveat.
 
-## Open — needs code, raised 2026-09-15
+**C7 PinP View Position is closed, 2026-09-15.** It works; the travel is only visible once View Zoom
+is raised — an observation problem, not a protocol one. `README.md` and `HELP.md` are corrected.
 
-- **F2 — every capture logs a Companion timeout error.** The capture works; Companion gives up on the
-  action and writes a stack trace each time (`Error executing action: Error: Call timed out`).
-  `cmdCaptureImage` awaits its whole sequence including the **7000 ms** hold and the two-press exit,
-  so the promise resolves ~8.5 s after the execute.
+## Built but unverified — 2026-09-15
 
-  **The comment already describes the right design and the code does not follow it** —
-  `src/api.ts:1178` says the hold "is deliberately the last thing in the sequence and nothing waits
-  on it", but line 1185 is `await this.delay(7000)` inside the action's own chain. Fix: return after
-  the execute and let the dismissal run detached, so the action resolves in ~1.3 s while device
-  behaviour is unchanged. A detached promise must not swallow its own errors. **Should not ship at
-  1.0** — it puts a stack trace in the log on every capture.
+Four code changes written, typechecked and linted, **never run**. They need one build and one
+session; `TESTING-NEXT.md` §V has the checks. **Bump the version before packaging.**
 
-- **F3 — the device may not push `0A0504` to our session.** `Image capture complete` never appeared
-  on 2026-09-15. It is info level and ungated by the debug flag, so it would have shown had
-  `0A0504,08` arrived. `0A0504` is push-only and never polled, so if it does not reach us the module
-  never learns a capture finished — and `captureModeOpen` stays at its `false` default, which makes
-  the `screen reported closed` diagnostic meaningless.
-
-  **Same trap as `030800`:** the 16-cycle capture that established `0A0504`'s behaviour recorded
-  RCS's session, not ours. **Not yet proven** — verbose logging was off. Settle it alongside the §1b
-  re-run. If confirmed, either poll `0A0504` or drop the completion log and the diagnostic.
-  `PROTOCOL.md` §4.11 and §7.4 carry the caveat.
+- **F2 — capture action no longer outlives Companion's timeout.** The dismissal runs detached, so
+  the action resolves in ~1.3 s instead of ~8.5 s. Device behaviour unchanged.
+- **Duplicate initial poll guarded.** `onAuthenticated()` returns early if already authenticated.
+  The reconnect check is the one that matters.
+- **Freeze trio made consistent.** The optimistic update moved into `cmdSetFreeze`, so On, Off and
+  Toggle all behave the same. The wider optimistic-update rule is now written down in `PROTOCOL.md`
+  §7.3 rather than changed — that closes CODE_REVIEW §5.3.
+- **Browse list cut to one line per action.** Nine descriptions removed, four of them relocated into
+  `static-text` notes so the text survives on the button. Only `raw_command` keeps a description.
 
 ## Open — needs a decision
 
@@ -153,54 +151,6 @@ Held deliberately until `TESTING-NEXT.md` is signed off, so nothing renames unde
   **Live caution for the section 1 testing:** the Layout preset writes `pinp_view_position_h/v` at
   **0**, the exact parameter under investigation. Keep it off the panel while chasing View Position.
 
-- **Clean up the browse action list — one line per action.** Decided 2026-09-14. **Next build, not
-  now.**
-
-  **The rule: no action carries a `description` except `raw_command`.** The second line makes the
-  browse list a mess to scan, and the browse list's job is to let you find an action, not to explain
-  it. Where an action genuinely needs explaining, the explanation belongs **inside the action** — a
-  `static-text` option, which renders on the button where the operator is actually configuring it.
-
-  **`raw_command` is the one exception**, and only because a wrong command there can crash the unit.
-  A hazard that severe earns a warning at pick time, before the action is chosen. `'Expert use
-only.'` stays exactly as it is.
-
-  This works because `description` is a single string rendered in **both** the browse list and the
-  configured action row on a button — there is no per-context variant — whereas a `static-text`
-  option renders only once the action is placed. So moving text from one to the other removes it
-  from the list without losing it.
-
-  **Nine descriptions come out. Five already have a `static-text` block, so they are a straight
-  delete:**
-
-  | Action                       | Line  |
-  | ---------------------------- | ----- |
-  | `toggle_aux_linked_pgm_mode` | `123` |
-  | `set_aux_linked_pgm_bus`     | `145` |
-  | `stream_record_start`        | `390` |
-  | `stream_record_stop`         | `396` |
-  | `capture_image`              | `403` |
-
-  **Four have no `static-text` behind them. Move the text into one rather than dropping it** — each
-  of these is the only place the module explains a genuinely confusing control:
-
-  | Action                   | Line  | Why it has to survive on the button                            |
-  | ------------------------ | ----- | -------------------------------------------------------------- |
-  | `set_mix_time`           | `65`  | Units key — the option takes tenths, so `4` means 0.4s, not 4s |
-  | `set_aux_layer_pinp`     | `174` | Explains AUX-bus PinP overlay working independently of PGM     |
-  | `pinp_window_cropping_h` | `255` | Inverted scale — 100% means _no_ crop                          |
-  | `pinp_window_cropping_v` | `261` | Same inversion, vertical                                       |
-
-  **Knock-on — `TESTING-NEXT.md` §7, still untested.** Item 29 enumerates which actions show a
-  one-line description and is void once this lands. Item 31 checks the livestream hazard is visible
-  in the browse list _before_ the action is picked; under this rule it moves to the button, where
-  `STREAM_RECORD_INFO` already carries the full warning, so item 31 needs rewriting to check the
-  button rather than the list. Item 24 survives and gets more true. **Clear §7 against the current
-  0.8.8 build first, or rewrite 29 and 31 before the change lands** — do not test the sheet as
-  written against a build that has already been cleaned up.
-
----
-
 ## Not yet implemented
 
 Addresses, payloads and the reasoning are all in [PROTOCOL.md](PROTOCOL.md) §9. Only the intent is
@@ -226,27 +176,24 @@ Record". It is implemented, on `0A0800`, and confirmed on hardware — the note 
 
 ## CI
 
-The `companion-module-checks` workflow ran once, on the 2026-09-04 push to `main`, and failed at its
-first step:
+`.github/workflows/node.yaml` ("Node CI") runs on every branch push, on `v*` tags and on pull
+requests: `yarn install --immutable`, `yarn build`, `yarn lint`, `prettier --check .` on Node 22.x,
+with `permissions: contents: read` and superseded runs cancelled. Green on `main`.
+
+**The `companion-module-checks` workflow remains deleted.** It failed at its first step because the
+repository name must begin with `companion-module-`:
 
 ```
 Unknown repository name format: Roland-v80-Companion-Module.
 Repository name must start with companion-module- or companion-surface-
-Error: Process completed with exit code 99.
 ```
 
-Not a code fault — it never reached build or package. **Resolved by removing the workflow from this
-fork.** The repository keeps the name `Roland-v80-Companion-Module`, and `repository` / `bugs` URLs
-in `package.json`, `companion/manifest.json` and README point at it, so everything is internally
-consistent.
+Not a code fault — it never reached build or package. The repository keeps its name, and
+`repository` / `bugs` in `package.json`, `companion/manifest.json` and the README all point at it
+consistently. **If the module goes upstream the naming rule applies wherever the work lands**, and
+`bitfocus/companion-module-roland-v80hd` already satisfies it.
 
-**What was given up:** that workflow also ran install, build, package and a launch test. Nothing now
-catches a broken package before it reaches hardware, so `yarn preflight` passing locally is the whole
-gate. Run it before releasing a version.
-
-**If the module is ever pushed upstream**, the naming rule applies on whatever repository the work
-lands in. `bitfocus/companion-module-roland-v80hd` already satisfies it, so this only matters if a
-differently-named intermediate fork is used.
+`yarn preflight` (`format` → `lint:fix` → `build` → `package`) remains the local pre-release gate.
 
 ---
 
