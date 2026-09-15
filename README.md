@@ -40,7 +40,7 @@ Current version: 0.8.8
 | PinP Window Position H and V        | Confirmed working                          |
 | PinP Window Size                    | Confirmed working                          |
 | PinP Window Cropping H and V        | Confirmed working                          |
-| PinP View Position H and V          | Not finalized — see below                  |
+| PinP View Position H and V          | Working — raise View Zoom to see it        |
 | PinP View Zoom                      | Confirmed working                          |
 | DSK Source, PGM, PVW                | Confirmed working                          |
 | Audio Input Mute all channels       | Confirmed working                          |
@@ -163,9 +163,9 @@ rewrote files during a commit.
 
 ## Known Issues
 
-PinP is functional. Six of the eight geometry actions were confirmed working on hardware on 2026-09-08, along with source selection and PGM and PVW on, off and toggle. Two are not finalized: **View Position H and V**.
+PinP is fully functional. All eight geometry actions are confirmed working on hardware, along with source selection and PGM and PVW on, off and toggle.
 
-View Position H and V produced no visible movement during testing. It is not yet established whether the actions themselves are at fault or whether the range they are given simply does not shift the image perceptibly — the two have not been told apart, so treat these as unverified rather than confirmed broken. Their addresses and byte encoding match the control specification, and the neighbouring actions on adjacent addresses all work. This is long-standing rather than new; the only change ever made to those lines was code formatting. Settling it needs a packet capture of the Roland RCS software moving a PinP view, and a check of what value range produces visible movement.
+**View Position H and V need View Zoom raised before you can see them work.** They were recorded as producing no visible movement across two test sessions, and the explanation turned out to be observational rather than a fault: the travel over the -50 to +50 span is small at default zoom. Raise View Zoom first and the movement is plainly visible. Confirmed on hardware 2026-09-15. If you are evaluating these actions, change zoom before concluding anything.
 
 Fade To Black feedback reports a fade in progress, not the engaged state. It lights while the fade is running rather than while Fade To Black is held on, because `030207` is a transition-in-progress flag. The address that carries the engaged state has not been found: a block read of `RQH:030200,000030;` returns nothing at all, so the approach that would have located it does not work on this device. This looks like a limit of what the unit exposes rather than a module fault, so it is parked. **If you know how to read the engaged Fade To Black state over LAN, please say so on the issue tracker** — it is the one piece missing.
 
@@ -244,7 +244,7 @@ No protocol changes.
 
 ### 0.8.3 — confirmed working on hardware, 2026-09-08
 
-**The 0.8.x line and the whole 0.7.0 code review have now been tested on a V-80HD.** The run passed with no regressions against 0.6.5: the password migration worked with no re-entry, every action, feedback, variable and preset category checked out, and a 30-minute soak was clean. Two PinP geometry actions are outstanding and are recorded in `working_doc.md` — View Position H and V showed no visible movement. Whether the actions fail or the value range simply does not move the image noticeably is not yet established. Either way it is pre-existing, not a regression; the only change ever made to those lines was prettier reformatting.
+**The 0.8.x line and the whole 0.7.0 code review have now been tested on a V-80HD.** The run passed with no regressions against 0.6.5: the password migration worked with no re-entry, every action, feedback, variable and preset category checked out, and a 30-minute soak was clean. Two PinP geometry actions were outstanding at the time — View Position H and V showed no visible movement. **Resolved 2026-09-15: they work, and the travel is only visible once View Zoom is raised.** It was an observation problem, not a fault.
 
 - **Image Capture now clears its own screen, confirmed on hardware.** Exiting the capture function is two presses of `[CAPTURE IMAGE]` 300ms apart, ungated, after a 7-second wait
 

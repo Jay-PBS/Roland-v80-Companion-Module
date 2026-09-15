@@ -75,14 +75,16 @@ The V-80HD applies a brute-force lockout after repeated failed password attempts
 - Window Position H and V (-100 to +100%)
 - Window Size (0 to 100%)
 - Window Cropping H and V (0 to 100%) — 100% is no crop, 0% is fully cropped
-- View Position H and V (-50 to +50%) — **not finalized, see below**
+- View Position H and V (-50 to +50%) — **raise View Zoom to see these work, see below**
 - View Zoom (100 to 400%)
 
-**View Position H and V are not finalized.** They showed no visible movement in hardware testing, but
-it is not yet established whether the actions are at fault or whether the range they are given is too
-small to shift the image noticeably. Everything else in this section works, including Window Position.
-The actions are left in place rather than hidden so that settling this does not change anyone's button
-layout. If you need view positioning before then, use the unit's own controls.
+**View Position H and V only show their effect once View Zoom is raised.** At the default 100% zoom
+the travel over the -50 to +50 span is too small to see, which is why these were recorded as "not
+working" through two test sessions. Raise View Zoom first and the movement is obvious. Confirmed on
+hardware 2026-09-15.
+
+Everything in this section works, including Window Position. If a View Position button appears to do
+nothing, check the zoom before anything else.
 
 ### DSK
 
