@@ -36,7 +36,7 @@ export function UpdatePresets(self: ModuleInstance): void {
 		// Cyans
 		teal: combineRgb(0x0a, 0x4c, 0x46), // Teal Deep    #0A4C46
 		teal_on: combineRgb(0x06, 0xb6, 0xd4), // Cyan Bright  #06B6D4
-		// Pinp layout
+		// PinP on the AUX bus
 		pinp: combineRgb(0x0a, 0x4c, 0x46), // Teal Deep
 		pinp_on: combineRgb(0x06, 0xb6, 0xd4), // Cyan Bright
 		// Audio
@@ -201,22 +201,6 @@ export function UpdatePresets(self: ModuleInstance): void {
 			},
 		],
 	}
-	presets['aux1_pinp1_layout'] = {
-		type: 'button',
-		category: 'Aux 1',
-		name: 'AUX1 PiP1 Layout',
-		style: { text: 'PiP1\nLAYOUT', size: sz, color: c.white, bgcolor: c.pinp, show_topbar: false },
-		steps: [{ down: pinpTemplateActions(1), up: [] }],
-		feedbacks: [],
-	}
-	presets['aux1_pinp2_layout'] = {
-		type: 'button',
-		category: 'Aux 1',
-		name: 'AUX1 PiP2 Layout',
-		style: { text: 'PiP2\nLAYOUT', size: sz, color: c.white, bgcolor: c.pinp, show_topbar: false },
-		steps: [{ down: pinpTemplateActions(2), up: [] }],
-		feedbacks: [],
-	}
 
 	// ── AUX 2 ─────────────────────────────────────────────────────────────────
 	for (let i = 1; i <= 8; i++) {
@@ -286,22 +270,6 @@ export function UpdatePresets(self: ModuleInstance): void {
 				style: { bgcolor: c.teal_on, color: c.black },
 			},
 		],
-	}
-	presets['aux2_pinp1_layout'] = {
-		type: 'button',
-		category: 'Aux 2',
-		name: 'AUX2 PiP1 Layout',
-		style: { text: 'PiP1\nLAYOUT', size: sz, color: c.white, bgcolor: c.pinp, show_topbar: false },
-		steps: [{ down: pinpTemplateActions(1), up: [] }],
-		feedbacks: [],
-	}
-	presets['aux2_pinp2_layout'] = {
-		type: 'button',
-		category: 'Aux 2',
-		name: 'AUX2 PiP2 Layout',
-		style: { text: 'PiP2\nLAYOUT', size: sz, color: c.white, bgcolor: c.pinp, show_topbar: false },
-		steps: [{ down: pinpTemplateActions(2), up: [] }],
-		feedbacks: [],
 	}
 
 	// ── AUX Link ──────────────────────────────────────────────────────────────
@@ -382,21 +350,26 @@ export function UpdatePresets(self: ModuleInstance): void {
 			feedbacks: [{ feedbackId: 'pinp_pvw_active', options: { layer }, style: { bgcolor: c.pvw_on, color: c.black } }],
 		}
 	}
-	// PinP layout templates also in PinP & Key category
-	presets['pinp1_layout'] = {
+	// Geometry reset, one per PinP layer. Named Reset rather than Layout because the device has no
+	// layout store to recall from - this writes eight fixed geometry values and nothing more.
+	//
+	// Four AUX-scoped copies of these used to sit in the Aux 1 and Aux 2 categories, emitting
+	// byte-for-byte identical commands: PinP geometry belongs to the layer, and there is no
+	// per-AUX geometry in the protocol at all.
+	presets['pinp1_reset'] = {
 		type: 'button',
 		category: 'PinP & Key',
-		name: 'PiP1 Layout',
-		style: { text: 'PiP1\nLAYOUT', size: sz, color: c.white, bgcolor: c.pinp, show_topbar: false },
-		steps: [{ down: pinpTemplateActions(1), up: [] }],
+		name: 'PiP1 Reset',
+		style: { text: 'PiP1\nRESET', size: sz, color: c.white, bgcolor: c.pinp, show_topbar: false },
+		steps: [{ down: pinpResetActions(1), up: [] }],
 		feedbacks: [],
 	}
-	presets['pinp2_layout'] = {
+	presets['pinp2_reset'] = {
 		type: 'button',
 		category: 'PinP & Key',
-		name: 'PiP2 Layout',
-		style: { text: 'PiP2\nLAYOUT', size: sz, color: c.white, bgcolor: c.pinp, show_topbar: false },
-		steps: [{ down: pinpTemplateActions(2), up: [] }],
+		name: 'PiP2 Reset',
+		style: { text: 'PiP2\nRESET', size: sz, color: c.white, bgcolor: c.pinp, show_topbar: false },
+		steps: [{ down: pinpResetActions(2), up: [] }],
 		feedbacks: [],
 	}
 
@@ -601,9 +574,10 @@ export function UpdatePresets(self: ModuleInstance): void {
 	self.setPresetDefinitions(presets)
 }
 
-// PinP layout template — all 8 window actions with sensible defaults
-// Cropping defaults to 100% (fully open — 0% would be fully cropped/invisible)
-function pinpTemplateActions(layer: number) {
+// Resets one PinP layer's geometry to a default box: all eight geometry parameters at fixed
+// values. Takes only the layer, because that is the only thing PinP geometry is scoped to.
+// Cropping defaults to 100%, which is fully open - 0% would crop the window out of existence.
+function pinpResetActions(layer: number) {
 	return [
 		{ actionId: 'pinp_window_position_h', options: { layer, pct: 0 } },
 		{ actionId: 'pinp_window_position_v', options: { layer, pct: 0 } },
