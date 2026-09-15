@@ -90,6 +90,27 @@ session; `TESTING-NEXT.md` §V has the checks. **Bump the version before packagi
 
 ## Queued — next build cycle
 
+- **Point `repository` and `bugs` at the Bitfocus repo.** Decided 2026-09-15. Both fields in
+  **`companion/manifest.json`** and **`package.json`** currently name this fork:
+
+  ```
+  from  https://github.com/Jay-PBS/Roland-v80-Companion-Module
+  to    https://github.com/bitfocus/companion-module-roland-v80hd
+  ```
+
+  The module's home once submitted is the Bitfocus repo, so `repository` should say so.
+
+  **Worth a second's thought when you do it:** `bugs` is the URL Companion sends users to when they
+  report a problem. Pointed at Bitfocus, reports land in their tracker rather than here — where the
+  issue templates in `.github/ISSUE_TEMPLATE/` and the triage described in `CONTRIBUTING.md`
+  actually live. Splitting them — `repository` upstream, `bugs` here — is legitimate and some
+  modules do it. Flagging it, not arguing it.
+
+  **Observed on the upstream repo 2026-09-15:** their `companion/manifest.json` still points both
+  fields at this fork and still carries `"version": "0.4.0"` hardcoded. Ours is `"0.0.0"`, injected
+  at build time — CODE_REVIEW §3.3. So the update that goes upstream fixes their stale version
+  string as well.
+
 - **Internal working docs stop shipping.** Moved here from the 1.0 pass on 2026-09-15 — do it with
   the next build rather than at submission. `working_doc.md`, `TESTING.md`, `TESTING-NEXT.md` and
   `CODE_REVIEW.md` go into `.gitignore` and come out of the index. They are internal working files
