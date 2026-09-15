@@ -88,24 +88,34 @@ session; `TESTING-NEXT.md` §V has the checks. **Bump the version before packagi
   tells it to use 22.20.0 but will not switch it — run `nvm use` in the repo directory there.
   If 22 is not installed on that machine: `nvm install 22.20.0`, then `corepack enable`._
 
+## Queued — next build cycle
+
+- **Internal working docs stop shipping.** Moved here from the 1.0 pass on 2026-09-15 — do it with
+  the next build rather than at submission. `working_doc.md`, `TESTING.md`, `TESTING-NEXT.md` and
+  `CODE_REVIEW.md` go into `.gitignore` and come out of the index. They are internal working files
+  and do not belong in a public module repo. Closes CODE_REVIEW §4.3.
+
+  `git rm --cached` on each — **confirm before running it.** The files stay on disk; only the index
+  entries go, exactly as the `.tgz` did.
+
+  **Knock-on is smaller than previously recorded.** `README.md` mentions `working_doc.md` and
+  `CODE_REVIEW.md` only inside changelog entries (lines 256 and 306) as historical prose, not as
+  links — a reader would see a filename that is not in the repo, which is worth a light edit but
+  breaks nothing. `PROTOCOL.md`, `HELP.md` and `CONTRIBUTING.md` reference none of them.
+
+  **The one real consequence:** changes to these files stop being versioned from that commit onward.
+  Everything already committed stays in history forever, but the safety net ends — and
+  `TESTING-NEXT.md` and this file both hold live, unfinished queues. `TESTING.md` and
+  `CODE_REVIEW.md` are closed records and lose nothing by going first, so splitting the pass is an
+  option if the live queues are not clear by then.
+
 ## Queued for 1.0 release prep
 
-Decided 2026-09-14, to be done as one pass before submission — not now, because both remove files
-the current workflow still reads and downloads.
-
-- **Internal working docs stop shipping.** `working_doc.md`, `TESTING.md`, `TESTING-NEXT.md` and
-  `CODE_REVIEW.md` go into `.gitignore` and come out of the index. They are internal working files
-  and do not belong in a public module repo. Supersedes the old "consider it" note. Untracking needs
-  `git rm --cached` on each — confirm before running it, the files stay on disk.
-  **Knock-on:** `README.md` and this file cross-reference all four by name; those links break for
-  anyone reading the repo and need removing in the same pass.
-- **Built `.tgz` files stopped shipping — done 2026-09-15.** `roland-v80hd-0.8.8.tgz` untracked with
-  `git rm --cached`; it stays on disk. `/*.tgz` covers everything now that nothing is excepted, and
-  carries a comment saying why. README's "download it from the repository root" section is rewritten
-  to point at building, with a note that releases will carry the asset from 1.0.
-
-  **Still to decide before 1.0:** whether 1.0 ships as a GitHub Release asset, or whether the module
-  store is the only route. Releases currently carry `v0.4.0` with no assets at all.
+- **Decide how 1.0 is distributed.** Whether it ships as a GitHub Release asset, or whether the
+  module store is the only route. Releases currently carry `v0.4.0` with no assets at all, so a
+  downloadable 1.0 is something to set up rather than something that happens by itself. README
+  currently promises "each release will carry its `.tgz` as a GitHub Release asset" — either make
+  that true or change the sentence.
 
 ## Follow-on from PROTOCOL.md — logged 2026-09-14
 
