@@ -211,6 +211,9 @@ export class V80Api {
 	private tcp?: TCPHelper
 	private rxBuffer = ''
 	private pollingTimer?: NodeJS.Timeout
+	// Set by cmdRaw. While this is in the future, incoming data is echoed at info level so a
+	// raw command's reply is visible without the debug flag - see cmdRaw.
+	private rawEchoUntil = 0
 	private debounceTimer?: NodeJS.Timeout
 	private authTimer?: NodeJS.Timeout
 	private watchdogTimer?: NodeJS.Timeout
@@ -380,6 +383,16 @@ export class V80Api {
 
 	private handleIncoming(data: Buffer): void {
 		this.lastRxTime = Date.now()
+		if (Date.now() < this.rawEchoUntil) {
+			// A raw command was sent in the last couple of seconds, so show what came back at
+			// info level. The byte count is the point: parseDth truncates every reply to its
+			// first byte, so a 48-byte block read and a 1-byte read are indistinguishable
+			// downstream. This is the only place the difference is visible.
+			this.self.log(
+				'info',
+				`Raw RX [${data.length}b]: ${[...data].map((b) => b.toString(16).padStart(2, '0')).join(' ')}`,
+			)
+		}
 		if (this.self.config.debug) {
 			this.self.log(
 				'debug',
@@ -1220,7 +1233,14 @@ export class V80Api {
 		}
 	}
 
+	// The raw command action is an expert tool behind its own config gate, and the only reason
+	// to reach for it is to see what the device actually does. So it reports both directions at
+	// info level rather than debug: relying on the debug flag meant a reply could be invisible
+	// because of a config checkbox or a log-level filter, which cost two hardware sessions on
+	// 2026-09-15. If the send is refused, sendCmd logs its own warn immediately after this line.
 	public cmdRaw(cmd: string): void {
+		this.self.log('info', `Raw TX: ${cmd}`)
+		this.rawEchoUntil = Date.now() + 2000
 		this.sendCmd(cmd)
 	}
 }
