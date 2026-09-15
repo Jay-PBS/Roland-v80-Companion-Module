@@ -116,6 +116,10 @@ the vertical split and Split 2 the horizontal** — and nothing in the module sa
 
 **Blocked on one observation: confirm which is which against the panel.**
 
+**Roland's documentation does not answer it** — checked 2026-09-15. The spec confirms the V-80HD has
+SPLIT 1 and 2 and documents their centre positions, but never says which is vertical and which is
+horizontal. Don't re-check the PDF; it has to be the panel.
+
 Display-only when it goes ahead. **The ids must not change** — `split1_on`, `split1_off`,
 `split1_toggle`, `split2_*`, the `split1_active` / `split2_active` feedbacks and the `split1` /
 `split2` variables all stay, or existing buttons break.

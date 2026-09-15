@@ -123,33 +123,26 @@ The protocol knowledge itself now lives in [PROTOCOL.md](PROTOCOL.md). Only the 
 
 ## Queued — once hardware testing clears
 
-Held deliberately until `TESTING-NEXT.md` is signed off, so nothing renames under the tester.
+Held until `TESTING-NEXT.md` is signed off, so nothing renames under the tester.
 
-- **Rewrite "layout" / "layer" / "PinP" for clarity.** The three words are used for three different
-  things and the naming does not separate them. Established 2026-09-14 by reading the addresses:
-  - **PinP 1 and PinP 2 are real hardware layers**, not a module abstraction. Two separate address
-    blocks, `0012xx` and `0013xx`, each carrying its own independent source, PGM/PVW, window
-    position, size, cropping, view position and view zoom. `pinpAddr()` in `src/api.ts` is the whole
-    abstraction — it picks `12` or `13`. They composite simultaneously; the AUX routing proves it,
-    needing four addresses for bus × layer (`000020`/`000021`, `000023`/`000024`).
-  - **The device has no PinP layout store.** Nothing in the protocol saves or recalls a geometry set.
-    Scene Memory (`0A0000`, 32 slots) is the only store-and-recall and it is whole-scene, not
-    PinP-scoped — and it is not implemented, see "Decided against" below.
-  - **The four "Layout" presets are a hardcoded macro**, not a device slot. `pinpTemplateActions()`
-    in `src/presets.ts` fires eight geometry writes at fixed values — position 0/0, size 25%,
-    cropping 100/100, view position 0/0, zoom 100%. It is a "reset this layer to a default box"
-    button and the name does not say so.
+- **Rewrite "layout" / "layer" / "PinP" for clarity — presets done 2026-09-15, naming still open.**
 
-  **This also settles CODE_REVIEW §6.2, which was logged as an open design question.** It is not:
-  `pinpTemplateActions()` takes only a `layer` argument, no `aux`, so `aux1_pinp1_layout` and
-  `aux2_pinp1_layout` emit byte-for-byte identical commands, as do the PiP2 pair. Four presets, two
-  behaviours, two exact duplicates — and all four are named and categorised as AUX-scoped when PinP
-  geometry belongs to the layer, not to the bus displaying it. There is no per-AUX geometry in the
-  protocol at all. The remaining choice is only what to do: collapse to two presets under a PinP
-  category, or keep four for panel convenience and rename so they stop implying AUX scoping.
+  The preset half is closed: the four AUX-scoped "Layout" duplicates are gone and the two survivors
+  are renamed `PiP1 Reset` / `PiP2 Reset` under `PinP & Key`. That also closed CODE_REVIEW §6.2.
 
-  **Live caution for the section 1 testing:** the Layout preset writes `pinp_view_position_h/v` at
-  **0**, the exact parameter under investigation. Keep it off the panel while chasing View Position.
+  **Still to do:** the three words are used for three different things and the naming only separates
+  two of them so far.
+  - **PinP 1 and 2 are real hardware layers** — two address blocks, `0012xx` and `0013xx`, each with
+    its own source, PGM/PVW and full geometry, compositing simultaneously. The module calls them
+    layers already; nothing to change.
+  - **The device has no layout store.** Scene Memory (`0A0000`) is the only store-and-recall and it
+    is whole-scene. The word "Layout" is now gone from the presets — check `HELP.md` and `README.md`
+    do not reintroduce it before 1.0.
+  - **Window vs View geometry** is the remaining confusion, and the one that actually caught us out:
+    Window Position and View Position are different parameters at different addresses with different
+    ranges, and View Position only shows its effect once View Zoom is raised. The action names say
+    `Window` and `View` correctly, but nothing explains the relationship. A `static-text` note on the
+    View actions would have saved two test sessions.
 
 ## Not yet implemented
 

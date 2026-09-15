@@ -37,17 +37,27 @@ bisects to a single cause. A ninth carries the version bump and changelog.
 | 5.2 | Commands sendable before authentication | Fixed                              | `55e965f` |
 | 5.5 | Prompt detection discards the rx buffer | Fixed                              | `55e965f` |
 
-**Deliberately not done:**
+**Since done — closed after the review was written:**
 
-| §   | Item                                | Why                                                                                                                                                                                              |
-| --- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 4.1 | Repository name vs manifest `id`    | Only matters at the point of upstream submission, and resolving it means renaming the repo. Jay's call.                                                                                          |
-| 4.3 | `working_doc.md` is tracked         | Untracking it removes a live working file from the branch. Not done without asking; also only matters upstream.                                                                                  |
-| 6.2 | The four AUX "layout" presets       | A design question, not a defect: are they meant to be AUX-scoped, or are four of the six redundant? Needs a decision before any code changes.                                                    |
-| 5.3 | Optimistic-update policy            | Making it consistent changes feedback behaviour on ~20 commands at once. Landing that beside the authentication changes would make a hardware failure ambiguous. Documented instead. Next build. |
-| 4.2 | `companion-module-checks.yaml`      | It fails on the repository name (§4.1), so restoring it now would just add a permanently red check.                                                                                              |
-| —   | 2.x API migration                   | Out of scope, as the review says. 1.14.1 remains a fine place to submit from.                                                                                                                    |
-| 7.1 | Build artifacts in the working tree | Deleting files was not done without asking. Eight `.tgz` now sit in the root; all but 0.7.0 are historical.                                                                                      |
+| §   | Item                                | Why                                                                                                                                                                                                                                     |
+| --- | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 6.2 | The four AUX "layout" presets       | **Done 2026-09-15.** Not a design question after all — `pinpTemplateActions()` took only a layer, so the four AUX copies were byte-for-byte duplicates of a layer-scoped operation. Deleted; the two survivors renamed Layout to Reset. |
+| 5.3 | Optimistic-update policy            | **Done 2026-09-15.** The freeze trio was the one genuine inconsistency and is fixed; the wider split is deliberate and now written down in `PROTOCOL.md` §7.3 rather than changed.                                                      |
+| 7.1 | Build artifacts in the working tree | **Done 2026-09-15.** No `.tgz` is tracked any more — `roland-v80hd-0.8.8.tgz` untracked with `git rm --cached`, `/*.tgz` covers the rest. Files stay on disk; README now points at building.                                            |
+
+**Still not done, all deliberate:**
+
+| §   | Item                             | Why                                                                                                             |
+| --- | -------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| 4.1 | Repository name vs manifest `id` | Only matters at the point of upstream submission, and resolving it means renaming the repo. Jay's call.         |
+| 4.3 | `working_doc.md` is tracked      | Untracking it removes a live working file from the branch. Not done without asking; also only matters upstream. |
+| 4.2 | `companion-module-checks.yaml`   | It fails on the repository name (§4.1), so restoring it now would just add a permanently red check.             |
+| —   | 2.x API migration                | Out of scope, as the review says. 1.14.1 remains a fine place to submit from.                                   |
+
+Everything left turns on the same thing: **4.1, the repository name.** It only matters at
+upstream submission, resolving it means renaming the repo, and 4.2 is blocked behind it because
+`companion-module-checks` fails on the name and would sit permanently red. 4.3 is queued for the 1.0
+prep pass, and the 2.x API migration remains out of scope — 1.14.1 is a fine place to submit from.
 
 ### How it was verified
 
