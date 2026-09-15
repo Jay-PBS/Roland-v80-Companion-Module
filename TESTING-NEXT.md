@@ -22,6 +22,7 @@ Written 2026-09-15, typechecked and linted, **never run**. One build, one sessio
 | V3  | Duplicate poll      | **Pull the network, let it recover.** It reconnects and logs ready again                                          |        |
 | V4  | Freeze consistency  | Freeze On, Off and Toggle on three buttons — all three light the feedback identically                             |        |
 | V5  | Browse list         | Every action shows **one line**. Only `Advanced – Send raw LAN command` has a second                              |        |
+| V8  | Raw command echo    | Fire any raw command — `Raw TX:` and `Raw RX [Nb]:` both appear at info level                                     |        |
 | V6  | Browse list         | Mix/Wipe Time, AUX Layer PinP and both Croppings show a `Note` block **on the button**                            |        |
 | V7  | Browse list         | Stream & Record Start still shows its livestream `Warning` **on the button**                                      |        |
 
@@ -36,38 +37,41 @@ is the only way that change could bite.
 
 Both were attempted on 2026-09-15 and **neither produced a result, for the same reason.**
 
-### The blocker: the module's debug switch is still off
+### Why the last two attempts produced nothing — now fixed in code
 
-Two attempts produced only `Surface/Handler` button lines and nothing at all from the connection.
+Three attempts on 2026-09-15 produced only `Surface/Handler` button lines: once with the module's
+debug flag off, and **once with it on**. Not even a `TX:` line either time.
 
-**That absence is itself diagnostic.** Every path that would block the command logs a **warn**, and
-warns are not debug-gated — `Not connected`, `Not authenticated yet - command dropped`, and
-`Raw LAN command ignored` if advanced actions were off. **None appeared, so the command was sent.**
-The only thing that suppresses `TX:` and `RX RAW:` is the module's own `debug` config flag.
+Everything on that path was gated behind `config.debug`, so a reply could be invisible because of the
+config checkbox _or_ Companion's log-level filter, and there was no way to tell "command never sent"
+from "reply not shown".
 
-**Where the checkbox is.** Connection config, **fifth field**, sitting between "Enable polling" and
-"Allow advanced actions", half width:
+**The raw command action now logs both directions at info level**, armed for 2 s after each send:
 
-> ☐ **Enable debug logging (verbose TX/RX)**
+```
+Raw TX: RQH:030200,000030;
+Raw RX [48b]: 01 00 00 ...
+```
 
-It is not Companion's log-level filter, and not the "Allow advanced actions" box below it. Tick it,
-**save the connection**, then retry.
+So §B no longer depends on any checkbox. If the send is refused, `sendCmd`'s warn follows
+immediately, which distinguishes the two cases.
 
-Without it a successful block read is completely silent — `parseDth` has no case for `030200`, so
-even a perfect 48-byte reply produces no log line whatsoever.
+**Still worth checking once:** Companion's log page has its own level filter. If `Raw TX` does not
+appear on the new build, confirm the filter includes Info before concluding anything about the
+device.
 
 ### B1 — Do block reads work?
 
 Contradictory hardware results on record: 2026-09-04 says `RQH:030200,000030;` returned all 48 bytes,
 2026-09-08 says it returned nothing. **This gates the entire Fade To Black search.**
 
-| #   | Step                                                             | Result |
-| --- | ---------------------------------------------------------------- | ------ |
-| B1a | Debug checkbox ticked and connection saved                       |        |
-| B1b | Fire raw command `RQH:030200,000030;`                            |        |
-| B1c | Record the `RX RAW [Nb]:` byte count — ~48, 1, or no line at all |        |
+| #   | Step                                                           | Result |
+| --- | -------------------------------------------------------------- | ------ |
+| B1a | Fire raw command `RQH:030200,000030;`                          |        |
+| B1b | Confirm `Raw TX:` appears — proves the command left the module |        |
+| B1c | Record the `Raw RX [Nb]:` byte count — ~48, 1, or no line      |        |
 
-| `RX RAW` shows | Verdict                                                                                      |
+| `Raw RX` shows | Verdict                                                                                      |
 | -------------- | -------------------------------------------------------------------------------------------- |
 | **~48 bytes**  | Block reads work. Proceed to the FTB diff, and the multi-byte decoder becomes worth building |
 | **1 byte**     | The device truncates. Block reads useless; FTB needs the RCS capture route instead           |
@@ -86,7 +90,7 @@ recorded RCS's session, not ours.
 
 | #   | Step                                                                                    | Result |
 | --- | --------------------------------------------------------------------------------------- | ------ |
-| B2a | With debug on, fire one capture and record **any** `0A0504` traffic in either direction |        |
+| B2a | Fire one capture with debug on, and record **any** `0A0504` traffic in either direction |        |
 
 If nothing arrives, the options are to poll `0A0504` like `030800`, or to drop the completion log and
 the `screen reported closed` diagnostic as things that cannot work. `PROTOCOL.md` §4.11 and §7.4
