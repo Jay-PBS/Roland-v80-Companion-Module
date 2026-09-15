@@ -461,6 +461,13 @@ export class V80Api {
 	}
 
 	private onAuthenticated(): void {
+		// Idempotency guard. Three paths reach here - the no-password branch in initTcp, the
+		// "Welcome to" banner and the "VER:" line - and the device sends both banner lines in
+		// one exchange, so without this the full 64-command requestCoreState() burst goes out
+		// twice back to back and "Connection ready" is logged twice. Safe because
+		// isAuthenticated is reset to false at every point a connection ends or restarts, so a
+		// genuine re-authentication after a drop is never blocked.
+		if (this.isAuthenticated) return
 		this.stopAuthTimer()
 		this.isAuthenticated = true
 		this.authFailed = false
