@@ -384,14 +384,28 @@ export class V80Api {
 	private handleIncoming(data: Buffer): void {
 		this.lastRxTime = Date.now()
 		if (Date.now() < this.rawEchoUntil) {
-			// A raw command was sent in the last couple of seconds, so show what came back at
-			// info level. The byte count is the point: parseDth truncates every reply to its
-			// first byte, so a 48-byte block read and a 1-byte read are indistinguishable
-			// downstream. This is the only place the difference is visible.
-			this.self.log(
-				'info',
-				`Raw RX [${data.length}b]: ${[...data].map((b) => b.toString(16).padStart(2, '0')).join(' ')}`,
-			)
+			// A raw command was sent in the last couple of seconds, so show what came back at info
+			// level. Two things are deliberate here.
+			//
+			// The byte count comes first, because it is the only thing that distinguishes a real
+			// multi-byte reply from a one-byte one - parseDth truncates every reply to its first
+			// byte, so everything downstream of this line is blind to the difference. That is what
+			// settled the block-read question on 2026-09-16.
+			//
+			// The frames are rendered readable rather than as raw hex. The first version logged hex
+			// only, and a 242-byte segment of it is unreadable by eye - which is most of them, since
+			// the device coalesces many replies into one segment. Control bytes are shown as their
+			// names so the STX/LF framing stays visible.
+			const readable = [...data]
+				.map((b) => {
+					if (b === 0x02) return '<STX>'
+					if (b === 0x0a) return '<LF>'
+					if (b === 0x0d) return '<CR>'
+					if (b >= 0x20 && b <= 0x7e) return String.fromCharCode(b)
+					return `<${b.toString(16).padStart(2, '0')}>`
+				})
+				.join('')
+			this.self.log('info', `Raw RX [${data.length}b]: ${readable}`)
 		}
 		if (this.self.config.debug) {
 			this.self.log(

@@ -65,9 +65,25 @@ It almost certainly fired — the RX echo only arms inside `cmdRaw`, so nothing 
 at all otherwise. But the point of the echo is that both directions are visible, so it is worth one
 look.
 
-| #   | Step                                                                                          | Result |
-| --- | --------------------------------------------------------------------------------------------- | ------ |
-| V8a | Fire any raw command and check the line **immediately above** the first `Raw RX` is `Raw TX:` |        |
+**Turn polling off first** — connection config, untick `Enable polling`. The echo arms for two
+seconds, and with polling on that catches four poll cycles and buries the reply. Your 2026-09-16 log
+had 142 frames in it for exactly this reason. Turn it back on afterwards.
+
+| #   | Step                                                                               | Expected                                                        | Result |
+| --- | ---------------------------------------------------------------------------------- | --------------------------------------------------------------- | ------ |
+| V8a | Polling off. Fire `RQH:001500,000001;` — a read of the PGM source, changes nothing | `Raw TX:` then one `Raw RX` holding `DTH:001500,xx;` and `ACK;` |        |
+| V8b | Fire `DTH:02015E,00;` — test pattern off, a no-op if none is running               | `Raw TX:` then a `Raw RX` holding `ACK;` and no `DTH:`          |        |
+| V8c | Fire `RQH:030200,000030;` — the block read, now cleanly isolated                   | `Raw TX:` and **no `Raw RX` at all**. Confirms B1 in one line   |        |
+
+**The echo now renders frames readably**, so the expected output of V8a is literally:
+
+```
+Raw TX: RQH:001500,000001;
+Raw RX [22b]: <STX>DTH:001500,29;<LF><STX>ACK;<LF>
+```
+
+`29` is the PGM source byte — `0x29` is Input 1. The byte count stays first, because it is the only
+thing that distinguishes a real multi-byte reply from a one-byte one.
 
 ### V9 — PinP Reset presets could not be found
 
