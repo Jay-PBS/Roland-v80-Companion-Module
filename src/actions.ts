@@ -326,12 +326,20 @@ export function UpdateActions(self: ModuleInstance): void {
 			callback: async (e) => self.api.cmdPinpViewZoom(L(e), Number(e.options.pct)),
 		},
 
-		split1_on: { name: 'Split 1 – On', options: [], callback: async () => self.api.cmdSplit1(true) },
-		split1_off: { name: 'Split 1 – Off', options: [], callback: async () => self.api.cmdSplit1(false) },
-		split1_toggle: { name: 'Split 1 – Toggle', options: [], callback: async () => self.api.cmdSplit1Toggle() },
-		split2_on: { name: 'Split 2 – On', options: [], callback: async () => self.api.cmdSplit2(true) },
-		split2_off: { name: 'Split 2 – Off', options: [], callback: async () => self.api.cmdSplit2(false) },
-		split2_toggle: { name: 'Split 2 – Toggle', options: [], callback: async () => self.api.cmdSplit2Toggle() },
+		split1_on: { name: 'Split 1 (Vertical) – On', options: [], callback: async () => self.api.cmdSplit1(true) },
+		split1_off: { name: 'Split 1 (Vertical) – Off', options: [], callback: async () => self.api.cmdSplit1(false) },
+		split1_toggle: {
+			name: 'Split 1 (Vertical) – Toggle',
+			options: [],
+			callback: async () => self.api.cmdSplit1Toggle(),
+		},
+		split2_on: { name: 'Split 2 (Horizontal) – On', options: [], callback: async () => self.api.cmdSplit2(true) },
+		split2_off: { name: 'Split 2 (Horizontal) – Off', options: [], callback: async () => self.api.cmdSplit2(false) },
+		split2_toggle: {
+			name: 'Split 2 (Horizontal) – Toggle',
+			options: [],
+			callback: async () => self.api.cmdSplit2Toggle(),
+		},
 
 		dsk_set_source: {
 			name: 'DSK – Set Source',

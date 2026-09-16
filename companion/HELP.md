@@ -65,7 +65,11 @@ The V-80HD applies a brute-force lockout after repeated failed password attempts
 
 ### Split
 
-- Split 1 and Split 2 — On, Off, Toggle
+- Split 1 (Vertical) and Split 2 (Horizontal) — On, Off, Toggle
+
+**Split 1 is the vertical split; Split 2 is the horizontal split.** Confirmed against the panel on
+2026-09-16. The device numbers them rather than naming them, so the orientation is carried in the
+action names here.
 
 ### PinP and Key
 
@@ -255,8 +259,8 @@ The following variables are available for use in button labels and expressions:
 | pinp2_pvw           | PinP 2 PVW state (ON or OFF)           |
 | dsk_pgm             | DSK PGM state (ON or OFF)              |
 | dsk_pvw             | DSK PVW state (ON or OFF)              |
-| split1              | Split 1 state (ON or OFF)              |
-| split2              | Split 2 state (ON or OFF)              |
+| split1              | Split 1 Vertical state (ON or OFF)     |
+| split2              | Split 2 Horizontal state (ON or OFF)   |
 | aux_linked_pgm      | AUX Linked PGM mode                    |
 | aux1_linked_pgm     | AUX 1 follows PGM (ON or OFF)          |
 | aux2_linked_pgm     | AUX 2 follows PGM (ON or OFF)          |

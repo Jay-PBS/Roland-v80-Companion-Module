@@ -24,39 +24,37 @@ Last reviewed: 2026-09-15 · Working version: 0.8.10
 
 ## Open — needs hardware
 
-Two questions, one five-minute session — `TESTING-NEXT.md` §B has the steps.
+**Both protocol questions are answered — 2026-09-16.** Block reads do not work, and the device does
+not push `0A0504` to our session. `PROTOCOL.md` §8.6 and §4.11 carry the detail; both were
+**Contested** and are now settled facts.
 
-**Tick the connection's "Enable debug logging (verbose TX/RX)" checkbox first.** Both 2026-09-15
-attempts produced nothing because it was off. It is the fifth field in the connection config, between
-"Enable polling" and "Allow advanced actions" — not Companion's log-level filter. The absence of any
-warn line proves the command was sent; only `TX:` and `RX RAW:` are debug-gated.
+Left over from the 0.8.10 run, small:
 
-- **B1 — Do block reads work?** Contradictory hardware results on record. Gates the Fade To Black
-  search entirely.
-- **B2 — Does `0A0504` reach our session?** `Image capture complete` never appeared, and that log is
-  info level and ungated, so it would have shown had `0A0504,08` arrived. `0A0504` is push-only and
-  never polled, so if it does not reach us the module never learns a capture finished — which also
-  makes the `screen reported closed` diagnostic meaningless. **Same trap as `030800`:** the capture
-  that established its behaviour recorded RCS's session, not ours. If confirmed, either poll it or
-  drop the completion log and the diagnostic. `PROTOCOL.md` §4.11 and §7.4 carry the caveat.
+- **V8** — the `Raw TX:` line was missing from the pasted log. The RX half is proven; the send side
+  is unconfirmed, and the echo exists precisely so both are visible.
+- **V9** — the two `PiP Reset` presets could not be located. They are verified present in the 0.8.10
+  bundle under `PinP & Key`. Check the installed version first, then look outside the Aux categories.
 
-**C7 PinP View Position is closed, 2026-09-15.** It works; the travel is only visible once View Zoom
-is raised — an observation problem, not a protocol one. `README.md` and `HELP.md` are corrected.
+**Fade To Black is the one real casualty.** The block-diff plan depended on block reads and is dead.
+`PROTOCOL.md` §10.1 lists what replaces it: capture RCS toggling FTB, walk `03xxxx` a byte at a
+time, or try the direct query in Roland's other command set — one line in a terminal and it would
+answer the question outright.
 
-## Built but unverified — 2026-09-15
+## Built but unverified — 2026-09-16
 
-Four code changes written, typechecked and linted, **never run**. They need one build and one
-session; `TESTING-NEXT.md` §V has the checks. **Bump the version before packaging.**
+**All seven changes in 0.8.10 passed.** What is unverified now is only what landed after that
+package. Needs a build; `TESTING-NEXT.md` §N has the checks.
 
-- **F2 — capture action no longer outlives Companion's timeout.** The dismissal runs detached, so
-  the action resolves in ~1.3 s instead of ~8.5 s. Device behaviour unchanged.
-- **Duplicate initial poll guarded.** `onAuthenticated()` returns early if already authenticated.
-  The reconnect check is the one that matters.
-- **Freeze trio made consistent.** The optimistic update moved into `cmdSetFreeze`, so On, Off and
-  Toggle all behave the same. The wider optimistic-update rule is now written down in `PROTOCOL.md`
-  §7.3 rather than changed — that closes CODE_REVIEW §5.3.
-- **Browse list cut to one line per action.** Nine descriptions removed, four of them relocated into
-  `static-text` notes so the text survives on the button. Only `raw_command` keeps a description.
+- **Split relabel.** Actions read `Split 1 (Vertical)` and `Split 2 (Horizontal)`, presets read
+  `Split 1 – Vertical` with faces `SPLIT / VERT` and `SPLIT / HORZ`, feedbacks and variable display
+  names follow. Confirmed against the panel 2026-09-16, which is what unblocked it.
+
+  **Display-only. Every id was left alone** — `split1_on`, `split1_off`, `split1_toggle`,
+  `split2_*`, both `*_active` feedbacks and both variable ids. §N3 is what proves an existing button
+  still fires, and it is the only check that matters.
+
+- **Doc corrections** — `HELP.md` gains the orientation, `PROTOCOL.md` records the settled protocol
+  facts. No code.
 
 ## Open — needs a decision
 

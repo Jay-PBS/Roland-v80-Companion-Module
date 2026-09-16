@@ -216,14 +216,14 @@ export function UpdateFeedbacks(self: ModuleInstance): void {
 
 		// ── Split ─────────────────────────────────────────────────────────────────
 		split1_active: {
-			name: 'Split 1 – active',
+			name: 'Split 1 (Vertical) – active',
 			type: 'boolean',
 			defaultStyle: { bgcolor: PURPLE_BRIGHT, color: WHITE },
 			options: [],
 			callback: () => self.split1Active,
 		},
 		split2_active: {
-			name: 'Split 2 – active',
+			name: 'Split 2 (Horizontal) – active',
 			type: 'boolean',
 			defaultStyle: { bgcolor: PURPLE_BRIGHT, color: WHITE },
 			options: [],

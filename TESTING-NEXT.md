@@ -3,143 +3,123 @@
 > **Open tasks only.** Cleared items are deleted, not recorded — the closed record lives in git
 > history and in `PROTOCOL.md`. `TESTING.md` is the 2026-09-08 run and is not edited.
 
-**Last updated:** 2026-09-15 · **Tester:** Jay · **Device firmware:** v1.20.201
+**Last updated:** 2026-09-16 · **Tester:** Jay · **Device firmware:** v1.20.201
 
-**Build under test: `roland-v80hd-0.8.10.tgz`**, packaged 2026-09-15. It carries seven code changes,
-**none of them hardware-verified** — §V has the checks.
-
----
-
-## V. Verify the seven unbuilt changes
-
-Written 2026-09-15, typechecked and linted, **never run**. One session clears all ten checks.
-
-| #   | Change              | What to check                                                                                                     | Result |
-| --- | ------------------- | ----------------------------------------------------------------------------------------------------------------- | ------ |
-| V1  | Capture timeout fix | Fire `Capture Image to Still`. Still captured, screen closes itself, **and no `Call timed out` error in the log** |        |
-| V2  | Duplicate poll      | Connect with debug on: `Connection ready` appears **once**, one state burst not two                               |        |
-| V3  | Duplicate poll      | **Pull the network, let it recover.** It reconnects and logs ready again                                          |        |
-| V4  | Freeze consistency  | Freeze On, Off and Toggle on three buttons — all three light the feedback identically                             |        |
-| V5  | Browse list         | Every action shows **one line**. Only `Advanced – Send raw LAN command` has a second                              |        |
-| V8  | Raw command echo    | Fire any raw command — `Raw TX:` and `Raw RX [Nb]:` both appear at info level                                     |        |
-| V9  | PinP presets        | `PinP & Key` holds `PiP1 Reset` and `PiP2 Reset`. **Aux 1 and Aux 2 no longer contain any PiP Layout buttons**    |        |
-| V10 | View Position note  | Both View Position actions show a `Note` on the button telling you to raise View Zoom first                       |        |
-| V6  | Browse list         | Mix/Wipe Time, AUX Layer PinP and both Croppings show a `Note` block **on the button**                            |        |
-| V7  | Browse list         | Stream & Record Start still shows its livestream `Warning` **on the button**                                      |        |
-
-**V3 is the one not to skip.** It is what proves the idempotency guard did not break reconnect, which
-is the only way that change could bite.
-
-**V1 supersedes the old capture item.** The completion-log question moves to §B2.
+**Last build tested:** `roland-v80hd-0.8.10.tgz`. Eight of its ten checks passed and both protocol
+questions are answered — see below for the two that did not close. **Three further changes have
+landed since that package** and need a new build: the Split relabel, and the doc corrections.
 
 ---
 
-## B. Two protocol questions — one session, needs the device
+## Cleared 2026-09-16 — do not retest
 
-Both were attempted on 2026-09-15 and **neither produced a result, for the same reason.**
+| Check  | Result                                                                   |
+| ------ | ------------------------------------------------------------------------ |
+| V1     | Capture works, **no `Call timed out` error** — the timeout fix holds     |
+| V2     | `Connection ready` once, one state burst                                 |
+| V3     | Recovered from `ECONNRESET` and logged ready again — the guard is safe   |
+| V4     | Freeze On, Off and Toggle all light the feedback identically             |
+| V5     | One line per action; only `Advanced` carries a second                    |
+| V6     | `Note` blocks present on Mix/Wipe Time, AUX Layer PinP, both Croppings   |
+| V7     | Stream & Record Start still shows its livestream `Warning` on the button |
+| V10    | Both View Position actions show the raise-the-zoom `Note`                |
+| **B1** | **Block reads do not work** — settled, see below                         |
+| **B2** | **The device does not push `0A0504` to us** — settled, see below         |
+| **F1** | **Split 1 is vertical, Split 2 is horizontal** — confirmed on the panel  |
 
-### Why the last two attempts produced nothing — now fixed in code
+### What B1 and B2 settled
 
-Three attempts on 2026-09-15 produced only `Surface/Handler` button lines: once with the module's
-debug flag off, and **once with it on**. Not even a `TX:` line either time.
+**B1 — block reads return nothing.** `RQH:030200,000030;` produced no reply. The 142 frames that
+arrived over the following two seconds were **every one a single-byte answer to the ordinary poll**,
+and no `0302xx` frame appeared other than the poll's own `030207`. The 2026-09-04 "returned all 48
+bytes" claim is disproven; the 2026-09-08 "returned nothing" was right. `PROTOCOL.md` §8.6 carries
+the full account, including why the wrong result was so plausible.
 
-Everything on that path was gated behind `config.debug`, so a reply could be invisible because of the
-config checkbox _or_ Companion's log-level filter, and there was no way to tell "command never sent"
-from "reply not shown".
+**Consequence:** the Fade To Black block-diff plan is dead. `PROTOCOL.md` §10.1 now lists what is
+left — capture RCS toggling FTB, walk `03xxxx` a byte at a time, or try Roland's other command set,
+which documents a direct query and is one line in a terminal.
 
-**The raw command action now logs both directions at info level**, armed for 2 s after each send:
+**B2 — `0A0504` never reaches us.** No `Image capture complete`, and no `0A0504` traffic in either
+direction during a capture that otherwise completed correctly. That is the `030800` trap for the
+second time: a push seen in an RCS recording is not proof it reaches your session.
+
+### Two findings that came free with the log
+
+Both now in `PROTOCOL.md` §2.3 and §2.4:
+
+- **Every answered read produces two frames** — `DTH:` then `ACK;`. Measured at 142 and 142, exactly
+  paired. `ACK;` is not only a write acknowledgement.
+- **The device batches its replies** even though it refuses batched requests — up to 22 frames in one
+  242-byte segment, and frames split across segment boundaries. Never assume one frame per read.
+
+---
+
+## Still open
+
+### V8 — raw echo, needs the `Raw TX:` line
+
+The `Raw RX` half is proven beyond doubt: 24 lines, 3172 bytes, correctly framed. **The `Raw TX:`
+line was not in the pasted log**, so the send side is unconfirmed.
+
+It almost certainly fired — the RX echo only arms inside `cmdRaw`, so nothing would have been logged
+at all otherwise. But the point of the echo is that both directions are visible, so it is worth one
+look.
+
+| #   | Step                                                                                          | Result |
+| --- | --------------------------------------------------------------------------------------------- | ------ |
+| V8a | Fire any raw command and check the line **immediately above** the first `Raw RX` is `Raw TX:` |        |
+
+### V9 — PinP Reset presets could not be found
+
+Expected in the preset browser under **`PinP & Key`**, alongside PiP1/PiP2 PGM and PVW:
 
 ```
-Raw TX: RQH:030200,000030;
-Raw RX [48b]: 01 00 00 ...
+PinP & Key
+  PinP1 PGM     PinP1 PVW
+  PinP2 PGM     PinP2 PVW
+  PiP1 Reset    <- these two
+  PiP2 Reset
 ```
 
-So §B no longer depends on any checkbox. If the send is refused, `sendCmd`'s warn follows
-immediately, which distinguishes the two cases.
+Verified present in the 0.8.10 bundle — `pinp1_reset`, `pinp2_reset` and the label `PiP1 Reset` are
+all in the shipped `main.js`, under category `PinP & Key`.
 
-**Still worth checking once:** Companion's log page has its own level filter. If `Raw TX` does not
-appear on the new build, confirm the filter includes Info before concluding anything about the
-device.
+| #   | Step                                                                                  | Result |
+| --- | ------------------------------------------------------------------------------------- | ------ |
+| V9a | Confirm the installed module is **0.8.10** — Companion caches by version              |        |
+| V9b | Look under **`PinP & Key`**, not Aux 1 or Aux 2. Six presets expected, not four       |        |
+| V9c | If still missing, restart the connection — the preset list is sent at connection init |        |
 
-### B1 — Do block reads work?
+If they are genuinely absent on a confirmed 0.8.10, that is a new finding and worth a log.
 
-Contradictory hardware results on record: 2026-09-04 says `RQH:030200,000030;` returned all 48 bytes,
-2026-09-08 says it returned nothing. **This gates the entire Fade To Black search.**
-
-| #   | Step                                                           | Result |
-| --- | -------------------------------------------------------------- | ------ |
-| B1a | Fire raw command `RQH:030200,000030;`                          |        |
-| B1b | Confirm `Raw TX:` appears — proves the command left the module |        |
-| B1c | Record the `Raw RX [Nb]:` byte count — ~48, 1, or no line      |        |
-
-| `Raw RX` shows | Verdict                                                                                      |
-| -------------- | -------------------------------------------------------------------------------------------- |
-| **~48 bytes**  | Block reads work. Proceed to the FTB diff, and the multi-byte decoder becomes worth building |
-| **1 byte**     | The device truncates. Block reads useless; FTB needs the RCS capture route instead           |
-| **no line**    | The device ignores multi-byte requests entirely. Same conclusion, harder stop                |
-
-**If bytes come back:** repeat with FTB engaged and settled, then diff. Whichever byte differs is the
-steady Fade To Black state — the one open question `README.md` publicly asks for help with.
-
-### B2 — Does the device push `0A0504` to our session?
-
-`Image capture complete` never appeared on 2026-09-15. That log is **info** level and ungated by the
-debug flag, so it would have shown had `0A0504,08` arrived. `0A0504` is push-only and never polled.
-
-**This is the `030800` trap again** — the 16-cycle capture that established `0A0504`'s behaviour
-recorded RCS's session, not ours.
-
-| #   | Step                                                                                    | Result |
-| --- | --------------------------------------------------------------------------------------- | ------ |
-| B2a | Fire one capture with debug on, and record **any** `0A0504` traffic in either direction |        |
-
-If nothing arrives, the options are to poll `0A0504` like `030800`, or to drop the completion log and
-the `screen reported closed` diagnostic as things that cannot work. `PROTOCOL.md` §4.11 and §7.4
-carry the caveat.
-
----
-
-## D. Desk item — Companion only, no device
+### D1 — detail on the button, desk work
 
 | #   | Item                 | What to check                                                                                                                    | Result |
 | --- | -------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------ |
 | D1  | Detail on the button | Place Capture Image and both Stream & Record actions on buttons — a labelled `Note` or `Warning` block appears above the options |        |
 
-D1 is the mechanism the browse-list cleanup depends on, so it is worth confirming independently of V6
-and V7.
+Largely implied by V6 and V7 passing, but it covers Capture Image specifically, which those did not.
 
 ---
 
-## F1 — Split 1 and Split 2 need naming for what they do
+## N. Next build — verify the Split relabel
 
-Both splits work and sit in the right place, but are labelled only by number. **Split 1 is reportedly
-the vertical split and Split 2 the horizontal** — and nothing in the module says so.
+Written 2026-09-16 after F1 was confirmed. **Not yet packaged.**
 
-**Blocked on one observation: confirm which is which against the panel.**
+| #   | Check                                                                                               | Result |
+| --- | --------------------------------------------------------------------------------------------------- | ------ |
+| N1  | Action list reads `Split 1 (Vertical) – On/Off/Toggle` and `Split 2 (Horizontal) – …`               |        |
+| N2  | Presets read `Split 1 – Vertical` / `Split 2 – Horizontal`, faces `SPLIT / VERT` and `SPLIT / HORZ` |        |
+| N3  | **An existing split button built before the rename still fires** — ids unchanged, so it must        |        |
+| N4  | Feedback names read `Split 1 (Vertical) – active`; variables `$(v80hd:split1)` still resolve        |        |
 
-**Roland's documentation does not answer it** — checked 2026-09-15. The spec confirms the V-80HD has
-SPLIT 1 and 2 and documents their centre positions, but never says which is vertical and which is
-horizontal. Don't re-check the PDF; it has to be the panel.
-
-Display-only when it goes ahead. **The ids must not change** — `split1_on`, `split1_off`,
-`split1_toggle`, `split2_*`, the `split1_active` / `split2_active` feedbacks and the `split1` /
-`split2` variables all stay, or existing buttons break.
-
-| File                                              | What                                             |
-| ------------------------------------------------- | ------------------------------------------------ |
-| [src/actions.ts:281-286](src/actions.ts#L281)     | Six action names                                 |
-| [src/feedbacks.ts:218-230](src/feedbacks.ts#L218) | Two feedback names                               |
-| [src/variables.ts:27-28](src/variables.ts#L27)    | Two variable display names, not the variable ids |
-| [src/presets.ts:422-437](src/presets.ts#L422)     | Two preset names and both button faces           |
-| [companion/HELP.md:66-68](companion/HELP.md#L66)  | The Split section and the variable table         |
-
-Also undecided: button faces as `SPLIT / VERT` and `SPLIT / HORZ`, or keep the numbers and carry the
-orientation in the name only.
+**N3 is the one that matters.** The rename is display-only and every id was left alone —
+`split1_on`, `split1_off`, `split1_toggle`, `split2_*`, both `*_active` feedbacks and both variable
+ids. N3 is what proves it.
 
 ---
 
 ## Deferred
 
-- **Raw-command button built on an older version still fires.** No such button exists and
-  manufacturing an old build is not worth it. **Fold into the next build's regression pass**, where a
-  0.8.8-era raw-command button will exist naturally.
+- **Raw-command button built on an older version still fires.** No such button exists. Fold into the
+  next regression pass, where a 0.8.8-era button will exist naturally.

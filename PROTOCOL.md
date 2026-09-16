@@ -134,9 +134,9 @@ DTH:001500,29;        set Program to Input 1
 RQH:001500,000001;    read the Program source back
 ```
 
-`<size>` is itself six hex digits. **In practice this module has only ever sent `000001`** — one
-byte. That is worth knowing before trusting anything written here about multi-byte reads; see
-[§8.6](#86-contested-do-block-reads-work).
+`<size>` is itself six hex digits. **Always send `000001`.** Asking for more does not work — the
+device returns nothing at all for a multi-byte request, confirmed on hardware 2026-09-16. See §8.6.
+Read one byte at a time, or not at all.
 
 ### 2.2 Replies
 
@@ -149,7 +149,31 @@ byte. That is worth knowing before trusting anything written here about multi-by
 Text lines — the password prompt, `Welcome to`, `VER:`, `Authentication error`, `Wait a moment` —
 are newline-terminated and are not frames.
 
-### 2.3 Frames are wrapped in control bytes
+### 2.3 Every answered read produces two frames
+
+A reply to `RQH` is **a `DTH:` frame followed immediately by `ACK;`** — not one or the other.
+Measured over 142 consecutive replies: 142 `DTH:` frames, 142 `ACK;` frames, perfectly paired, with
+nothing else on the wire. **Confirmed 2026-09-16.**
+
+So `ACK;` is not only a write acknowledgement. Treating it as one and discarding it is fine, but do
+not use its arrival to infer that a write happened.
+
+### 2.4 The device batches replies, even though it refuses batched requests
+
+This is the asymmetry that catches people. You must send **one command per TCP write** (§7.2), but
+the device answers **many frames in a single segment** — up to 22 frames, 242 bytes, in one read
+during the same measurement.
+
+```
+one 242-byte segment  =  11 x (DTH:xxxxxx,vv;  ACK;)
+```
+
+**Never assume one frame per segment, in either direction.** A parser that reads a socket chunk and
+treats it as a single message will silently drop most of what the device says. Accumulate into a
+buffer and split on the terminator. Frames also split _across_ segment boundaries — one `DTH:` in
+that measurement had its `ACK;` arrive in the next read.
+
+### 2.5 Frames are wrapped in control bytes
 
 Device frames arrive wrapped in **STX (`0x02`), XON (`0x11`) and XOFF (`0x13`)**. Strip them from
 the leading edge before parsing. **Confirmed** — this is in the module's receive path and was found
@@ -163,7 +187,7 @@ about 8 KB it is not a frame at all, and keeping a tail only hands the parser a 
 the middle of a value — which produces one silently wrong reading rather than an error. Discard it
 and log that you did.
 
-### 2.4 The truncation trap
+### 2.6 The truncation trap
 
 **A one-byte read is easy; anything longer is where implementations fall down.**
 
@@ -431,12 +455,15 @@ not `00`.
 Capture source bytes: HDMI 1-4 = `00`–`03`, SDI 1-4 = `04`–`07`, Video Player = `08`. Note this is
 **not** the general source byte map — capture cannot take a still or a crosspoint as its source.
 
-> **Contested: does `0A0504` actually reach your session?** Its behaviour was established from a
-> 16-cycle recording of **RCS's** session, and `0A0504` is push-only — nothing polls it. A capture
-> run from this module on 2026-09-15 completed correctly but produced **no `0A0504,08`**, so the
-> client never learned the capture had finished. That is the `030800` trap again (§4.10). Not yet
-> proven — the run had verbose logging off, so a push that arrived and failed to parse would have
-> been invisible. **If you depend on capture completion, poll `0A0504` rather than waiting for it.**
+> **`0A0504` does not reach your session. Confirmed 2026-09-16.** Its behaviour was established
+> from a 16-cycle recording of **RCS's** session, and it is push-only — nothing polls it. Two
+> captures run from this module, the second with full logging, completed correctly and produced
+> **no `0A0504` traffic in either direction**. The client never learns the capture finished.
+>
+> **This is the `030800` trap again** (§4.10), and that is now twice. Treat every push documented
+> from an RCS recording as unproven for your own session until you have seen it arrive in yours.
+>
+> **If you need capture completion, poll `0A0504`.** Waiting for a push will wait forever.
 
 > **`0A0800` starts a livestream.** On the V-80HD, livestreaming, video recording and audio
 > recording share one trigger and cannot be started separately. Whichever of Live Streaming, Video
@@ -749,14 +776,14 @@ lit on a tally button — briefly telling them something false about what is on 
 
 ### 7.4 What the device pushes unprompted
 
-| Register                       | Behaviour                                                                                  |
-| ------------------------------ | ------------------------------------------------------------------------------------------ |
-| `0E0000`                       | 1 Hz keepalive, both directions                                                            |
-| `030604`                       | 1 Hz clock counter                                                                         |
-| `0A0504`                       | Capture screen state, within ~60 ms of a toggle — **but see §4.11, it may reach RCS only** |
-| `0F0000` / `0F0300` / `0F0600` | Audio meters, 36-byte payloads, **only while audio is present**                            |
-| `0E0001,01` … `0E0002`         | Brackets a **full parameter dump** after every capture                                     |
-| `030800`                       | Stream & Record status — **to RCS's session, not yours**                                   |
+| Register                       | Behaviour                                                                          |
+| ------------------------------ | ---------------------------------------------------------------------------------- |
+| `0E0000`                       | 1 Hz keepalive, both directions                                                    |
+| `030604`                       | 1 Hz clock counter                                                                 |
+| `0A0504`                       | Capture screen state, ~60 ms after a toggle — **to RCS's session only, see §4.11** |
+| `0F0000` / `0F0300` / `0F0600` | Audio meters, 36-byte payloads, **only while audio is present**                    |
+| `0E0001,01` … `0E0002`         | Brackets a **full parameter dump** after every capture                             |
+| `030800`                       | Stream & Record status — **to RCS's session, not yours**                           |
 
 **Captured.**
 
@@ -815,33 +842,34 @@ to map something, drive it from RCS and watch.
 A related correction: RCS sends **one** press/release pair per action, not two. An implementation
 that doubled the send was solving a problem that did not exist.
 
-### 8.6 Contested: do block reads work?
+### 8.6 Disproven: block reads work
 
-**Two hardware observations, four days apart, that cannot both be right.**
+**They do not. Settled on hardware 2026-09-16.**
 
-**2026-09-04 — reported working.** `RQH:030200,000030;` sent via a raw-command action "returned all
-48 bytes", with the dump recorded:
+`RQH:030200,000030;` — a request for 48 bytes — was fired with the raw command logging both
+directions at info level. The device returned **nothing at all** for it. Over the two seconds that
+followed, 142 replies arrived and **every single one was a one-byte answer to the ordinary 500 ms
+poll**; not one carried a multi-byte payload, and no `0302xx` frame appeared other than the poll's
+own `030207`.
 
-```
-030200 = 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-         00 01 00 00 00 02 01 00 00 00 00 00 00 00 00 00
-         00 00 00 00 00 00 00 00 01 01 00 00 00 00
-```
+This closes a contradiction that had stood since 2026-09-08:
 
-**2026-09-08 — reported not working.** The same command "returned nothing at all". This is the
-currently shipped position, and it is why the Fade To Black search is parked.
+| Date       | Claim                                      | Verdict     |
+| ---------- | ------------------------------------------ | ----------- |
+| 2026-09-04 | "Block reads work — returned all 48 bytes" | **Wrong**   |
+| 2026-09-08 | "Returned nothing at all"                  | **Correct** |
 
-Two further data points, neither decisive:
+**How the wrong result happened, and why it was so plausible.** The client truncates every reply to
+its first byte, so at the application layer a 48-byte answer and a 1-byte answer are identical. With
+a 500 ms poll running continuously in the background, a "successful block read" and an ordinary poll
+reply arriving a moment later look exactly the same. The two recorded dumps of that block disagreed
+with each other, which was the tell.
 
-- **The two recorded dumps of the same block disagree.** Elsewhere in the same notes the FTB-off
-  dump is given as `01 0F 7F 00 00…`, which does not match the table above.
-- **A one-byte parser cannot tell a 48-byte reply from a 1-byte one.** If the client truncates every
-  reply to its first byte — which this one does — a "successful" block read and a single-byte read
-  look identical at the application layer. The 2026-09-04 success may have been a misread.
+**The lesson, and it is the reason this document counts bytes everywhere:** verify at the lowest
+layer you can reach. An application-level observation cannot distinguish "the device answered" from
+"the device was already talking".
 
-**This matters because the entire Fade To Black search plan depends on block reads working.** It is
-the first thing to settle, and it is a two-minute test: send the command with debug logging on and
-count the bytes on the wire, not in the parser.
+**Consequence:** the Fade To Black search cannot proceed by diffing a block. See §10.1.
 
 ### 8.7 Corrections to claims that were documented as fact
 
@@ -958,19 +986,21 @@ capturing RCS driving it.
 `030207` is a fade-in-progress flag (§4.10). The address carrying the steady engaged state has not
 been found, and it was the only polled byte that moved during the capture that established this.
 
-The search plan, still valid: read the `030200` block with FTB off and settled, repeat with FTB
-engaged and settled, and diff. If nothing differs, widen to `030000` and `030100`. Fallback is to
-capture RCS toggling FTB — RCS clearly knows the state.
+**The block-diff approach is dead.** It was the obvious plan — read `030200` with FTB off, read it
+again with FTB engaged, diff the two — and it depended on block reads working. They do not (§8.6),
+confirmed 2026-09-16. Nothing in that plan survives.
 
-**This is blocked on §8.6.** The block-read approach cannot be trusted until block reads themselves
-are settled.
+**What is left:**
 
-**A lead worth trying first.** Roland's separate _Basic control commands_ set — the mnemonic language
-noted at the top of this document, sharing the same socket — documents a direct query for this
-state, returning one of `OFF`, `ON`, `FADEIN` or `FADEOUT`. If that works, it answers the question
-outright and the block-read hunt is unnecessary. **Spec** — read from Roland's documentation and
-**not tested here**, so treat it as a lead rather than a fact. It costs one line in a terminal to
-check, and it is the obvious thing to do before diffing 48-byte blocks.
+- **Capture RCS toggling FTB.** RCS clearly knows the state, and this is the technique that produced
+  `0B002A`, the capture sequence, the Stream & Record pair and the tally answer. It is the method
+  with the best record in this project by a distance (§11).
+- **Walk `03xxxx` one byte at a time.** Slow but possible now that single reads are known to work —
+  poll a candidate range with FTB off, repeat with it engaged, and compare. The address space is
+  large and `03` is entirely undocumented, so scope it before starting.
+- **Roland's other command set** documents a direct query returning `OFF`, `ON`, `FADEIN` or
+  `FADEOUT`. It is out of scope for this document and untested here, but it is one line in a
+  terminal and would answer the question outright. Try it before either of the above.
 
 ### 10.2 Resolved: PinP View Position
 

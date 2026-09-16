@@ -395,16 +395,16 @@ export function UpdatePresets(self: ModuleInstance): void {
 	presets['split1'] = {
 		type: 'button',
 		category: 'Split',
-		name: 'Split 1',
-		style: { text: 'SPLIT\n1', size: sz, color: c.white, bgcolor: c.trans, show_topbar: false },
+		name: 'Split 1 – Vertical',
+		style: { text: 'SPLIT\nVERT', size: sz, color: c.white, bgcolor: c.trans, show_topbar: false },
 		steps: [{ down: [{ actionId: 'split1_toggle', options: {} }], up: [] }],
 		feedbacks: [{ feedbackId: 'split1_active', options: {}, style: { bgcolor: c.trans_on, color: c.black } }],
 	}
 	presets['split2'] = {
 		type: 'button',
 		category: 'Split',
-		name: 'Split 2',
-		style: { text: 'SPLIT\n2', size: sz, color: c.white, bgcolor: c.trans, show_topbar: false },
+		name: 'Split 2 – Horizontal',
+		style: { text: 'SPLIT\nHORZ', size: sz, color: c.white, bgcolor: c.trans, show_topbar: false },
 		steps: [{ down: [{ actionId: 'split2_toggle', options: {} }], up: [] }],
 		feedbacks: [{ feedbackId: 'split2_active', options: {}, style: { bgcolor: c.trans_on, color: c.black } }],
 	}
