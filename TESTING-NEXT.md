@@ -6,81 +6,59 @@
 **Build under test:** `roland-v80hd-0.8.13.tgz` · **Tester:** Jay · **Firmware:** v1.20.201
 **Last updated:** 2026-09-16
 
-**Fade To Black is done.** Q1-Q6, Q8 and Q9 all passed on 0.8.12 — engaged tracks the panel, the
-variables read correctly, and the fade feedback clears on disconnect instead of sticking. The only
-change since is the colour, below.
+## Nothing outstanding
 
-> **Check the connection is on this build before testing anything.** Installing the `.tgz` adds the
-> version to Companion's module list; **the connection stays pinned to the version it was already
-> on**. Change it on the connection itself. This cost a round trip on 2026-09-16 — a working change
-> was reported as broken and the whole code path re-verified before the version turned out to be the
-> problem. The log line naming the module path is the quickest confirmation.
+**0.8.13 is fully verified.** Every check passed — Fade To Black including the engaged state and the
+panel tracking, the Split relabel, the readable raw echo, the FTB fade colour, and the on-button
+detail blocks.
 
----
+The raw echo also confirmed `QFTB;` is live in the poll rather than only in a manual test — every
+cycle closes with:
 
-## C. The FTB fade colour — one check
+```
+<STX>DTH:0C0007,00;<LF><STX>ACK;<LF><STX>FTB:OFF;<LF><STX>ACK;<LF>
+```
 
-Q4 passed but asked for orange instead of purple, so the fade no longer borrows the transition
-colour. Red is now reserved for "the output is actually black".
+There are no open protocol questions, no open decisions, and no outstanding checks.
 
-| #   | Check                                                                          | Result |
-| --- | ------------------------------------------------------------------------------ | ------ |
-| C1  | Drop a fresh FTB preset — the fade shows **orange**, then **red** once engaged |        |
-
-Only a freshly dropped preset picks this up. An existing button keeps the styling it was created
-with.
+> **Check the connection is on the build you think it is, before testing anything.** Installing the
+> `.tgz` adds the version to Companion's module list; **the connection stays pinned to the version it
+> was already on**. This cost a round trip on 2026-09-16 — a working change was reported as broken
+> and the whole code path re-verified before the version turned out to be the problem. The log line
+> naming the module path is the quickest confirmation.
 
 ---
 
-## N. The Split relabel and the readable raw echo
+## Untestable by absence — fold into the next regression pass
 
-N1 and N2 passed on 0.8.12. Three left.
+Neither has a subject to test against, and neither is worth manufacturing an old build for. Both
+become testable naturally once buttons exist that predate a later change.
 
-| #   | Check                                                                          | Result |
-| --- | ------------------------------------------------------------------------------ | ------ |
-| N3  | **A split button built before the rename still fires**                         |        |
-| N4  | Feedbacks read `Split 1 (Vertical) – active`; `$(v80hd:split1)` still resolves |        |
-| N5  | Fire `RQH:001500,000001;` — `Raw RX` reads readable text, not hex              |        |
-
-**N3 is the only one that really matters.** The rename is display-only and every id was left alone,
-so N3 is what proves it.
-
-**For N5, turn polling off first** — the echo arms for two seconds, which with polling on catches
-four poll cycles and buries the reply.
+- **A split button built before the Vertical/Horizontal rename still fires.** None exists. The risk
+  is real but the evidence is not: every id was left untouched — `split1_on`, `split1_off`,
+  `split1_toggle`, `split2_*`, both `*_active` feedbacks and both variable ids — and a Companion
+  button references actions by id, so an unchanged id resolves. **Verified by inspection rather than
+  on hardware**, which is worth saying out loud rather than recording as a pass.
+- **A raw-command button built on an older version still fires.** Same situation.
 
 ---
 
-## D. Desk item — Companion only
-
-| #   | Check                                                                                                                            | Result |
-| --- | -------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| D1  | Place Capture Image and both Stream & Record actions on buttons — a labelled `Note` or `Warning` block appears above the options |        |
-
----
-
-## Closed without testing
-
-- **Q7, engaging FTB from the Roland RCS software.** Cannot be run and never could: **the V-80HD
-  accepts a second control session and then sends it nothing** (`PROTOCOL.md` §1.3). RCS and
-  Companion cannot both hold the port, so there is no configuration in which this test exists. It
-  should not have been written. The underlying question — does the feedback track a change the
-  module did not make — is answered by Q3 from the panel.
-
----
-
-## Not in this build — held for 0.9
+## Held for 0.9 — the tidy-up release
 
 Decided 2026-09-16. Housekeeping gets one deliberate pass rather than dribbling into point releases
-where it obscures what actually changed: untracking the test sheets and the code review, the
-remaining repository management, an aesthetic and consistency pass over button faces, categories,
-colour use and action naming, and a final end-to-end documentation review including the beta wording.
+where it obscures what actually changed:
 
-`working_doc.md` holds the detail. **Nothing is being built right now** — the next build is 0.8.14 if
-the checks above turn something up, and may not need to exist if they all pass.
+- Untrack the test sheets and the code review
+- Remaining repository management
+- An aesthetic and consistency pass — button faces, categories, colour use, action naming
+- A final end-to-end documentation review, including the beta wording
+
+`working_doc.md` holds the detail. **Nothing is being built.** 0.8.14 exists only if something turns
+up; on current evidence it does not need to.
 
 ---
 
-## Also changed in 0.8.11–0.8.13, no test needed
+## Changed in 0.8.11–0.8.13 without needing a test
 
 Docs and config only, listed so nothing looks unexplained:
 
@@ -92,10 +70,3 @@ Docs and config only, listed so nothing looks unexplained:
 - **All issues and discussions point at the Bitfocus repo**, including the issue chooser here. The
   split is deliberate: this repository carries experimental work, the released one carries versions
   that have been through hardware testing.
-
----
-
-## Deferred
-
-- **Raw-command button built on an older version still fires.** No such button exists. Fold into the
-  next regression pass, where a 0.8.12-era button will exist naturally.

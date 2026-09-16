@@ -38,16 +38,17 @@ now cleared explicitly, because the engaged state cannot be re-derived and a wro
 persists. Every other boolean has the same flaw but is re-established by the next poll within a
 cycle, so the stale window is half a second. Decide whether that is worth fixing generally.
 
-## Built but unverified — 0.8.13
+## Built and verified — 0.8.13
 
-Fade To Black is confirmed on hardware and needs nothing further. What is still unverified:
+**Nothing is unverified.** Every change through 0.8.13 has been exercised on hardware: Fade To Black
+including the engaged state and panel tracking, the Split relabel, the readable raw echo, the FTB
+fade colour, and the on-button detail blocks.
 
-- **The FTB fade colour.** Orange rather than the transition purple, so red on that button means one
-  thing only: the output is actually black. `TESTING-NEXT.md` §C.
-- **The Split relabel.** Actions, presets, faces, feedbacks and variable names all carry Vertical and
-  Horizontal. **Display-only — every id was left alone**, and §N3 is the check that proves an
-  existing button still fires.
-- **The readable raw echo.** Frames render as text rather than hex. §N5.
+Two things are recorded as **verified by inspection rather than on hardware**, because neither has a
+subject to test against and neither is worth manufacturing an old build for — a split button built
+before the rename, and a raw-command button from an older version. Both become testable naturally in
+a later regression pass. The ids were all left untouched and a Companion button resolves actions by
+id, so the reasoning is sound; it is simply not the same as having seen it.
 
 ## Open — needs a decision
 
