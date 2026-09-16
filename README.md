@@ -4,7 +4,13 @@ Bitfocus Companion module for the Roland V-80HD Direct Streaming Video Switcher.
 
 Developed and maintained by Purple Badger Solutions.
 Contact: projects@purplebadgersolutions.co.uk
-Repository: https://github.com/Jay-PBS/Roland-v80-Companion-Module
+**Released module:** https://github.com/bitfocus/companion-module-roland-v80hd
+**Development repository:** https://github.com/Jay-PBS/Roland-v80-Companion-Module
+
+The Bitfocus repository is the released module and where **all issues and discussions belong**.
+This repository is where development happens, including experimental work that is not fit to run
+a show on. Pulling from here means you may be running something mid-change; pull the release if
+you want a version that has been through hardware testing.
 
 This module is currently in beta. It has been tested on physical hardware and is provided for evaluation. Use in production environments is at the operator's own discretion and risk.
 
@@ -189,7 +195,7 @@ Audio control is limited to mute on purpose. The V-80HD exposes full audio contr
 
 Audio level metering is not implemented either, though the device does supply it. The unit pushes meter data unprompted on three registers — `0F0000`, `0F0300` and `0F0600`, most likely Main, AUX 1 and AUX 2 — as 36-byte payloads in L/R pairs, arriving only while audio is present and without any polling. Turning that into Companion variables would need a multi-byte payload decoder the module does not currently have, so it is recorded rather than built.
 
-If you want the advanced audio controls or the level meters, please raise an issue on GitHub (https://github.com/Jay-PBS/Roland-v80-Companion-Module/issues). They are not planned otherwise, as the effort is hard to justify without someone who actually needs them.
+If you want the advanced audio controls or the level meters, please raise an issue on GitHub (https://github.com/bitfocus/companion-module-roland-v80hd/issues). They are not planned otherwise, as the effort is hard to justify without someone who actually needs them.
 
 ---
 

@@ -8,7 +8,11 @@ That constraint shapes what can and cannot be accepted.
 
 ## Bug reports are welcome
 
-Open an issue using the [bug report form](https://github.com/Jay-PBS/Roland-v80-Companion-Module/issues/new/choose). The more of the following you can include, the faster it gets resolved:
+**Issues belong on the released repository: [bitfocus/companion-module-roland-v80hd](https://github.com/bitfocus/companion-module-roland-v80hd).**
+Open one using the [bug report form](https://github.com/bitfocus/companion-module-roland-v80hd/issues/new/choose). The repository you may have found
+this in, `Jay-PBS/Roland-v80-Companion-Module`, is where development happens and carries
+experimental work; keeping reports on the released module is what stops a bug in something
+half-finished being mistaken for a bug in the shipped version. The more of the following you can include, the faster it gets resolved:
 
 - V-80HD firmware version, and the Companion and module versions.
 - What you did, what you expected, and what happened instead.
@@ -24,4 +28,4 @@ If you have found a genuine defect, open an issue describing it. That is the use
 
 ## Anything else
 
-Questions, behaviour you are not sure is a bug, feature ideas, or anything that does not fit the bug report form — raise it in [issues](https://github.com/Jay-PBS/Roland-v80-Companion-Module/issues) or [discussions](https://github.com/Jay-PBS/Roland-v80-Companion-Module/discussions). Both are read.
+Questions, behaviour you are not sure is a bug, feature ideas, or anything that does not fit the bug report form — raise it in [issues](https://github.com/bitfocus/companion-module-roland-v80hd/issues) or [discussions](https://github.com/bitfocus/companion-module-roland-v80hd/discussions). Both are read.

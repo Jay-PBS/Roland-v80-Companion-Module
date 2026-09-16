@@ -1,5 +1,11 @@
+# This is the development repository. Issues belong on the released module, so the blank option is
+# off and both routes below lead elsewhere. The templates beside this file are kept deliberately:
+# they travel upstream with the code and are the forms people should meet on the released repo.
 blank_issues_enabled: false
 contact_links:
+  - name: REPORT A BUG IN THIS MODULE
+    url: https://github.com/bitfocus/companion-module-roland-v80hd/issues/new/choose
+    about: Issues go on the released module, not here. This repository carries experimental work, and a bug in something half-finished should not be mistaken for a bug in the shipped version.
   - name: BUG OR FEATURE REQUEST FOR COMPANION ITSELF
     url: https://github.com/bitfocus/companion/issues
-    about: Report it against the companion itself, to get the relevant people notified.
+    about: Report it against Companion itself, to get the relevant people notified.

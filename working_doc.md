@@ -56,6 +56,23 @@ package. Needs a build; `TESTING-NEXT.md` §N has the checks.
 
 ## Open — needs a decision
 
+- **Resolved 2026-09-16 — everything points at Bitfocus now.** `repository` and `bugs` in
+  `manifest.json` and `package.json`, plus every issue and discussion link in `README.md` and
+  `CONTRIBUTING.md`. `.github/ISSUE_TEMPLATE/config.yml` here now redirects to the released
+  repository rather than offering a form.
+
+  **The reason is version separation, and it is worth remembering:** this repository carries
+  experimental work, so a bug in something half-finished must not be mistaken for a bug in the
+  shipped module. Keeping reports on the release is what enforces that.
+
+  The issue templates stay in this repository deliberately — they travel upstream with the code and
+  are the forms people should meet on the released repo.
+
+  **One thing this does not do:** GitHub still allows issues here if someone goes looking. The
+  config only changes what the "new issue" chooser offers. Turning Issues off in this repository's
+  settings is the only thing that actually enforces it, and that is a GitHub setting rather than a
+  file.
+
 - **Tagging — resolved 2026-09-10, no backfill.** Tags are `v0.4.0`, `v0.6.5` and `v0.8.5`, and
   those are the states worth keeping. The earlier note claimed 0.6.2, 0.6.3 and 0.6.4 went untagged;
   they cannot be tagged, because they were never committed. Committed history runs
@@ -90,24 +107,6 @@ package. Needs a build; `TESTING-NEXT.md` §N has the checks.
   `CODE_REVIEW.md` go into `.gitignore` and come out of the index with `git rm --cached`. Files stay
   on disk; losing their ongoing history is accepted pre-1.0. `working_doc.md` and `PROTOCOL.md` stay
   tracked in both repos. Closes CODE_REVIEW §4.3. **Confirm before running it.**
-
-## Open — needs a decision
-
-- **`repository` and `bugs` now point at Bitfocus, and the docs still point here.** Done 2026-09-16
-  in `companion/manifest.json` and `package.json` as decided. The consequence is now concrete:
-
-  | Points at Bitfocus              | Points here                                       |
-  | ------------------------------- | ------------------------------------------------- |
-  | `manifest.json`, `package.json` | `README.md:7`, `README.md:192`, `CONTRIBUTING.md` |
-
-  `bugs` is the URL Companion sends a user to when they report a problem, so **reports now land in a
-  repository that contains 0.4.0 and none of this work**, while `CONTRIBUTING.md` and the issue
-  templates in `.github/ISSUE_TEMPLATE/` live here and describe a process nobody will reach.
-
-  Three ways out, and it needs picking rather than leaving: revert both fields until submission;
-  split them, `repository` upstream and `bugs` here; or repoint the docs too and accept that bug
-  reports go to Bitfocus from now on. Flagged when this was queued; the split is real now rather
-  than hypothetical.
 
 ## Queued for 1.0 release prep
 
