@@ -22,47 +22,47 @@ Current version: 0.8.10
 
 ## Feature Status
 
-| Feature                             | Status                                     |
-| ----------------------------------- | ------------------------------------------ |
-| CUT, AUTO, Fade To Black            | Confirmed working                          |
-| Transition Type Mix and Wipe        | Confirmed working                          |
-| Mix and Wipe Time                   | Confirmed working                          |
-| Wipe Pattern and Direction          | Confirmed working                          |
-| Program Source routing              | Confirmed working                          |
-| Preview Source routing              | Confirmed working                          |
-| Input Assign slots 1 to 8           | Confirmed working                          |
-| AUX 1 and 2 Source routing          | Confirmed working                          |
-| AUX Linked PGM                      | Confirmed working                          |
-| AUX Layer PinP and Key control      | Confirmed working                          |
-| Split 1 and 2                       | Confirmed working                          |
-| PinP and Key Source                 | Confirmed working                          |
-| PinP PGM and PVW On, Off, Toggle    | Confirmed working                          |
-| PinP Window Position H and V        | Confirmed working                          |
-| PinP Window Size                    | Confirmed working                          |
-| PinP Window Cropping H and V        | Confirmed working                          |
-| PinP View Position H and V          | Working — raise View Zoom to see it        |
-| PinP View Zoom                      | Confirmed working                          |
-| DSK Source, PGM, PVW                | Confirmed working                          |
-| Audio Input Mute all channels       | Confirmed working                          |
-| Main Bus Mute                       | Confirmed working                          |
-| AUX Bus Mute                        | Confirmed working                          |
-| Feedback for all polled state       | Confirmed working                          |
-| Test Patterns 12 patterns           | Confirmed working                          |
-| Fade To Black feedback              | Confirmed working — added in 0.6.0         |
-| Wipe Pattern and Direction feedback | Confirmed working — added in 0.6.0         |
-| AUX Linked PGM feedback             | Confirmed working — added in 0.6.0         |
-| AUX Linked PGM per-bus follow       | Confirmed working — added in 0.6.3         |
-| AUX Linked PGM presets              | Confirmed working — added in 0.6.3         |
-| Per-channel audio mute variables    | Confirmed working — added in 0.6.0         |
-| Per-input freeze variables          | Confirmed working — added in 0.6.0         |
-| Audio mute feedback via panel       | Confirmed working                          |
-| Transition type feedback via panel  | Partial                                    |
-| Stream & Record start/stop          | Confirmed working — added in 0.6.4         |
-| Stream & Record state feedback      | Confirmed working — verified 2026-09-08    |
-| Image Capture to Still              | Confirmed working — added in 0.6.4         |
-| Capture screen close after capture  | Confirmed working on hardware — 0.8.3      |
-| Tally feedbacks                     | Confirmed working — added in 0.6.3         |
-| Audio level control                 | Mute only by design — raise a GitHub issue |
+| Feature                             | Status                                      |
+| ----------------------------------- | ------------------------------------------- |
+| CUT, AUTO, Fade To Black            | Confirmed working                           |
+| Transition Type Mix and Wipe        | Confirmed working                           |
+| Mix and Wipe Time                   | Confirmed working                           |
+| Wipe Pattern and Direction          | Confirmed working                           |
+| Program Source routing              | Confirmed working                           |
+| Preview Source routing              | Confirmed working                           |
+| Input Assign slots 1 to 8           | Confirmed working                           |
+| AUX 1 and 2 Source routing          | Confirmed working                           |
+| AUX Linked PGM                      | Confirmed working                           |
+| AUX Layer PinP and Key control      | Confirmed working                           |
+| Split 1 and 2                       | Confirmed working                           |
+| PinP and Key Source                 | Confirmed working                           |
+| PinP PGM and PVW On, Off, Toggle    | Confirmed working                           |
+| PinP Window Position H and V        | Confirmed working                           |
+| PinP Window Size                    | Confirmed working                           |
+| PinP Window Cropping H and V        | Confirmed working                           |
+| PinP View Position H and V          | Working — raise View Zoom to see it         |
+| PinP View Zoom                      | Confirmed working                           |
+| DSK Source, PGM, PVW                | Confirmed working                           |
+| Audio Input Mute all channels       | Confirmed working                           |
+| Main Bus Mute                       | Confirmed working                           |
+| AUX Bus Mute                        | Confirmed working                           |
+| Feedback for all polled state       | Confirmed working                           |
+| Test Patterns 12 patterns           | Confirmed working                           |
+| Fade To Black feedback              | Confirmed working — engaged state in 0.8.11 |
+| Wipe Pattern and Direction feedback | Confirmed working — added in 0.6.0          |
+| AUX Linked PGM feedback             | Confirmed working — added in 0.6.0          |
+| AUX Linked PGM per-bus follow       | Confirmed working — added in 0.6.3          |
+| AUX Linked PGM presets              | Confirmed working — added in 0.6.3          |
+| Per-channel audio mute variables    | Confirmed working — added in 0.6.0          |
+| Per-input freeze variables          | Confirmed working — added in 0.6.0          |
+| Audio mute feedback via panel       | Confirmed working                           |
+| Transition type feedback via panel  | Partial                                     |
+| Stream & Record start/stop          | Confirmed working — added in 0.6.4          |
+| Stream & Record state feedback      | Confirmed working — verified 2026-09-08     |
+| Image Capture to Still              | Confirmed working — added in 0.6.4          |
+| Capture screen close after capture  | Confirmed working on hardware — 0.8.3       |
+| Tally feedbacks                     | Confirmed working — added in 0.6.3          |
+| Audio level control                 | Mute only by design — raise a GitHub issue  |
 
 ---
 
@@ -171,7 +171,9 @@ PinP is fully functional. All eight geometry actions are confirmed working on ha
 
 **View Position H and V need View Zoom raised before you can see them work.** They were recorded as producing no visible movement across two test sessions, and the explanation turned out to be observational rather than a fault: the travel over the -50 to +50 span is small at default zoom. Raise View Zoom first and the movement is plainly visible. Confirmed on hardware 2026-09-15. If you are evaluating these actions, change zoom before concluding anything.
 
-Fade To Black feedback reports a fade in progress, not the engaged state. It lights while the fade is running rather than while Fade To Black is held on, because `030207` is a transition-in-progress flag. The address that carries the engaged state has not been found: a block read of `RQH:030200,000030;` returns nothing at all, so the approach that would have located it does not work on this device. This looks like a limit of what the unit exposes rather than a module fault, so it is parked. **If you know how to read the engaged Fade To Black state over LAN, please say so on the issue tracker** — it is the one piece missing.
+**Fade To Black now reports the engaged state, as of 0.8.11.** There are two feedbacks: _fade in progress_, which lights while a fade runs, and _engaged_, which lights while the output is actually black — however it was engaged, from Companion, the panel or the Roland RCS software.
+
+This was the longest-standing open question in the project and the answer was not where anyone was looking. `030207` is a transition flag and the engaged state is in no address at all: packet capture across three engage / hold / release cycles moved exactly that one byte, block reads return nothing, and the device pushes nothing to a second control session. The state is readable only through `QFTB`, a command from Roland's separate mnemonic command set, which turns out to work over the same connection alongside the address protocol.
 
 Transition type feedback is partial. It follows the module and responds to panel activity, but driving the transition from the front panel directly can leave it showing an unexpected state. Not a show-stopper, and the root cause is not yet established. It is on the list for the next session with hardware.
 
@@ -387,5 +389,3 @@ Note: versions 0.4.1 and 0.4.2 were local test builds only and were never tagged
 ---
 
 ## Roadmap
-
-- Fade To Black engaged state. `030207` is a fade-in-progress flag, not the engaged state — confirmed by capture — so the FTB feedback lights only while a fade runs. The address holding the steady state has not been identified yet.

@@ -24,17 +24,19 @@ Last reviewed: 2026-09-15 · Working version: 0.8.10
 
 ## Open — needs hardware
 
-**Fade To Black — two routes now closed, not untried.** Captured 2026-09-16 at the packet level
-across three engage / hold 30 s / release cycles: **only `030207` changed**, not one of the other 63
-polled addresses moved, and **nothing arrived unasked**. Combined with block reads returning nothing
-(§8.6), the engaged state is neither polled nor pushed and neither obvious search method survives.
+**Nothing outstanding.** Fade To Black was the last open protocol question and it was answered
+2026-09-16: the engaged state is in no address, and `QFTB;` from Roland's mnemonic command set reads
+it directly. Confirmed on hardware both ways — `FTB:OFF;` clear, `FTB:ON;` engaged.
 
-What is left, cheapest first — `PROTOCOL.md` §10.1:
+**The finding that generalises:** the two command languages work on one connection. Several things
+recorded as blocked on a multi-byte decoder — audio levels, metering, source names — have plain-ASCII
+equivalents in the mnemonic set. Worth a look before anyone writes that decoder. `PROTOCOL.md` §10.1.
 
-1. **The direct query in Roland's other command set.** One line in a terminal. Returns
-   `OFF`/`ON`/`FADEIN`/`FADEOUT`. Untested here.
-2. **Walk `03xxxx` with single reads**, several samples per candidate because of the drop rate below.
-3. **Capture RCS toggling FTB** — the technique with the best record in this project.
+**Wider question, not acted on:** no state field is cleared on disconnect. `destroyTcp()` stops the
+timers and clears nothing, and `configUpdated()` reuses the same `ModuleInstance`. The FTB pair is
+now cleared explicitly, because the engaged state cannot be re-derived and a wrong value there
+persists. Every other boolean has the same flaw but is re-established by the next poll within a
+cycle, so the stale window is half a second. Decide whether that is worth fixing generally.
 
 ## Built but unverified — 2026-09-16
 

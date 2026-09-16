@@ -55,8 +55,16 @@ export class ModuleInstance extends InstanceBase<ModuleConfig, ModuleSecrets> {
 	public mainBusMute = false
 	public aux1BusMute = false
 	public aux2BusMute = false
-	// True only while a fade is running. The engaged state is not yet known - see working_doc.
+	// True only while a fade is running. Read from 030207, which is a transition-in-progress
+	// flag and says nothing about whether the output ended up black.
 	public ftbFading = false
+	// Whether Fade To Black is engaged - the output is black. Read from QFTB, which is the only
+	// way to know: the engaged state is in no DTH/RQH address, confirmed by packet capture.
+	//
+	// Tri-state on purpose. `undefined` means not yet established, which is the honest answer
+	// between connecting and the first reply. A feedback asserting "clear" while the output is
+	// black is worse on a live desk than one admitting it does not know.
+	public ftbEngaged: boolean | undefined = undefined
 	public freezeActive = false
 	// Whether the still-capture screen is showing. Set only from the device's own 0A0504
 	// 00/01 push, never optimistically - it is the gate that stops a CAPTURE IMAGE toggle
@@ -167,7 +175,8 @@ export class ModuleInstance extends InstanceBase<ModuleConfig, ModuleSecrets> {
 			main_bus_mute: this.mainBusMute ? 'ON' : 'OFF',
 			aux1_bus_mute: this.aux1BusMute ? 'ON' : 'OFF',
 			aux2_bus_mute: this.aux2BusMute ? 'ON' : 'OFF',
-			ftb: this.ftbFading ? 'FADING' : 'IDLE',
+			ftb: this.ftbEngaged === undefined ? 'UNKNOWN' : this.ftbEngaged ? 'ENGAGED' : 'CLEAR',
+			ftb_fading: this.ftbFading ? 'ON' : 'OFF',
 			freeze: this.freezeActive ? 'ON' : 'OFF',
 			test_pattern: tpName,
 			stream_record: this.streamRecordActive ? 'ON' : 'OFF',

@@ -18,8 +18,14 @@ such.
 
 > **A note on scope.** Roland also publishes a separate _Basic control commands_ set — mnemonic
 > commands such as `VFL:1024;` — which shares the same LAN and RS-232 transport but is a completely
-> different command language. This module does not use it and it is not covered here. If you are
-> holding a document full of `Q`-prefixed mnemonics, you are reading about the other one.
+> different command language. It is not covered here. If you are holding a document full of
+> `Q`-prefixed mnemonics, you are reading about the other one.
+>
+> **The two work on one connection**, which is worth knowing before you conclude something is
+> unreachable. Roland says so and it is verified: `QFTB;` answers correctly on a session already
+> carrying 64 address reads per poll cycle, and it is the only way to read the Fade To Black engaged
+> state — that value exists in no address (§10.1). This module sends exactly that one mnemonic
+> command and nothing else from that set.
 
 ## How to read this document
 
@@ -1017,32 +1023,41 @@ capturing RCS driving it.
 
 ## 10. Open questions
 
-### 10.1 Open: Fade To Black engaged state
+### 10.1 Resolved: Fade To Black engaged state
 
-`030207` is a fade-in-progress flag (§4.10). The steady engaged state has never been located, and
-two routes are now closed rather than untried.
+**Not in the address protocol at all. Read it with `QFTB;`. Confirmed on hardware 2026-09-16.**
 
-**Measured 2026-09-16.** Three engage / hold ~30 s / release cycles, driven from a client, captured
-in full at the packet level:
+```
+    client →  QFTB;
+    device →  FTB:OFF;   ACK;        output is live
+    device →  FTB:ON;    ACK;        output is black
+```
 
-- **Only `030207` changed.** Not one of the other 63 polled addresses moved, in any of the three
-  holds. A thirty-second hold is long enough that a steady state cannot hide behind a transient.
-- **Nothing arrived unasked.** No address outside the polled set appeared at any point.
+Also returns `FADEIN` and `FADEOUT` while a transition is running.
 
-**So the engaged state is not in the polled set, and it is not pushed.** Combined with §8.6 — block
-reads return nothing — the two obvious search methods are both exhausted.
+**This was the longest-running open question in the project, and the answer was not where anyone
+looked.** The search had assumed the state was an address, and everything about that assumption was
+eliminated one piece at a time:
 
-**What is left:**
+- `030207` is a transition flag, not the state — six presses, twelve transitions, independent of
+  whether the result was black (§4.10)
+- **Block reads return nothing**, which killed the plan to diff the `030200` block (§8.6)
+- **The state is in no polled address** — three engage / hold 30 s / release cycles moved exactly one
+  byte out of 64, and that one was `030207`
+- **The device pushes nothing** to a second control session (§7.5)
 
-- **Roland's other command set** documents a direct query returning `OFF`, `ON`, `FADEIN` or
-  `FADEOUT`. Out of scope for this document, untested here, and one line in a terminal. **Try this
-  first** — it is the only remaining route that is cheap.
-- **Walk `03xxxx` with single reads.** Single-byte reads work; block reads do not. So the search is
-  one address at a time: read a candidate with FTB off, read it engaged, compare. `03` is entirely
-  undocumented, so scope the range before starting, and note §7.2 — with two in five replies
-  dropped, a single sample proving nothing means sampling each candidate several times.
-- **Capture RCS toggling FTB.** The technique with the best record in this project (§11). RCS
-  clearly knows the state, so whatever it reads is on the wire in its session.
+Every route through the address protocol was closed. The state was readable the whole time through
+Roland's _other_ command set — the mnemonic language this document does not otherwise cover.
+
+> **The finding that generalises: the two command languages work on one connection.** Roland
+> documents this, and it is now verified — `QFTB;` answers correctly on a session already carrying
+> 64 `RQH` per poll cycle. If something appears unreachable through `DTH`/`RQH`, check whether the
+> mnemonic set exposes it before concluding the device does not expose it at all. Several things
+> this document lists as blocked on a multi-byte decoder — audio levels, metering, source names —
+> have plain-ASCII equivalents there.
+
+**For implementers:** the reply is not a `DTH:` frame, so an address-protocol parser will discard it
+silently. It arrives `;`-terminated like everything else and is followed by its own `ACK;`.
 
 ### 10.2 Resolved: PinP View Position
 

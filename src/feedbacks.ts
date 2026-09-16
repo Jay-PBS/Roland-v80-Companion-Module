@@ -97,14 +97,26 @@ export function UpdateFeedbacks(self: ModuleInstance): void {
 			],
 			callback: (fb) => self.transitionType === fb.options.type,
 		},
+		// Two feedbacks, because they answer different questions and an operator may want both on
+		// one button: "a fade is happening" and "the output is black". ftb_active keeps its id and
+		// its meaning, so buttons built before the engaged state was findable still work.
 		ftb_active: {
 			name: 'Fade To Black – fade in progress',
 			description:
-				'Lights only while a fade is running, not while Fade To Black is engaged. The address for the engaged state has not been identified yet.',
+				'Lights only while a fade is running. For whether the output is actually black, use Fade To Black – engaged.',
 			type: 'boolean',
 			defaultStyle: { bgcolor: RED_BRIGHT, color: WHITE },
 			options: [],
 			callback: () => self.ftbFading,
+		},
+		ftb_engaged: {
+			name: 'Fade To Black – engaged',
+			description:
+				'Lights while the output is faded to black, however it was engaged - Companion, the panel or the Roland RCS software. Stays dark until the state is known, which is from the first poll after connecting.',
+			type: 'boolean',
+			defaultStyle: { bgcolor: RED_BRIGHT, color: WHITE },
+			options: [],
+			callback: () => self.ftbEngaged === true,
 		},
 		wipe_type_active: {
 			name: 'Wipe pattern active',

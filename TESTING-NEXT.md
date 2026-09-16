@@ -43,9 +43,30 @@ echo logs both directions at info level, so no debug checkbox is needed.
 
 | #   | Step                                                        | Result |
 | --- | ----------------------------------------------------------- | ------ |
-| Q1  | FTB **clear**. Fire `QFTB;`. Record the whole `Raw RX` line |        |
-| Q2  | FTB **engaged and settled**. Fire `QFTB;` again. Record it  |        |
-| Q3  | Do the two replies differ, and match reality?               |        |
+| Q1  | FTB **clear**. Fire `QFTB;`. Record the whole `Raw RX` line |
+
+--log
+log: You can view older logs on disk at: C:\Users\jayid\AppData\Roaming\companion\logs
+26.09.16 14:31:07 Surface/Handler/streamdeck:A00SA4502K9QLM: Button 1/1/1 pressed
+26.09.16 14:31:07 Instance/Connection/v80hd: Raw TX: QFTB;
+26.09.16 14:31:07 Instance/Connection/v80hd: Raw RX [16b]: 02 46 54 42 3a 4f 46 46 3b 0a 02 41 43 4b 3b 0a
+26.09.16 14:31:07 Surface/Handler/streamdeck:A00SA4502K9QLM: Button 1/1/1 released
+26.09.16 14:31:09 Instance/Connection/v80hd: Raw RX [22b]: 02 44 54 48 3a 30 30 31 35 30 30 2c 32 39 3b 0a 02 41 43 4b 3b 0a
+
+| |
+| Q2 | FTB **engaged and settled**. Fire `QFTB;` again. Record it |  
+--log
+log: You can view older logs on disk at: C:\Users\jayid\AppData\Roaming\companion\logs
+26.09.16 14:32:11 log: Log cleared
+26.09.16 14:32:14 Surface/Handler/streamdeck:A00SA4502K9QLM: Button 1/2/1 pressed
+26.09.16 14:32:14 Surface/Handler/streamdeck:A00SA4502K9QLM: Button 1/2/1 released
+26.09.16 14:32:18 Data/Database: backup complete in 126.82760000042617ms
+26.09.16 14:32:18 Surface/Handler/streamdeck:A00SA4502K9QLM: Button 1/1/1 pressed
+26.09.16 14:32:18 Instance/Connection/v80hd: Raw TX: QFTB;
+26.09.16 14:32:18 Instance/Connection/v80hd: Raw RX [15b]: 02 46 54 42 3a 4f 4e 3b 0a 02 41 43 4b 3b 0a
+26.09.16 14:32:19 Surface/Handler/streamdeck:A00SA4502K9QLM: Button 1/1/1 released
+|
+| Q3 | Do the two replies differ, and match reality? | |
 
 **Q2 is the one that matters.** A reply to Q1 alone only proves the device accepts the command; it
 does not prove the value tracks anything. Both are needed.

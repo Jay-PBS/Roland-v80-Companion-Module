@@ -184,7 +184,7 @@ The following states are polled and drive feedbacks:
 - Per-input freeze state (HDMI 1 to 4, SDI 1 to 4)
 - Audio mute state (per input channel, main bus, AUX 1 bus, AUX 2 bus)
 - Transition type (Mix or Wipe)
-- Fade To Black active
+- Fade To Black – fade in progress, and Fade To Black – engaged
 - Wipe pattern and wipe direction
 - Test pattern active
 - Tally state per input (HDMI 1 to 4, SDI 1 to 4)
@@ -267,7 +267,8 @@ The following variables are available for use in button labels and expressions:
 | main_bus_mute       | Main bus mute state (ON or OFF)        |
 | aux1_bus_mute       | AUX 1 bus mute state (ON or OFF)       |
 | aux2_bus_mute       | AUX 2 bus mute state (ON or OFF)       |
-| ftb                 | FADING while a fade runs, else IDLE    |
+| ftb                 | ENGAGED, CLEAR or UNKNOWN              |
+| ftb_fading          | Fade in progress (ON or OFF)           |
 | freeze              | Global freeze state (ON or OFF)        |
 | test_pattern        | Active test pattern name               |
 | stream_record       | Stream & Record active (ON/OFF)        |
@@ -307,7 +308,6 @@ Variables are accessed as $(instance_label:variable_id), for example $(v80hd:pro
 
 ## Known Limitations
 
-- Fade To Black feedback lights while the fade is running rather than while Fade To Black is engaged. Under investigation.
 - Polling is fixed at 500ms. Feedback updates may lag up to 500ms behind panel operations.
 - Livestreaming and recording cannot be started separately. The V-80HD drives both from one trigger (`0A0800`), so Stream & Record Start begins whichever of Live Streaming, Video Rec and Audio Rec are enabled in the unit's menu.
 - Audio control is limited to mute by design. The device supports full audio control over LAN, but the front-panel level knobs are not motorised, so a level set from Companion could not be reflected on the unit. If you need the advanced audio controls, raise an issue on the project's GitHub.

@@ -347,6 +347,20 @@ export class V80Api {
 		this.isConnected = false
 		this.isAuthenticated = false
 		this.authSent = false
+		// Forget the two FTB fields, because neither can be re-derived and both would otherwise
+		// outlive the connection. Nothing clears state on disconnect today: destroyTcp stops the
+		// timers, and configUpdated builds a new V80Api around the same ModuleInstance, so every
+		// field survives. A fade running when the link drops therefore left ftb_active lit and
+		// $(ftb) reading FADING indefinitely - until the device came back and a poll answered.
+		//
+		// Doing this only for FTB is deliberate rather than tidy. Every other boolean has the
+		// same flaw, but they are all re-established by the next poll within one cycle, so the
+		// stale window is half a second. FTB engaged is the one that cannot be inferred from
+		// anything, so a wrong value there persists and misleads. Whether the rest should clear
+		// too is a separate question - see working_doc.
+		this.self.ftbFading = false
+		this.self.ftbEngaged = undefined
+		this.self.changedState()
 	}
 
 	private stopAuthTimer(): void {
@@ -511,12 +525,39 @@ export class V80Api {
 			this.self.log('warn', `Device error: ${frame}`)
 			return
 		}
+		// Reply to QFTB. This is the one command the module sends from Roland's other, mnemonic
+		// command set - see cmdFadeToBlackQuery. Deliberately narrow: it matches FTB specifically
+		// rather than opening a general parser for that language, because FTB is the only thing
+		// we need from it and a loose parser would be a standing invitation to grow one.
+		const ftb = /^FTB:(OFF|ON|FADEIN|FADEOUT)$/i.exec(frame)
+		if (ftb) {
+			this.onFtbState(ftb[1].toUpperCase())
+			return
+		}
 		const m = /^DTH:([0-9A-Fa-f]{6}),([0-9A-Fa-f]*)$/i.exec(frame)
 		if (!m) {
 			if (this.self.config.debug) this.self.log('debug', `UNMATCHED: ${frame}`)
 			return
 		}
 		this.parseDth(m[1].toUpperCase(), m[2].toUpperCase())
+	}
+
+	// The engaged Fade To Black state, which took until 2026-09-16 to find. It is not in the
+	// DTH/RQH address map at all: three engage/hold/release cycles captured at the packet level
+	// moved exactly one polled byte, 030207, and that is the fade-in-progress flag rather than
+	// the state. Block reads return nothing and the device pushes nothing, so both obvious
+	// search routes were exhausted. QFTB answers it directly.
+	//
+	// FADEIN and FADEOUT deliberately do not touch ftbEngaged. They report a transition in
+	// flight, and which direction each name means is not documented unambiguously - so rather
+	// than guess, the engaged state is left at whatever it was until the device settles on a
+	// plain ON or OFF. ftbFading stays owned by 030207, which is polled as a byte and is the
+	// faster of the two.
+	private onFtbState(state: string): void {
+		if (state === 'ON') this.self.ftbEngaged = true
+		else if (state === 'OFF') this.self.ftbEngaged = false
+		if (this.self.config.debug) this.self.log('debug', `FTB state: ${state}`)
+		this.scheduleDebounce()
 	}
 
 	private parseDth(addr: string, hex: string): void {
@@ -736,6 +777,13 @@ export class V80Api {
 		for (let i = 0x00; i <= 0x07; i++) {
 			cmds.push(this.rqh(`0C00${i.toString(16).toUpperCase().padStart(2, '0')}`, '000001'))
 		}
+		// Fade To Black engaged state. The one command here from Roland's other, mnemonic command
+		// set, and the only way to read this at all - it is in no DTH/RQH address, confirmed by
+		// packet capture. Roland documents the two languages as usable on one connection and that
+		// is now verified on hardware: QFTB answers correctly alongside 64 RQH per cycle.
+		//
+		// Not an RQH, so it cannot join the address array above - it goes on the end as itself.
+		cmds.push('QFTB;')
 		this.sendCmdBatch(cmds)
 	}
 
