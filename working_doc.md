@@ -24,20 +24,14 @@ Last reviewed: 2026-09-15 · Working version: 0.8.10
 
 ## Open — needs hardware
 
-**Both protocol questions are answered — 2026-09-16.** Block reads do not work, and the device does
-not push `0A0504` to our session. `PROTOCOL.md` §8.6 and §4.11 carry the detail; both were
-**Contested** and are now settled facts.
+**Nothing.** The 0.8.10 run cleared every check and answered both open protocol questions on
+2026-09-16.
 
-Left over from the 0.8.10 run, small:
-
-- **V9** — the two `PiP Reset` presets could not be located. They are verified present in the 0.8.10
-  bundle under `PinP & Key`. Check the installed version first, then look outside the Aux categories.
-  This is the only unexplained result left.
-
-**Fade To Black is the one real casualty.** The block-diff plan depended on block reads and is dead.
-`PROTOCOL.md` §10.1 lists what replaces it: capture RCS toggling FTB, walk `03xxxx` a byte at a
-time, or try the direct query in Roland's other command set — one line in a terminal and it would
-answer the question outright.
+The one long-standing unknown that remains is **the Fade To Black engaged state**, and it is parked
+rather than open: the block-diff plan that would have found it depended on block reads, which do not
+work. `PROTOCOL.md` §10.1 lists the three routes left — capture RCS toggling FTB, walk `03xxxx` a
+byte at a time, or try the direct query in Roland's other command set, which is one line in a
+terminal and would answer it outright. **Try that one first.**
 
 ## Built but unverified — 2026-09-16
 
