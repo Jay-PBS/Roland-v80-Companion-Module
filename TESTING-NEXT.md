@@ -24,6 +24,43 @@ splitting across boundaries — even though it refuses batched requests.
 
 ---
 
+## Q. Settle the FTB query — no build needed
+
+**Do this before any FTB code is written.** It decides the whole design — see the plan.
+
+Roland's other command set documents a direct FTB state query. It has never been tried on this
+device, and it is one raw command.
+
+**Turn polling off first** (connection config → untick `Enable polling`), then fire through
+`Advanced – Send raw LAN command`:
+
+```
+QFTB;
+```
+
+Expected per Roland's spec: `FTB:a;ACK;` where `a` is `OFF`, `ON`, `FADEIN` or `FADEOUT`. The raw
+echo logs both directions at info level, so no debug checkbox is needed.
+
+| #   | Step                                                        | Result |
+| --- | ----------------------------------------------------------- | ------ |
+| Q1  | FTB **clear**. Fire `QFTB;`. Record the whole `Raw RX` line |        |
+| Q2  | FTB **engaged and settled**. Fire `QFTB;` again. Record it  |        |
+| Q3  | Do the two replies differ, and match reality?               |        |
+
+**Q2 is the one that matters.** A reply to Q1 alone only proves the device accepts the command; it
+does not prove the value tracks anything. Both are needed.
+
+| Outcome                        | Consequence                                                   |
+| ------------------------------ | ------------------------------------------------------------- |
+| Two different, correct replies | **Branch A** — the feedback becomes authoritative. Best case  |
+| Same reply both times          | Accepted but meaningless — treat as a failure, go to Branch B |
+| `ERR:` or no `Raw RX` at all   | **Branch B** — inference, with the drift limits documented    |
+
+If Branch A works it also reopens `FTB:ON;` / `FTB:OFF;` as absolute writes, which would replace the
+`0B003C` toggle — queued separately, not part of this change.
+
+---
+
 ## N. Next build — two changes to verify
 
 Written 2026-09-16, typechecked and linted, **not yet packaged.** Bump the version before building.
