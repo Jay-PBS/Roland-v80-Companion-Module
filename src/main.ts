@@ -61,9 +61,14 @@ export class ModuleInstance extends InstanceBase<ModuleConfig, ModuleSecrets> {
 	// Whether Fade To Black is engaged - the output is black. Read from QFTB, which is the only
 	// way to know: the engaged state is in no DTH/RQH address, confirmed by packet capture.
 	//
-	// Tri-state on purpose. `undefined` means not yet established, which is the honest answer
-	// between connecting and the first reply. A feedback asserting "clear" while the output is
-	// black is worse on a live desk than one admitting it does not know.
+	// Tri-state on purpose, though nothing branches on `undefined` yet - the feedback treats it
+	// and `false` identically, and it only surfaces in $(ftb). It is kept because the queued
+	// move to absolute writes needs it: FTB:ON;/FTB:OFF; plus a toggle has to know whether a
+	// toggle is safe, and "engaged is unknown" is a different answer from "engaged is false".
+	//
+	// It is not cleared on disconnect - see destroyTcp. In practice `undefined` therefore means
+	// only "not established since the module started", which lasts until the first poll after
+	// connecting, well under a second.
 	public ftbEngaged: boolean | undefined = undefined
 	public freezeActive = false
 	// Whether the still-capture screen is showing. Set only from the device's own 0A0504

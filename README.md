@@ -8,7 +8,7 @@ Repository: https://github.com/Jay-PBS/Roland-v80-Companion-Module
 
 This module is currently in beta. It has been tested on physical hardware and is provided for evaluation. Use in production environments is at the operator's own discretion and risk.
 
-Current version: 0.8.10
+Current version: 0.8.11
 
 ---
 
@@ -80,7 +80,7 @@ Note: the V-80HD applies a brute-force lockout after repeated failed password at
 
 ## Polling and Feedback
 
-State is polled every 500ms. Feedback updates may lag up to 500ms behind operations performed on the panel.
+State is polled every 500ms, but the device answers only about 58% of those polls — measured on hardware, with no packet loss. So a typical feedback updates within half a second and the occasional one takes several: the gap between readings of a given value runs to 5 seconds at the 99th percentile and 6.5 at worst. Steady states like source selection or mute are unaffected in practice. A brief transient can be missed entirely.
 
 Polling is the module's only source of truth, so the "Enable polling" option costs more than lag when it is turned off. Actions that update their own feedback locally — mutes, splits, PinP and DSK on air, freeze, test patterns, AUX layer modes — keep working from Companion. The rest have nothing to update them: PGM, PVW and AUX source selection, PinP and DSK sources, PinP geometry, AUX link follow, tally and Stream & Record all freeze at their last value, and panel or RCS activity is not seen at all.
 
@@ -199,6 +199,18 @@ Not every version below is a commit. Only 0.4.0, 0.6.0, 0.6.5, 0.7.0, 0.8.2, 0.8
 0.8.8 were ever committed; the rest — 0.6.1 to 0.6.4, 0.8.0, 0.8.1 and 0.8.3 — were local builds that
 went straight to hardware, so their entries record what changed rather than something you can check
 out. Tags exist for `v0.4.0`, `v0.6.5` and `v0.8.5`, which are the states worth returning to.
+
+### 0.8.11 — Fade To Black finally reports whether the output is black
+
+**Fade To Black now has two feedbacks: _fade in progress_ and _engaged_.** The second is the one this project has been chasing since the beginning — it lights while the output is actually black, however it got there: from Companion, from the V-80's own panel, or from the Roland RCS software.
+
+The reason it took so long is that the search assumed the state was an address, and it is not one. `030207` turned out to be a transition flag; block reads return nothing; three engage-and-hold cycles captured at the packet level moved exactly one byte out of the sixty-four polled, and that byte was `030207` again; and the device pushes nothing to a second control session. Every route through the address protocol was closed. The state was readable the whole time through `QFTB`, a command from Roland's separate mnemonic command set — which turns out to work over the same connection, alongside the address protocol. That is worth knowing beyond this one feature.
+
+**Breaking: `$(v80hd:ftb)` now reads `ENGAGED`, `CLEAR` or `UNKNOWN`**, where it previously read `FADING` or `IDLE`. A button expression testing `= "FADING"` will stop matching — use the new `$(v80hd:ftb_fading)`, which is `ON` or `OFF`. Companion can migrate variable ids but not their values, so this one cannot be handled automatically. The `Fade To Black – fade in progress` feedback keeps its id and its meaning, so existing buttons using it are unaffected.
+
+**A fade interrupted by a dropped connection no longer sticks.** Nothing was cleared when the link went down, so a fade in flight left the feedback lit indefinitely. The fade flag now clears; the engaged state deliberately does not, because the switcher keeps doing whatever it was doing and the last known value is more accurate than discarding it.
+
+**Corrected: feedback latency is not "up to 500ms".** The device answers only about 58% of polls — measured on hardware, with no packet loss, so it is the unit's own behaviour. Most feedbacks still update within half a second, but the gap between readings of a given value reaches 5 seconds at the 99th percentile and 6.5 at worst. Steady states are unaffected in practice; a brief transient can be missed entirely. README and HELP said otherwise in four places.
 
 ### 0.8.10 — PinP preset tidy-up, and a note that would have saved two test sessions
 

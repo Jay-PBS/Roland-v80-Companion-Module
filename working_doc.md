@@ -4,7 +4,7 @@ Live working notes: **open items only**.
 
 Once something is done and verified on hardware, delete it from this file. Anything worth keeping permanently belongs in [README.md](README.md) (project-facing) or [companion/HELP.md](companion/HELP.md) (user-facing), not here. This file is not a changelog and holds no logs — the changelog lives in the README.
 
-Last reviewed: 2026-09-15 · Working version: 0.8.10
+Last reviewed: 2026-09-15 · Working version: 0.8.11
 
 ---
 
@@ -16,7 +16,7 @@ Last reviewed: 2026-09-15 · Working version: 0.8.10
 | `yarn build`         | Passing                                                     |
 | `yarn lint`          | Passing — clean, 0 errors                                   |
 | `prettier --check .` | Passing                                                     |
-| `yarn package`       | Passing — `roland-v80hd-0.8.10.tgz` (untracked, local only) |
+| `yarn package`       | Passing — `roland-v80hd-0.8.11.tgz` (untracked, local only) |
 | GitHub Actions       | Passing — Node CI, green on `main`                          |
 | `yarn preflight`     | Passing — the pre-release gate                              |
 
@@ -86,67 +86,28 @@ package. Needs a build; `TESTING-NEXT.md` §N has the checks.
 
 ## Queued — next build cycle
 
-- **Correct the feedback-latency claim in README and HELP.** Four places say feedback "may lag up to
-  500ms". **Measured 2026-09-16: that is wrong.** The device answers only 58% of polls — 22,661 sent,
-  13,239 returned, with no TCP loss — so the gap between samples of a given address runs median
-  0.51 s, 90th percentile 1.99 s, 99th 5.03 s, **max 6.52 s**. Thirteen percent of gaps are long
-  enough to hide a complete one-second transition; one of six FTB presses in that capture produced no
-  observed change at all because a 3.5 s gap swallowed the fade.
+- **Test sheets and the code review stop shipping.** `TESTING.md`, `TESTING-NEXT.md` and
+  `CODE_REVIEW.md` go into `.gitignore` and come out of the index with `git rm --cached`. Files stay
+  on disk; losing their ongoing history is accepted pre-1.0. `working_doc.md` and `PROTOCOL.md` stay
+  tracked in both repos. Closes CODE_REVIEW §4.3. **Confirm before running it.**
 
-  `README.md:83`, `companion/HELP.md:21`, `:311`, `:324`. `PROTOCOL.md` §7.2 has the measurement.
+## Open — needs a decision
 
-  **Worth considering alongside it:** whether a smaller poll set or a longer interval raises the
-  answer rate. 64 commands per 500 ms is ~128/sec into a device whose panel locked up at 250 ms, so
-  the drop rate and the lockout may be the same problem seen from two sides. Untested.
+- **`repository` and `bugs` now point at Bitfocus, and the docs still point here.** Done 2026-09-16
+  in `companion/manifest.json` and `package.json` as decided. The consequence is now concrete:
 
-- **Rewrite HELP's Image Capture section — after final testing.** The current text describes the
-  button as busy for the full ten seconds, which the timeout fix changed: it returns in about a
-  second and the screen clears itself later. A corrected version was written and **reverted on
-  2026-09-15 deliberately** — the observed behaviour needs confirming on hardware first, and the
-  section will want rewriting once around the final result rather than twice. Also move the
-  "overwrites without confirmation" warning out of the timing paragraph; it is the part that loses
-  someone's work and it is currently buried.
+  | Points at Bitfocus              | Points here                                       |
+  | ------------------------------- | ------------------------------------------------- |
+  | `manifest.json`, `package.json` | `README.md:7`, `README.md:192`, `CONTRIBUTING.md` |
 
-- **Point `repository` and `bugs` at the Bitfocus repo.** Decided 2026-09-15. Both fields in
-  **`companion/manifest.json`** and **`package.json`** currently name this fork:
+  `bugs` is the URL Companion sends a user to when they report a problem, so **reports now land in a
+  repository that contains 0.4.0 and none of this work**, while `CONTRIBUTING.md` and the issue
+  templates in `.github/ISSUE_TEMPLATE/` live here and describe a process nobody will reach.
 
-  ```
-  from  https://github.com/Jay-PBS/Roland-v80-Companion-Module
-  to    https://github.com/bitfocus/companion-module-roland-v80hd
-  ```
-
-  The module's home once submitted is the Bitfocus repo, so `repository` should say so.
-
-  **Worth a second's thought when you do it:** `bugs` is the URL Companion sends users to when they
-  report a problem. Pointed at Bitfocus, reports land in their tracker rather than here — where the
-  issue templates in `.github/ISSUE_TEMPLATE/` and the triage described in `CONTRIBUTING.md`
-  actually live. Splitting them — `repository` upstream, `bugs` here — is legitimate and some
-  modules do it. Flagging it, not arguing it.
-
-  **Observed on the upstream repo 2026-09-15:** their `companion/manifest.json` still points both
-  fields at this fork and still carries `"version": "0.4.0"` hardcoded. Ours is `"0.0.0"`, injected
-  at build time — CODE_REVIEW §3.3. So the update that goes upstream fixes their stale version
-  string as well.
-
-- **Test sheets and the code review stop shipping.** Moved here from the 1.0 pass on 2026-09-15 —
-  do it with the next build rather than at submission. **`TESTING.md`, `TESTING-NEXT.md` and
-  `CODE_REVIEW.md`** go into `.gitignore` and come out of the index. Closes CODE_REVIEW §4.3.
-
-  **`working_doc.md` and `PROTOCOL.md` stay tracked, in both repos** — decided 2026-09-15.
-  `PROTOCOL.md` is public reference material by design, and `working_doc.md` carries the project's
-  reasoning in a form a future maintainer would want. Only the test sheets and the review go.
-
-  `git rm --cached` on each — **confirm before running it.** The files stay on disk; only the index
-  entries go, exactly as the `.tgz` did.
-
-  **Knock-on is smaller than previously recorded.** `README.md` mentions `working_doc.md` and
-  `CODE_REVIEW.md` only inside changelog entries (lines 256 and 306) as historical prose, not as
-  links — a reader would see a filename that is not in the repo, which is worth a light edit but
-  breaks nothing. `PROTOCOL.md`, `HELP.md` and `CONTRIBUTING.md` reference none of them.
-
-  Changes to the three stop being versioned from that commit onward. **Accepted, 2026-09-15** —
-  everything already committed stays in history, and pre-1.0 the ongoing history of test sheets is
-  not worth keeping.
+  Three ways out, and it needs picking rather than leaving: revert both fields until submission;
+  split them, `repository` upstream and `bugs` here; or repoint the docs too and accept that bug
+  reports go to Bitfocus from now on. Flagged when this was queued; the split is real now rather
+  than hypothetical.
 
 ## Queued for 1.0 release prep
 

@@ -1,6 +1,6 @@
 {
 	"name": "companion-module-roland-v80hd",
-	"version": "0.8.10",
+	"version": "0.8.11",
 	"main": "dist/main.js",
 	"type": "module",
 	"scripts": {
@@ -16,8 +16,8 @@
 		"preflight": "yarn format && yarn lint:fix && yarn build && yarn package"
 	},
 	"license": "MIT",
-	"repository": "https://github.com/Jay-PBS/Roland-v80-Companion-Module",
-	"bugs": "https://github.com/Jay-PBS/Roland-v80-Companion-Module/issues",
+	"repository": "https://github.com/bitfocus/companion-module-roland-v80hd",
+	"bugs": "https://github.com/bitfocus/companion-module-roland-v80hd/issues",
 	"engines": {
 		"node": "^22.20",
 		"yarn": "^4"

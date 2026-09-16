@@ -347,19 +347,19 @@ export class V80Api {
 		this.isConnected = false
 		this.isAuthenticated = false
 		this.authSent = false
-		// Forget the two FTB fields, because neither can be re-derived and both would otherwise
-		// outlive the connection. Nothing clears state on disconnect today: destroyTcp stops the
-		// timers, and configUpdated builds a new V80Api around the same ModuleInstance, so every
-		// field survives. A fade running when the link drops therefore left ftb_active lit and
-		// $(ftb) reading FADING indefinitely - until the device came back and a poll answered.
+		// Clear the fade flag, and only the fade flag.
 		//
-		// Doing this only for FTB is deliberate rather than tidy. Every other boolean has the
-		// same flaw, but they are all re-established by the next poll within one cycle, so the
-		// stale window is half a second. FTB engaged is the one that cannot be inferred from
-		// anything, so a wrong value there persists and misleads. Whether the rest should clear
-		// too is a separate question - see working_doc.
+		// Nothing clears state on disconnect today: destroyTcp stops the timers, and
+		// configUpdated builds a new V80Api around the same ModuleInstance, so every field
+		// survives. For a fade that is plainly wrong - a fade is a one-second transient, so it
+		// cannot still be running, and a link that dropped mid-fade left ftb_active lit and
+		// $(ftb_fading) reading ON indefinitely.
+		//
+		// ftbEngaged is deliberately NOT cleared. The switcher keeps doing whatever it was
+		// doing, so if the output was black when the link dropped it is still black, and the
+		// last known value is more accurate than discarding it. Companion shows the connection
+		// is down separately. It is re-read from QFTB within a cycle of reconnecting anyway.
 		this.self.ftbFading = false
-		this.self.ftbEngaged = undefined
 		this.self.changedState()
 	}
 

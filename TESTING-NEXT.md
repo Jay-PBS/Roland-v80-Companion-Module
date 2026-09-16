@@ -3,97 +3,83 @@
 > **Open tasks only.** Cleared items are deleted, not recorded — the closed record lives in git
 > history and in `PROTOCOL.md`. `TESTING.md` is the 2026-09-08 run and is not edited.
 
-**Last updated:** 2026-09-16 · **Tester:** Jay · **Device firmware:** v1.20.201
+**Build under test:** `roland-v80hd-0.8.11.tgz` · **Tester:** Jay · **Firmware:** v1.20.201
+**Last updated:** 2026-09-16
 
-## 0.8.10 is fully verified
-
-**All ten checks passed, and both open protocol questions were answered.** Nothing from that build
-is outstanding. What follows is only what has landed since.
-
-Two protocol results worth carrying forward, both now in `PROTOCOL.md`:
-
-- **Block reads do not work** (§8.6). `RQH:030200,000030;` returns nothing. The 142 frames that
-  followed were every one a single-byte poll reply. This killed the Fade To Black block-diff plan —
-  §10.1 lists what replaces it.
-- **`0A0504` never reaches our session** (§4.11). The `030800` trap for the second time: a push seen
-  in an RCS recording is not proof it reaches yours.
-
-Plus two that came free from reading the wire (§2.3, §2.4): every answered read produces **two**
-frames, `DTH:` then `ACK;`, and the device **batches its replies** — up to 22 frames in one segment,
-splitting across boundaries — even though it refuses batched requests.
+Three groups, none verified: **Q** the Fade To Black engaged state, **N** the Split relabel and the
+readable raw echo, **D** one desk item.
 
 ---
 
-## Q. Fade To Black — verify the engaged state
+## Q. Fade To Black — the engaged state
 
-**`QFTB;` works.** Confirmed 2026-09-16: `FTB:OFF;` with FTB clear, `FTB:ON;` engaged. Built and
-polled; needs a build to test.
+**`QFTB;` works** — confirmed 2026-09-16, `FTB:OFF;` clear and `FTB:ON;` engaged. Now polled every
+cycle and wired to a new feedback.
 
-| #   | Check                                                                                                | Result |
-| --- | ---------------------------------------------------------------------------------------------------- | ------ |
-| Q1  | **Connect with FTB already engaged.** `Fade To Black – engaged` lights within a second or two        |        |
-| Q2  | Toggle from Companion — the engaged feedback follows                                                 |        |
-| Q3  | **Toggle on the V-80 panel — the engaged feedback follows.** This is what the redesign exists for    |        |
-| Q4  | `Fade To Black – fade in progress` still lights only during the fade, and goes dark after            |        |
-| Q5  | `$(v80hd:ftb)` reads `ENGAGED` / `CLEAR`; `$(v80hd:ftb_fading)` reads `ON` / `OFF`                   |        |
-| Q6  | **Pull the network mid-fade.** Both feedbacks go dark rather than sticking lit, `$(ftb)` → `UNKNOWN` |        |
-| Q7  | Engage FTB from the **Roland RCS software** if convenient — the feedback should still follow         |        |
+| #   | Check                                                                                          | Result |
+| --- | ---------------------------------------------------------------------------------------------- | ------ |
+| Q1  | Connect with FTB **already engaged** — `Fade To Black – engaged` lights within a second or two |        |
+| Q2  | Toggle from Companion — the engaged feedback follows                                           |        |
+| Q3  | **Toggle on the V-80 panel — the engaged feedback follows**                                    |        |
+| Q4  | `Fade To Black – fade in progress` still lights only during the fade, then goes dark           |        |
+| Q5  | `$(v80hd:ftb)` reads `ENGAGED` / `CLEAR`; `$(v80hd:ftb_fading)` reads `ON` / `OFF`             |        |
+| Q6  | **Pull the network mid-fade** — the fade feedback goes dark instead of sticking lit            |        |
+| Q7  | Engage from the **Roland RCS software**, if it is to hand — the feedback should still follow   |        |
 
-**Q3 is the one that matters.** The old feedback could never track a panel press, and that was the
-whole point of the redesign. Q6 is the disconnect bug fix; Q7 is a bonus if RCS is to hand.
+**Q3 is the whole point of the change.** The old feedback could never track a panel press. Q6 is the
+disconnect fix — note that `engaged` deliberately **holds** its value through a disconnect while
+`fade in progress` clears, because the switcher keeps doing what it was doing.
 
-**Watch the poll budget.** The cycle is now 65 commands rather than 64. With the device already
-answering only ~58% of polls (`PROTOCOL.md` §7.2), note whether the engaged feedback feels sluggish —
-if it does, `QFTB;` may be better sent every second cycle than every cycle.
+**Breaking change to check:** `$(v80hd:ftb)` no longer returns `FADING`. Any button expression
+testing `= "FADING"` is dead and needs pointing at `$(v80hd:ftb_fading)`.
 
-**Breaking change to check:** `$(v80hd:ftb)` no longer returns `FADING`/`IDLE`. Any button expression
-testing `= "FADING"` is now dead and needs pointing at `$(v80hd:ftb_fading)` instead.
+**Watch the poll budget.** The cycle is 65 commands now, not 64, against a device already answering
+only ~58% of polls. If the engaged feedback feels sluggish, `QFTB;` may be better sent every second
+cycle — worth noting, not worth pre-empting.
 
 ---
 
-## N. Next build — two changes to verify
+## N. The Split relabel and the readable raw echo
 
-Written 2026-09-16, typechecked and linted, **not yet packaged.** Bump the version before building.
-
-### The Split relabel
-
-Confirmed on the panel: **Split 1 is vertical, Split 2 is horizontal.** Now said in action names,
-preset names, button faces, feedback names, variable display names and `HELP.md`.
+Written 2026-09-16, never run — these missed the 0.8.10 package.
 
 | #   | Check                                                                                               | Result |
 | --- | --------------------------------------------------------------------------------------------------- | ------ |
 | N1  | Actions read `Split 1 (Vertical) – On/Off/Toggle` and `Split 2 (Horizontal) – …`                    |        |
 | N2  | Presets read `Split 1 – Vertical` / `Split 2 – Horizontal`, faces `SPLIT / VERT` and `SPLIT / HORZ` |        |
-| N3  | **An existing split button built before the rename still fires**                                    |        |
-| N4  | Feedback names read `Split 1 (Vertical) – active`; `$(v80hd:split1)` still resolves                 |        |
+| N3  | **A split button built before the rename still fires**                                              |        |
+| N4  | Feedbacks read `Split 1 (Vertical) – active`; `$(v80hd:split1)` still resolves                      |        |
+| N5  | Fire `RQH:001500,000001;` — `Raw RX` reads `<STX>DTH:001500,29;<LF><STX>ACK;<LF>`, not hex          |        |
 
-**N3 is the only one that really matters.** The rename is display-only and every id was left alone —
-`split1_on`, `split1_off`, `split1_toggle`, `split2_*`, both `*_active` feedbacks, both variable ids.
-N3 is what proves it.
+**N3 is the only one that really matters.** The rename is display-only and every id was left alone,
+so N3 is what proves it.
 
-### The readable raw echo
-
-Frames now render as text rather than hex, because a 242-byte segment of hex pairs is unreadable and
-most segments are that size.
-
-| #   | Check                                                                                     | Result |
-| --- | ----------------------------------------------------------------------------------------- | ------ |
-| N5  | Fire `RQH:001500,000001;`. `Raw RX` reads `<STX>DTH:001500,29;<LF><STX>ACK;<LF>`, not hex |        |
-
-**Turn polling off first** — connection config, untick `Enable polling`. The echo arms for two
-seconds, which with polling on catches four poll cycles and buries the reply among dozens of frames.
-Turn it back on afterwards.
+**For N5, turn polling off first** — the echo arms for two seconds, which with polling on catches
+four poll cycles and buries the reply.
 
 ---
 
 ## D. Desk item — Companion only
 
-| #   | Item                 | What to check                                                                                                                    | Result |
-| --- | -------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| D1  | Detail on the button | Place Capture Image and both Stream & Record actions on buttons — a labelled `Note` or `Warning` block appears above the options |        |
+| #   | Check                                                                                                                            | Result |
+| --- | -------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| D1  | Place Capture Image and both Stream & Record actions on buttons — a labelled `Note` or `Warning` block appears above the options |        |
 
-Largely implied by V6 and V7 having passed, but it covers Capture Image specifically, which they did
-not.
+---
+
+## Also changed in 0.8.11, no test needed
+
+Docs and config only, listed so nothing looks unexplained:
+
+- **Feedback latency corrected** in README and HELP. Four places said "up to 500ms"; the device
+  answers ~58% of polls, so the real figure is a 0.51 s median with a tail to 6.5 s.
+- **HELP's Image Capture section rewritten** now V1 has confirmed the behaviour — the button returns
+  in about a second and the screen clears itself later, and the overwrite warning is no longer buried
+  at the end of a paragraph about timing.
+- **`repository` and `bugs` repointed at the Bitfocus repo** in `manifest.json` and `package.json`.
+  **This has a live consequence** — see `working_doc.md`, "Open — needs a decision". Bug reports from
+  Companion now land in a repository holding 0.4.0, while `CONTRIBUTING.md` and the issue templates
+  still describe this one.
 
 ---
 

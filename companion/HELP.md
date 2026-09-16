@@ -1,4 +1,4 @@
-# Roland V-80HD — Companion Module v0.8.10
+# Roland V-80HD — Companion Module v0.8.11
 
 This module is currently in beta. It has been tested on physical hardware with firmware v1.20.201 and is provided for evaluation purposes. Use in production environments is at the operator's own discretion and risk.
 
@@ -18,7 +18,11 @@ Tested firmware: v1.20.201
 
 ## Network Behaviour
 
-State polling is fixed at 500ms. Feedback updates may lag up to 500ms behind operations performed directly on the panel. Each polled address is requested individually — the device does not answer batched requests.
+State polling is fixed at 500ms, and each address is requested individually — the device does not answer batched requests.
+
+**The device answers only about 58% of those polls.** That is measured on hardware with no packet loss, so it is the unit's behaviour rather than a network fault. Most feedbacks still update within half a second; the gap between readings of a given value reaches 5 seconds at the 99th percentile and 6.5 at worst.
+
+In practice this is invisible for steady states — sources, mutes, on-air flags — because the next reading corrects anything missed. It matters for brief events: a one-second fade can pass entirely between two readings of the same address.
 
 **Turning polling off does more than add lag.** Polling is the only thing that reads state back from the device, so with it disabled the module has no source of truth at all. Some actions update their own feedback locally when pressed — the mutes, the splits, PinP and DSK on air, freeze, test patterns, the AUX layer modes — and those keep working from Companion. Everything else has nothing to update it: PGM, PVW and AUX source selection, PinP and DSK sources, PinP geometry, AUX link follow, tally, and Stream & Record all freeze at whatever they last showed, and nothing done on the front panel or in RCS is seen at all. Disable polling only if you need the network traffic gone and can accept roughly half the feedbacks going stale.
 
@@ -141,10 +145,15 @@ automatically.
 Capture Image to Still is the only capture action. It opens the capture screen, takes the still and
 closes the screen again by itself, so there is nothing to drive by hand.
 
-The capture takes roughly 10 seconds and overwrites the target slot without confirmation. Most of
-that is a deliberate 7-second wait: capture mode leaves its screen up on the monitor, and the unit
-needs far longer than its own "capture done" reply suggests before it will accept the button press
-that dismisses it. The action does that for you, so no button press on the unit is needed.
+**The target slot is overwritten without confirmation.** There is no undo.
+
+**The button returns straight away.** The still is written in about a second, and the capture screen
+then clears itself roughly seven seconds later with nothing further from you. Nothing to wait on, and
+no button to press on the unit.
+
+That seven-second wait is deliberate and cannot be shortened. Capture mode leaves its screen up on
+the monitor, and the unit needs far longer than its own "capture done" reply suggests before it will
+accept the press that dismisses it. Shorter waits were tried and broke the capture outright.
 
 Do not fire two captures less than 7 seconds apart, or the first one's dismissal can land on the
 second one's screen.
@@ -308,7 +317,7 @@ Variables are accessed as $(instance_label:variable_id), for example $(v80hd:pro
 
 ## Known Limitations
 
-- Polling is fixed at 500ms. Feedback updates may lag up to 500ms behind panel operations.
+- Polling is fixed at 500ms, but the device answers only about 58% of polls, so an individual feedback can occasionally take several seconds. See Network Behaviour.
 - Livestreaming and recording cannot be started separately. The V-80HD drives both from one trigger (`0A0800`), so Stream & Record Start begins whichever of Live Streaming, Video Rec and Audio Rec are enabled in the unit's menu.
 - Audio control is limited to mute by design. The device supports full audio control over LAN, but the front-panel level knobs are not motorised, so a level set from Companion could not be reflected on the unit. If you need the advanced audio controls, raise an issue on the project's GitHub.
 - Scene Memory control is not provided.
@@ -321,7 +330,7 @@ Module shows as disconnected — check the IP address, confirm port 8023, and en
 
 Module reports a device auth lockout — the V-80HD has locked out after repeated failed password attempts and will reject even a correct password until it clears. Confirm the password matches the one set on the device, then wait before retrying.
 
-Feedbacks not updating — confirm polling is enabled. Allow up to 500ms for the next poll cycle. If feedbacks remain static, disable and re-enable the module.
+Feedbacks not updating — confirm polling is enabled, then allow a few seconds rather than half a second, since the device does not answer every poll. If feedbacks remain static after that, disable and re-enable the connection.
 
 AUX routing not responding as expected — confirm AUX Linked PGM is set to Off for independent AUX control.
 
