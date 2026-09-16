@@ -14,7 +14,7 @@ you want a version that has been through hardware testing.
 
 This module is currently in beta. It has been tested on physical hardware and is provided for evaluation. Use in production environments is at the operator's own discretion and risk.
 
-Current version: 0.8.13
+Current version: 0.9.0
 
 ---
 
@@ -39,9 +39,9 @@ Current version: 0.8.13
 | Input Assign slots 1 to 8           | Confirmed working                           |
 | AUX 1 and 2 Source routing          | Confirmed working                           |
 | AUX Linked PGM                      | Confirmed working                           |
-| AUX Layer PinP and Key control      | Confirmed working                           |
+| AUX Layer PinP & Key control        | Confirmed working                           |
 | Split 1 and 2                       | Confirmed working                           |
-| PinP and Key Source                 | Confirmed working                           |
+| PinP & Key Source                   | Confirmed working                           |
 | PinP PGM and PVW On, Off, Toggle    | Confirmed working                           |
 | PinP Window Position H and V        | Confirmed working                           |
 | PinP Window Size                    | Confirmed working                           |
@@ -108,7 +108,9 @@ This handles silent network loss, where the socket stays open but the device is 
 
 Variables are accessed as $(instance_label:variable_id).
 
-Core variables: program_input, preview_input, program_source, preview_source, aux1_input, aux2_input, aux1_source, aux2_source, transition_type, mix_time, wipe_type, wipe_direction, pinp1_pgm, pinp1_pvw, pinp2_pgm, pinp2_pvw, dsk_pgm, dsk_pvw, split1, split2, aux_linked_pgm, main_bus_mute, aux1_bus_mute, aux2_bus_mute, ftb, freeze, test_pattern.
+Core variables: program_input, preview_input, program_source, preview_source, aux1_input, aux2_input, aux1_source, aux2_source, transition_type, mix_time, wipe_type, wipe_direction, pinp1_pgm, pinp1_pvw, pinp2_pgm, pinp2_pvw, dsk_pgm, dsk_pvw, split1, split2, aux_linked_pgm, main_bus_mute, aux1_bus_mute, aux2_bus_mute, ftb, ftb_fading, freeze, test_pattern, stream_record, stream_record_state.
+
+`ftb` reads ENGAGED, CLEAR or UNKNOWN; `ftb_fading` is ON or OFF while a fade runs. See the 0.8.11 changelog entry if you have an expression testing the old FADING value. HELP.md carries the full table with a description for every variable.
 
 Per-channel audio mute variables (added in 0.6.0): mute_audio_in_1, mute_audio_in_2, mute_audio_in_34, mute_usb_in, mute_bluetooth_in, mute_audio_player, mute_hdmi_in_1 to mute_hdmi_in_4, mute_sdi_in_1 to mute_sdi_in_4, mute_video_player.
 
@@ -205,6 +207,42 @@ Not every version below is a commit. Only 0.4.0, 0.6.0, 0.6.5, 0.7.0, 0.8.2, 0.8
 0.8.8 were ever committed; the rest — 0.6.1 to 0.6.4, 0.8.0, 0.8.1 and 0.8.3 — were local builds that
 went straight to hardware, so their entries record what changed rather than something you can check
 out. Tags exist for `v0.4.0`, `v0.6.5` and `v0.8.5`, which are the states worth returning to.
+
+### 0.9.0 — the aesthetic and consistency pass
+
+**Presentation only. No protocol changes, no action or feedback ids changed, and no behaviour change
+to any existing button.** Everything here is a display name, a button face or a default colour — all
+of which Companion copies onto a button when you drop a preset rather than referencing, so nothing
+you have already built moves.
+
+**Feedback default colours now match the palette.** Every feedback's default style carried white text
+on its bright background. 0.8.5 measured white against all seven brights at 1.53–3.96:1, under the
+4.5 threshold, and moved the _presets_ to black — the feedback defaults never followed, so a feedback
+added by hand still arrived with the combination 0.8.5 had rejected. All thirty now carry black.
+
+**Action names follow one scheme.** The list is `Group – Name` throughout, and the stragglers have
+been brought in:
+
+- `PinP and Key` is now `PinP & Key` in the nine action names that used it, matching the feedbacks,
+  the preset category and the panel, which all said `&` already
+- `Stream & Record - Start` / `- Stop` and both Stream & Record feedbacks used a hyphen where the
+  rest of the surface uses an en dash
+- `Test Pattern All Outputs (toggle)` and `Test Pattern Off` are now `Test Pattern – All Outputs
+(toggle)` and `Test Pattern – Off`
+- `Set AUX Linked PGM` and `AUX Linked PGM mode (toggle)` are now `Set AUX Linked PGM – mode` and
+  `Toggle AUX Linked PGM – mode`, so the mode pair reads the same way as the bus-follow pair
+- `Sync state now` is now `Utility – Sync state now`, finishing what 0.8.6 started — that entry
+  named this action as the one still sitting loose in the list
+
+**PinP button faces are consistent.** The Aux categories wrote `PiP 1`, PinP & Key wrote `PiP1`.
+All of them now read `PiP 1` and `PiP 2`, and the preset names follow — `AUX1 PiP 1 Always On` rather
+than `AUX1 PiP1 AlwOn`.
+
+Also in this release, from the pre-0.9 documentation sweep: twenty stale or self-contradicting
+statements corrected across the source comments, `working_doc.md`, `CODE_REVIEW.md`, `PROTOCOL.md`,
+this file and the CI workflow. Mostly claims overtaken by the Fade To Black answer on 2026-09-16 and
+by the 0.8.8 capture-action removal. `TESTING.md` was left as written, with a pointer added to the
+two findings later overturned.
 
 ### 0.8.13 — the FTB fade colour
 
@@ -305,6 +343,9 @@ Each new deep is the bright colour scaled down in RGB, so the hue is preserved e
 No protocol changes.
 
 ### 0.8.3 — confirmed working on hardware, 2026-09-08
+
+> **Partly superseded by 0.8.8.** The `Capture Mode – close if open` action referred to below was
+> removed in 0.8.8, along with `Capture Mode (toggle)`. The entry is left as written.
 
 **The 0.8.x line and the whole 0.7.0 code review have now been tested on a V-80HD.** The run passed with no regressions against 0.6.5: the password migration worked with no re-entry, every action, feedback, variable and preset category checked out, and a 30-minute soak was clean. Two PinP geometry actions were outstanding at the time — View Position H and V showed no visible movement. **Resolved 2026-09-15: they work, and the travel is only visible once View Zoom is raised.** It was an observation problem, not a fault.
 
@@ -417,7 +458,3 @@ Note: 0.6.2 was built but superseded before it reached hardware, and 0.6.1 was s
 - First tagged release. Baseline feature set as listed above.
 
 Note: versions 0.4.1 and 0.4.2 were local test builds only and were never tagged or published. There was no 0.5 release.
-
----
-
-## Roadmap

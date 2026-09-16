@@ -1,4 +1,4 @@
-# Roland V-80HD — Companion Module v0.8.13
+# Roland V-80HD — Companion Module v0.9.0
 
 This module is currently in beta. It has been tested on physical hardware with firmware v1.20.201 and is provided for evaluation purposes. Use in production environments is at the operator's own discretion and risk.
 
@@ -63,9 +63,9 @@ The V-80HD applies a brute-force lockout after repeated failed password attempts
 - Set AUX Linked PGM (Off, Auto Link, Manual Link) — this sets the link mode and is global
 - Set AUX Linked PGM bus follow — chooses whether AUX 1 or AUX 2 follows PGM, and Toggle for the same
 
-- Set AUX Layer PinP and Key — Disable, Enable, Always On, per layer per bus
-- Toggle AUX Layer PinP and Key between Disable and Enable
-- Toggle AUX Layer PinP and Key between Disable and Always On
+- Set AUX Layer – PinP & Key — Disable, Enable, Always On, per layer per bus
+- Toggle AUX Layer – PinP & Key between Disable and Enable
+- Toggle AUX Layer – PinP & Key between Disable and Always On
 
 ### Split
 
@@ -75,7 +75,7 @@ The V-80HD applies a brute-force lockout after repeated failed password attempts
 2026-09-16. The device numbers them rather than naming them, so the orientation is carried in the
 action names here.
 
-### PinP and Key
+### PinP & Key
 
 - Set Source per layer — full source list
 - PGM On, Off, Toggle per layer
@@ -113,11 +113,11 @@ nothing, check the zoom before anything else.
 
 ### Test Pattern
 
-- All outputs — 12 patterns available plus Test Pattern Off
+- Test Pattern – All Outputs (toggle) — 12 patterns, plus Test Pattern – Off
 
 ### Stream & Record
 
-- Stream & Record Start, Stop
+- Stream & Record – Start, Stop
 
 **This may start a livestream, not just a recording.** On the V-80HD the livestream, audio
 recording and video recording all start and stop together and cannot be triggered separately.
@@ -160,7 +160,7 @@ second one's screen.
 
 ### Utility
 
-- Sync state now — forces an immediate poll
+- Utility – Sync state now — forces an immediate poll
 
 ### Advanced
 
@@ -344,4 +344,4 @@ Feedbacks not updating — confirm polling is enabled, then allow a few seconds 
 
 AUX routing not responding as expected — confirm AUX Linked PGM is set to Off for independent AUX control.
 
-PinP appearing on the wrong output — use the AUX Layer PinP and Key actions to control PinP on the AUX bus independently. The PinP PGM Toggle action affects the main program output layer only.
+PinP appearing on the wrong output — use the AUX Layer – PinP & Key actions to control PinP on the AUX bus independently. The PinP PGM Toggle action affects the main program output layer only.

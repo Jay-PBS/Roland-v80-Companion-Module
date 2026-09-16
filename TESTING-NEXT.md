@@ -3,12 +3,25 @@
 > **Open tasks only.** Cleared items are deleted, not recorded — the closed record lives in git
 > history and in `PROTOCOL.md`. `TESTING.md` is the 2026-09-08 run and is not edited.
 
-**Build under test:** `roland-v80hd-0.8.13.tgz` · **Tester:** Jay · **Firmware:** v1.20.201
+**Build under test:** `roland-v80hd-0.9.0.tgz` · **Tester:** Jay · **Firmware:** v1.20.201
 **Last updated:** 2026-09-16
 
-## Nothing outstanding
+## 0.9.0 — presentation only, nothing urgent
 
-**0.8.13 is fully verified.** Every check passed — Fade To Black including the engaged state and the
+**0.9.0 is the aesthetic and consistency pass.** No id changed, no protocol changed, and nothing an
+existing button does changed — Companion copies names, faces and styles onto a button when a preset
+is dropped rather than referencing them, so a button built before this keeps what it had. There is
+nothing here that can regress a show.
+
+Fold these into the next session whenever it happens:
+
+| #   | Check                  | What to look for                                                                                                                                                            |
+| --- | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| P1  | Renamed actions fire   | `PinP & Key – …`, `Stream & Record – Start` / `– Stop`, `Test Pattern – All Outputs (toggle)` / `– Off`, `Set` / `Toggle AUX Linked PGM – mode`, `Utility – Sync state now` |
+| P2  | Feedback default style | Add any feedback by hand — it should arrive with black text and read better lit than unlit                                                                                  |
+| P3  | PinP button faces      | `PiP 1` / `PiP 2` fit at 16pt without wrapping, on both the Aux and PinP & Key presets                                                                                      |
+
+**0.8.13 was fully verified.** Every check passed — Fade To Black including the engaged state and the
 panel tracking, the Split relabel, the readable raw echo, the FTB fade colour, and the on-button
 detail blocks.
 
@@ -19,7 +32,8 @@ cycle closes with:
 <STX>DTH:0C0007,00;<LF><STX>ACK;<LF><STX>FTB:OFF;<LF><STX>ACK;<LF>
 ```
 
-There are no open protocol questions, no open decisions, and no outstanding checks.
+There are no open protocol questions and no open decisions. P1 to P3 above are cosmetic
+confirmations of the 0.9.0 pass, not outstanding work.
 
 > **Check the connection is on the build you think it is, before testing anything.** Installing the
 > `.tgz` adds the version to Companion's module list; **the connection stays pinned to the version it
@@ -43,18 +57,16 @@ become testable naturally once buttons exist that predate a later change.
 
 ---
 
-## Held for 0.9 — the tidy-up release
+## Still held — the rest of the 0.9 tidy-up
 
-Decided 2026-09-16. Housekeeping gets one deliberate pass rather than dribbling into point releases
-where it obscures what actually changed:
+Decided 2026-09-16. **The aesthetic and consistency pass is done and shipped as 0.9.0** — that is
+what P1 to P3 above cover. What remains needs no build and no hardware:
 
 - Untrack the test sheets and the code review
 - Remaining repository management
-- An aesthetic and consistency pass — button faces, categories, colour use, action naming
 - A final end-to-end documentation review, including the beta wording
 
-`working_doc.md` holds the detail. **Nothing is being built.** 0.8.14 exists only if something turns
-up; on current evidence it does not need to.
+`working_doc.md` holds the detail. 0.8.14 was never built and is not needed.
 
 ---
 

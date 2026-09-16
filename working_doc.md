@@ -4,21 +4,21 @@ Live working notes: **open items only**.
 
 Once something is done and verified on hardware, delete it from this file. Anything worth keeping permanently belongs in [README.md](README.md) (project-facing) or [companion/HELP.md](companion/HELP.md) (user-facing), not here. This file is not a changelog and holds no logs — the changelog lives in the README.
 
-Last reviewed: 2026-09-15 · Working version: 0.8.13
+Last reviewed: 2026-09-16 · Working version: 0.9.0
 
 ---
 
 ## Build status
 
-| Check                | State                                                       |
-| -------------------- | ----------------------------------------------------------- |
-| `yarn install`       | Passing                                                     |
-| `yarn build`         | Passing                                                     |
-| `yarn lint`          | Passing — clean, 0 errors                                   |
-| `prettier --check .` | Passing                                                     |
-| `yarn package`       | Passing — `roland-v80hd-0.8.13.tgz` (untracked, local only) |
-| GitHub Actions       | Passing — Node CI, green on `main`                          |
-| `yarn preflight`     | Passing — the pre-release gate                              |
+| Check                | State                                                      |
+| -------------------- | ---------------------------------------------------------- |
+| `yarn install`       | Passing                                                    |
+| `yarn build`         | Passing                                                    |
+| `yarn lint`          | Passing — clean, 0 errors                                  |
+| `prettier --check .` | Passing                                                    |
+| `yarn package`       | Passing — `roland-v80hd-0.9.0.tgz` (untracked, local only) |
+| GitHub Actions       | Passing — Node CI, green on `main`                         |
+| `yarn preflight`     | Passing — the pre-release gate                             |
 
 ---
 
@@ -32,17 +32,25 @@ it directly. Confirmed on hardware both ways — `FTB:OFF;` clear, `FTB:ON;` eng
 recorded as blocked on a multi-byte decoder — audio levels, metering, source names — have plain-ASCII
 equivalents in the mnemonic set. Worth a look before anyone writes that decoder. `PROTOCOL.md` §10.1.
 
-**Wider question, not acted on:** no state field is cleared on disconnect. `destroyTcp()` stops the
-timers and clears nothing, and `configUpdated()` reuses the same `ModuleInstance`. The FTB pair is
-now cleared explicitly, because the engaged state cannot be re-derived and a wrong value there
-persists. Every other boolean has the same flaw but is re-established by the next poll within a
-cycle, so the stale window is half a second. Decide whether that is worth fixing generally.
+## Built, not yet on hardware — 0.9.0
 
-## Built and verified — 0.8.13
+**0.9.0 is the aesthetic and consistency pass, built 2026-09-16 and not yet run against a V-80HD.**
+It is presentation only — display names, button faces and default feedback colours, all of which
+Companion copies onto a button rather than referencing. No id changed, so nothing already built
+moves, and there is no protocol or behaviour change to regress.
 
-**Nothing is unverified.** Every change through 0.8.13 has been exercised on hardware: Fade To Black
-including the engaged state and panel tracking, the Split relabel, the readable raw echo, the FTB
-fade colour, and the on-button detail blocks.
+What to look at on the next hardware session, none of it urgent:
+
+- The renamed actions appear under their new names and still fire — `PinP & Key – …`,
+  `Stream & Record – Start` / `– Stop`, `Test Pattern – All Outputs (toggle)` / `– Off`,
+  `Set AUX Linked PGM – mode` / `Toggle AUX Linked PGM – mode`, `Utility – Sync state now`
+- A feedback added by hand arrives with black text on its bright background, and reads better lit
+  than unlit
+- The `PiP 1` / `PiP 2` button faces fit at 16pt without wrapping
+
+**Everything through 0.8.13 is verified on hardware:** Fade To Black including the engaged state and
+panel tracking, the Split relabel, the readable raw echo, the FTB fade colour, and the on-button
+detail blocks.
 
 Two things are recorded as **verified by inspection rather than on hardware**, because neither has a
 subject to test against and neither is worth manufacturing an old build for — a split button built
@@ -64,15 +72,14 @@ connection.** The surface already tells the operator. The FTB fade flag is still
 because a fade is a one-second transient and a stuck one is plainly false — but that is correctness
 for its own sake rather than a fix for anything an operator would have seen.
 
-## Queued — 0.8.14
+## Queued — the rest of the 0.9 tidy-up
 
-**Not yet — nothing is being built.** Whatever comes out of the outstanding checks in
-`TESTING-NEXT.md` lands here: C1, N3, N4, N5 and D1. If they all pass, 0.8.14 may not need to exist.
+Decided 2026-09-16. Everything that is housekeeping rather than function gets one deliberate pass
+rather than dribbling into point releases where it obscures what actually changed.
 
-## Queued — 0.9, the tidy-up release
-
-Decided 2026-09-16. Everything that is housekeeping rather than function is held for one deliberate
-pass, rather than dribbling into point releases where it obscures what actually changed.
+**0.9.0 took the aesthetic pass and nothing else.** The items below are what remains, and none of
+them is a code change — they are repository decisions and a documentation read. 0.8.14 was never
+built and is not needed; 0.8.13 closed everything that was outstanding.
 
 - **Untrack the test sheets and the code review.** `TESTING.md`, `TESTING-NEXT.md` and
   `CODE_REVIEW.md` into `.gitignore` and out of the index with `git rm --cached`. Files stay on disk;
@@ -81,11 +88,19 @@ pass, rather than dribbling into point releases where it obscures what actually 
 - **Repository management.** Whatever remains of the two-repo split once the dust settles — issue
   routing is done, but turning Issues off in this repository's settings is the only thing that
   actually enforces it, and that is a GitHub setting rather than a file.
-- **Aesthetic and consistency pass.** Button faces, preset categories, colour use across the palette,
-  action naming. Nothing is known to be wrong; this is the read-it-cold pass that catches what months
-  of incremental change leave behind.
+  **`bitfocus/main` is 2 commits ahead of here** as of the last fetch on 2026-09-14: two Dependabot
+  bumps touching `yarn.lock` only (js-yaml 4.3.1→4.3.2, colord 2.10.0). `git fetch bitfocus` before
+  the next push upstream, since there may be more by then.
 - **Final documentation review.** `README.md` and `HELP.md` end to end, with the beta wording
-  revisited — they still describe the module as provided for evaluation.
+  revisited — they still describe the module as provided for evaluation. The README's empty
+  `## Roadmap` heading was removed on 2026-09-16 rather than filled; decide in this pass whether a
+  public roadmap earns a section, given this file already holds one.
+- **Build artifacts in the working tree.** 20 `.tgz` builds (0.4.0 → 0.9.0) plus
+  `TESING NOTES.xlsx`, all gitignored, none tracked, all sitting in the repo root. Nothing is broken
+  by them, but the version-bump-per-build rule and a directory holding every historical build is a
+  good way to install the wrong one — `CODE_REVIEW.md` §7.1 raises the same point. Decide what to
+  keep; note the `.gitignore` entry carries the `TESING` typo, so correcting the filename would
+  un-ignore it. **Confirm before deleting anything.**
 
 ## Queued for 1.0 release prep
 
@@ -141,10 +156,11 @@ Keeping it here would only add a permanently red check that proves nothing.
 today. This was previously written up as a submission blocker waiting on a repo rename; it is not
 one, and never was.
 
-The one real submission-time item is smaller: `repository` and `bugs` in `companion/manifest.json`
-and `package.json` both point at this fork. Whether they move to the Bitfocus repo is a decision
-about where bug reports should land — issues currently come here, and `CONTRIBUTING.md` is written
-on that basis.
+**The submission-time item that was open here is done.** `repository` and `bugs` in
+`companion/manifest.json` and `package.json` both point at `bitfocus/companion-module-roland-v80hd`,
+which is where issues are routed — by `CONTRIBUTING.md`, by the README and by the issue chooser in
+`.github/ISSUE_TEMPLATE/config.yml`, which turns the blank option off so a report cannot land here by
+accident.
 
 `yarn preflight` (`format` → `lint:fix` → `build` → `package`) remains the local pre-release gate.
 
@@ -156,7 +172,10 @@ Everything that was here now lives in [PROTOCOL.md](PROTOCOL.md), which is the p
 record and goes further than this section did — it also recovers three findings that had been
 compressed out of this file and survived only in git history.
 
-Raw capture files are kept locally at `scratchpad/v80_exit_hunt.pcapng` and
-`scratchpad/v80_toggle_test.pcapng`. **`scratchpad/` is gitignored, so those are the one piece of
-evidence with no backup.** Everything derived from them is written up; the recordings themselves are
-not recoverable if that directory is cleared.
+Raw capture files were written to the session scratchpad — `v80_exit_hunt.pcapng`,
+`v80_toggle_test.pcapng`, `v80_capture_image.pcapng`, the `v80_ftb_block*` set and the `ftb*` set.
+**That scratchpad is a per-session temp directory outside the repository, not an ignored folder
+inside it**, so those recordings are the one piece of evidence with no backup and no path in this
+tree that would find them again. Everything derived from them is written up in `PROTOCOL.md`; the
+recordings themselves are gone as soon as the directory is cleared. Copy a capture somewhere durable
+at the time if it is ever worth keeping.
