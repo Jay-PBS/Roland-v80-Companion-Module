@@ -125,7 +125,7 @@ export function UpdateActions(self: ModuleInstance): void {
 			callback: async (e) => self.api.cmdSetAuxSource(A(e), String(e.options.source)),
 		},
 		set_aux_linked_pgm: {
-			name: 'Set AUX Linked PGM',
+			name: 'Set AUX Linked PGM – mode',
 			options: [
 				{
 					id: 'mode',
@@ -138,7 +138,7 @@ export function UpdateActions(self: ModuleInstance): void {
 			callback: async (e) => self.api.cmdSetAuxLinkedPgm(Number(e.options.mode) as 0 | 1 | 2),
 		},
 		toggle_aux_linked_pgm_mode: {
-			name: 'AUX Linked PGM mode (toggle)',
+			name: 'Toggle AUX Linked PGM – mode',
 			options: [
 				{
 					id: 'info',
@@ -187,7 +187,7 @@ export function UpdateActions(self: ModuleInstance): void {
 			callback: async (e) => self.api.cmdToggleAuxLinkedPgmBus(A(e)),
 		},
 		set_aux_layer_pinp: {
-			name: 'Set AUX Layer – PinP and Key',
+			name: 'Set AUX Layer – PinP & Key',
 			options: [
 				{
 					id: 'info',
@@ -202,7 +202,7 @@ export function UpdateActions(self: ModuleInstance): void {
 			callback: async (e) => self.api.cmdSetAuxLayerPinp(A(e), L(e), Number(e.options.mode) as 0 | 1 | 2),
 		},
 		toggle_aux_layer_pinp: {
-			name: 'Toggle AUX Layer – PinP and Key (Disable / Enable)',
+			name: 'Toggle AUX Layer – PinP & Key (Disable / Enable)',
 			options: [
 				{ id: 'aux', type: 'dropdown', label: 'AUX Bus', default: '1', choices: AUX_CHOICES },
 				{ id: 'layer', type: 'dropdown', label: 'PinP Layer', default: '1', choices: AUX_LAYER_CHOICES },
@@ -210,7 +210,7 @@ export function UpdateActions(self: ModuleInstance): void {
 			callback: async (e) => self.api.cmdToggleAuxLayerPinp(A(e), L(e)),
 		},
 		toggle_aux_layer_pinp_always_on: {
-			name: 'Toggle AUX Layer – PinP and Key (Disable / Always On)',
+			name: 'Toggle AUX Layer – PinP & Key (Disable / Always On)',
 			options: [
 				{ id: 'aux', type: 'dropdown', label: 'AUX Bus', default: '1', choices: AUX_CHOICES },
 				{ id: 'layer', type: 'dropdown', label: 'PinP Layer', default: '1', choices: AUX_LAYER_CHOICES },
@@ -219,7 +219,7 @@ export function UpdateActions(self: ModuleInstance): void {
 		},
 
 		pinp_set_source: {
-			name: 'PinP and Key – Set Source',
+			name: 'PinP & Key – Set Source',
 			options: [
 				LAYER_OPT,
 				{ id: 'source', type: 'dropdown', label: 'Source', default: 'input_1', choices: SOURCE_CHOICES },
@@ -227,32 +227,32 @@ export function UpdateActions(self: ModuleInstance): void {
 			callback: async (e) => self.api.cmdPinpSetSource(L(e), String(e.options.source)),
 		},
 		pinp_pgm_on: {
-			name: 'PinP and Key – PGM On',
+			name: 'PinP & Key – PGM On',
 			options: [LAYER_OPT],
 			callback: async (e) => self.api.cmdPinpPgm(L(e), true),
 		},
 		pinp_pgm_off: {
-			name: 'PinP and Key – PGM Off',
+			name: 'PinP & Key – PGM Off',
 			options: [LAYER_OPT],
 			callback: async (e) => self.api.cmdPinpPgm(L(e), false),
 		},
 		pinp_pgm_toggle: {
-			name: 'PinP and Key – PGM Toggle',
+			name: 'PinP & Key – PGM Toggle',
 			options: [LAYER_OPT],
 			callback: async (e) => self.api.cmdPinpPgmToggle(L(e)),
 		},
 		pinp_pvw_on: {
-			name: 'PinP and Key – PVW On',
+			name: 'PinP & Key – PVW On',
 			options: [LAYER_OPT],
 			callback: async (e) => self.api.cmdPinpPvw(L(e), true),
 		},
 		pinp_pvw_off: {
-			name: 'PinP and Key – PVW Off',
+			name: 'PinP & Key – PVW Off',
 			options: [LAYER_OPT],
 			callback: async (e) => self.api.cmdPinpPvw(L(e), false),
 		},
 		pinp_pvw_toggle: {
-			name: 'PinP and Key – PVW Toggle',
+			name: 'PinP & Key – PVW Toggle',
 			options: [LAYER_OPT],
 			callback: async (e) => self.api.cmdPinpPvwToggle(L(e)),
 		},
@@ -421,7 +421,7 @@ export function UpdateActions(self: ModuleInstance): void {
 		},
 
 		test_pattern: {
-			name: 'Test Pattern All Outputs (toggle)',
+			name: 'Test Pattern – All Outputs (toggle)',
 			options: [
 				{
 					id: 'info',
@@ -439,15 +439,15 @@ export function UpdateActions(self: ModuleInstance): void {
 			],
 			callback: async (e) => self.api.cmdTestPattern(String(e.options.pattern)),
 		},
-		test_pattern_off: { name: 'Test Pattern Off', options: [], callback: async () => self.api.cmdTestPatternOff() },
+		test_pattern_off: { name: 'Test Pattern – Off', options: [], callback: async () => self.api.cmdTestPatternOff() },
 
 		stream_record_start: {
-			name: 'Stream & Record - Start',
+			name: 'Stream & Record – Start',
 			options: [STREAM_RECORD_INFO],
 			callback: async () => self.api.cmdStreamRecordStart(),
 		},
 		stream_record_stop: {
-			name: 'Stream & Record - Stop',
+			name: 'Stream & Record – Stop',
 			options: [STREAM_RECORD_INFO],
 			callback: async () => self.api.cmdStreamRecordStop(),
 		},
@@ -474,7 +474,7 @@ export function UpdateActions(self: ModuleInstance): void {
 			callback: async (e) => await self.api.cmdCaptureImage(Number(e.options.slot), String(e.options.source)),
 		},
 
-		sync_now: { name: 'Sync state now', options: [], callback: async () => self.api.requestCoreState() },
+		sync_now: { name: 'Utility – Sync state now', options: [], callback: async () => self.api.requestCoreState() },
 
 		// Always defined, never conditionally registered. Registering this only when
 		// showAdvanced was on meant turning the checkbox back off removed the definition

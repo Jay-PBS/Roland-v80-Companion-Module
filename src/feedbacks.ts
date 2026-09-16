@@ -15,7 +15,8 @@ import {
 	AUX_LAYER_CHOICES,
 } from './api.js'
 
-// Corporate colour palette — bright = active, deep = inactive default
+// Corporate colour palette — bright = active, deep = inactive default. Same seven brights the
+// presets use, so a feedback added by hand lands on the palette rather than beside it.
 const RED_BRIGHT = combineRgb(0xef, 0x44, 0x44) // #EF4444
 const GREEN_BRIGHT = combineRgb(0x22, 0xc5, 0x5e) // #22C55E
 const BLUE_BRIGHT = combineRgb(0x3b, 0x82, 0xf6) // #3B82F6
@@ -23,8 +24,14 @@ const ORANGE_BRIGHT = combineRgb(0xf9, 0x73, 0x16) // #F97316
 const AMBER_BRIGHT = combineRgb(0xfa, 0xcc, 0x15) // #FACC15
 const PURPLE_BRIGHT = combineRgb(0xa8, 0x55, 0xf7) // #A855F7
 const CYAN_BRIGHT = combineRgb(0x06, 0xb6, 0xd4) // #06B6D4
-const WHITE = combineRgb(0xff, 0xff, 0xff)
 const BLACK = combineRgb(0x00, 0x00, 0x00)
+
+// Every defaultStyle below carries BLACK, and none carries white. 0.8.5 measured white against all
+// seven brights at 1.53-3.96:1, under the 4.5 threshold, and moved the presets to black text on an
+// active button; black passes on all seven. The feedback defaults did not follow at the time, so
+// until 0.9.0 a feedback added by hand still arrived with the combination 0.8.5 had rejected.
+// Existing buttons keep the styling they were built with - Companion copies a style, it does not
+// reference one - so this only affects feedbacks added from here on.
 
 export function UpdateFeedbacks(self: ModuleInstance): void {
 	self.setFeedbackDefinitions({
@@ -32,7 +39,7 @@ export function UpdateFeedbacks(self: ModuleInstance): void {
 		program_input_active: {
 			name: 'Program – Input on PGM',
 			type: 'boolean',
-			defaultStyle: { bgcolor: RED_BRIGHT, color: WHITE },
+			defaultStyle: { bgcolor: RED_BRIGHT, color: BLACK },
 			options: [{ id: 'input', type: 'number', label: 'Input (1–8)', default: 1, min: 1, max: 8 }],
 			callback: (fb) => self.programInput === Number(fb.options.input),
 		},
@@ -46,7 +53,7 @@ export function UpdateFeedbacks(self: ModuleInstance): void {
 		program_source_active: {
 			name: 'Program – Raw source byte on PGM',
 			type: 'boolean',
-			defaultStyle: { bgcolor: RED_BRIGHT, color: WHITE },
+			defaultStyle: { bgcolor: RED_BRIGHT, color: BLACK },
 			options: [
 				{
 					id: 'source',
@@ -67,7 +74,7 @@ export function UpdateFeedbacks(self: ModuleInstance): void {
 		aux_input_active: {
 			name: 'AUX – Input on AUX bus',
 			type: 'boolean',
-			defaultStyle: { bgcolor: BLUE_BRIGHT, color: WHITE },
+			defaultStyle: { bgcolor: BLUE_BRIGHT, color: BLACK },
 			options: [
 				{ id: 'aux', type: 'number', label: 'AUX (1 or 2)', default: 1, min: 1, max: 2 },
 				{ id: 'input', type: 'number', label: 'Input (1–8)', default: 1, min: 1, max: 8 },
@@ -82,7 +89,7 @@ export function UpdateFeedbacks(self: ModuleInstance): void {
 		transition_type_active: {
 			name: 'Transition type active',
 			type: 'boolean',
-			defaultStyle: { bgcolor: PURPLE_BRIGHT, color: WHITE },
+			defaultStyle: { bgcolor: PURPLE_BRIGHT, color: BLACK },
 			options: [
 				{
 					id: 'type',
@@ -107,7 +114,7 @@ export function UpdateFeedbacks(self: ModuleInstance): void {
 			type: 'boolean',
 			// Orange rather than red, so it reads as distinct from ftb_engaged at a glance when
 			// both are on one button. Red is reserved for "the output is actually black".
-			defaultStyle: { bgcolor: ORANGE_BRIGHT, color: WHITE },
+			defaultStyle: { bgcolor: ORANGE_BRIGHT, color: BLACK },
 			options: [],
 			callback: () => self.ftbFading,
 		},
@@ -116,28 +123,28 @@ export function UpdateFeedbacks(self: ModuleInstance): void {
 			description:
 				'Lights while the output is faded to black, however it was engaged - Companion, the panel or the Roland RCS software. Stays dark until the state is known, which is from the first poll after connecting.',
 			type: 'boolean',
-			defaultStyle: { bgcolor: RED_BRIGHT, color: WHITE },
+			defaultStyle: { bgcolor: RED_BRIGHT, color: BLACK },
 			options: [],
 			callback: () => self.ftbEngaged === true,
 		},
 		wipe_type_active: {
 			name: 'Wipe pattern active',
 			type: 'boolean',
-			defaultStyle: { bgcolor: PURPLE_BRIGHT, color: WHITE },
+			defaultStyle: { bgcolor: PURPLE_BRIGHT, color: BLACK },
 			options: [{ id: 'type', type: 'dropdown', label: 'Pattern', default: '0', choices: WIPE_TYPE_CHOICES }],
 			callback: (fb) => self.wipeType === Number(fb.options.type),
 		},
 		wipe_direction_active: {
 			name: 'Wipe direction active',
 			type: 'boolean',
-			defaultStyle: { bgcolor: PURPLE_BRIGHT, color: WHITE },
+			defaultStyle: { bgcolor: PURPLE_BRIGHT, color: BLACK },
 			options: [{ id: 'dir', type: 'dropdown', label: 'Direction', default: '0', choices: WIPE_DIRECTION_CHOICES }],
 			callback: (fb) => self.wipeDirection === Number(fb.options.dir),
 		},
 		aux_linked_pgm_active: {
 			name: 'AUX Linked PGM mode active',
 			type: 'boolean',
-			defaultStyle: { bgcolor: BLUE_BRIGHT, color: WHITE },
+			defaultStyle: { bgcolor: BLUE_BRIGHT, color: BLACK },
 			options: [{ id: 'mode', type: 'dropdown', label: 'Mode', default: '1', choices: AUX_LINK_MODE_CHOICES }],
 			callback: (fb) => self.auxLinkedPgm === Number(fb.options.mode),
 		},
@@ -145,7 +152,7 @@ export function UpdateFeedbacks(self: ModuleInstance): void {
 			name: 'AUX Linked PGM – bus follows PGM',
 			description: 'Whether this AUX bus is selected to follow PGM. Independent of the link mode.',
 			type: 'boolean',
-			defaultStyle: { bgcolor: BLUE_BRIGHT, color: WHITE },
+			defaultStyle: { bgcolor: BLUE_BRIGHT, color: BLACK },
 			options: [{ id: 'aux', type: 'dropdown', label: 'AUX Bus', default: '1', choices: AUX_CHOICES }],
 			callback: (fb) => (Number(fb.options.aux) === 2 ? self.aux2LinkedPgm : self.aux1LinkedPgm),
 		},
@@ -154,7 +161,7 @@ export function UpdateFeedbacks(self: ModuleInstance): void {
 		pinp_pgm_active: {
 			name: 'PinP & Key – active on PGM',
 			type: 'boolean',
-			defaultStyle: { bgcolor: ORANGE_BRIGHT, color: WHITE },
+			defaultStyle: { bgcolor: ORANGE_BRIGHT, color: BLACK },
 			options: [{ id: 'layer', type: 'number', label: 'Layer (1 or 2)', default: 1, min: 1, max: 2 }],
 			callback: (fb) => (Number(fb.options.layer) === 2 ? self.pinp2Pgm : self.pinp1Pgm),
 		},
@@ -170,7 +177,7 @@ export function UpdateFeedbacks(self: ModuleInstance): void {
 		aux_layer_pinp_enabled: {
 			name: 'AUX Layer – PinP Enabled',
 			type: 'boolean',
-			defaultStyle: { bgcolor: ORANGE_BRIGHT, color: WHITE },
+			defaultStyle: { bgcolor: ORANGE_BRIGHT, color: BLACK },
 			options: [
 				{ id: 'aux', type: 'dropdown', label: 'AUX Bus', default: '1', choices: AUX_CHOICES },
 				{ id: 'layer', type: 'dropdown', label: 'PinP Layer', default: '1', choices: AUX_LAYER_CHOICES },
@@ -216,7 +223,7 @@ export function UpdateFeedbacks(self: ModuleInstance): void {
 		dsk_pgm_active: {
 			name: 'DSK – active on PGM',
 			type: 'boolean',
-			defaultStyle: { bgcolor: ORANGE_BRIGHT, color: WHITE },
+			defaultStyle: { bgcolor: ORANGE_BRIGHT, color: BLACK },
 			options: [],
 			callback: () => self.dskPgm,
 		},
@@ -232,14 +239,14 @@ export function UpdateFeedbacks(self: ModuleInstance): void {
 		split1_active: {
 			name: 'Split 1 (Vertical) – active',
 			type: 'boolean',
-			defaultStyle: { bgcolor: PURPLE_BRIGHT, color: WHITE },
+			defaultStyle: { bgcolor: PURPLE_BRIGHT, color: BLACK },
 			options: [],
 			callback: () => self.split1Active,
 		},
 		split2_active: {
 			name: 'Split 2 (Horizontal) – active',
 			type: 'boolean',
-			defaultStyle: { bgcolor: PURPLE_BRIGHT, color: WHITE },
+			defaultStyle: { bgcolor: PURPLE_BRIGHT, color: BLACK },
 			options: [],
 			callback: () => self.split2Active,
 		},
@@ -276,7 +283,7 @@ export function UpdateFeedbacks(self: ModuleInstance): void {
 		freeze_active: {
 			name: 'Freeze (all) – active',
 			type: 'boolean',
-			defaultStyle: { bgcolor: BLUE_BRIGHT, color: WHITE },
+			defaultStyle: { bgcolor: BLUE_BRIGHT, color: BLACK },
 			options: [],
 			callback: () => self.freezeActive,
 		},
@@ -298,7 +305,7 @@ export function UpdateFeedbacks(self: ModuleInstance): void {
 			name: 'Tally – Input on air (PGM)',
 			description: 'Reported by the switcher itself, not inferred from the PGM bus.',
 			type: 'boolean',
-			defaultStyle: { bgcolor: RED_BRIGHT, color: WHITE },
+			defaultStyle: { bgcolor: RED_BRIGHT, color: BLACK },
 			options: [{ id: 'input', type: 'dropdown', label: 'Input', default: 'hdmi_1', choices: PHYSICAL_INPUT_CHOICES }],
 			callback: (fb) => {
 				const idx = TALLY_IDX[String(fb.options.input)]
@@ -318,19 +325,19 @@ export function UpdateFeedbacks(self: ModuleInstance): void {
 		},
 
 		stream_record_active: {
-			name: 'Stream & Record - active',
+			name: 'Stream & Record – active',
 			description:
 				'Reported by the device, not inferred from what this module sent, so it also tracks the panel and the Roland RCS software. Covers livestreaming and recording together.',
 			type: 'boolean',
-			defaultStyle: { bgcolor: RED_BRIGHT, color: WHITE },
+			defaultStyle: { bgcolor: RED_BRIGHT, color: BLACK },
 			options: [],
 			callback: () => self.streamRecordActive,
 		},
 		stream_record_state: {
-			name: 'Stream & Record - specific state',
+			name: 'Stream & Record – specific state',
 			description: 'Starting and Stopping are brief transitional states the device reports before it settles.',
 			type: 'boolean',
-			defaultStyle: { bgcolor: RED_BRIGHT, color: WHITE },
+			defaultStyle: { bgcolor: RED_BRIGHT, color: BLACK },
 			options: [
 				{
 					id: 'state',

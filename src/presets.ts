@@ -5,7 +5,7 @@ import { TEST_PATTERNS, PHYSICAL_INPUTS } from './api.js'
 
 export function UpdatePresets(self: ModuleInstance): void {
 	const presets: CompanionPresetDefinitions = {}
-	const sz = 16 // 16pt for review
+	const sz = 16
 
 	// Corporate colour palette - deep = inactive button bg, bright = active feedback.
 	// The deeps are the bright colours scaled down in RGB, so hue is preserved exactly and an
@@ -159,7 +159,7 @@ export function UpdatePresets(self: ModuleInstance): void {
 	presets['aux1_pinp1_en'] = {
 		type: 'button',
 		category: 'Aux 1',
-		name: 'AUX1 PiP1 En',
+		name: 'AUX1 PiP 1 Enable',
 		style: { text: 'PiP 1\nEN', size: sz, color: c.white, bgcolor: c.layer, show_topbar: false },
 		steps: [{ down: [{ actionId: 'toggle_aux_layer_pinp', options: { aux: '1', layer: '1' } }], up: [] }],
 		feedbacks: [
@@ -173,7 +173,7 @@ export function UpdatePresets(self: ModuleInstance): void {
 	presets['aux1_pinp1_on'] = {
 		type: 'button',
 		category: 'Aux 1',
-		name: 'AUX1 PiP1 AlwOn',
+		name: 'AUX1 PiP 1 Always On',
 		style: { text: 'PiP 1\nALW ON', size: sz, color: c.white, bgcolor: c.layer, show_topbar: false },
 		steps: [{ down: [{ actionId: 'toggle_aux_layer_pinp_always_on', options: { aux: '1', layer: '1' } }], up: [] }],
 		feedbacks: [
@@ -187,7 +187,7 @@ export function UpdatePresets(self: ModuleInstance): void {
 	presets['aux1_pinp2_en'] = {
 		type: 'button',
 		category: 'Aux 1',
-		name: 'AUX1 PiP2 En',
+		name: 'AUX1 PiP 2 Enable',
 		style: { text: 'PiP 2\nEN', size: sz, color: c.white, bgcolor: c.layer, show_topbar: false },
 		steps: [{ down: [{ actionId: 'toggle_aux_layer_pinp', options: { aux: '1', layer: '2' } }], up: [] }],
 		feedbacks: [
@@ -201,7 +201,7 @@ export function UpdatePresets(self: ModuleInstance): void {
 	presets['aux1_pinp2_on'] = {
 		type: 'button',
 		category: 'Aux 1',
-		name: 'AUX1 PiP2 AlwOn',
+		name: 'AUX1 PiP 2 Always On',
 		style: { text: 'PiP 2\nALW ON', size: sz, color: c.white, bgcolor: c.layer, show_topbar: false },
 		steps: [{ down: [{ actionId: 'toggle_aux_layer_pinp_always_on', options: { aux: '1', layer: '2' } }], up: [] }],
 		feedbacks: [
@@ -229,7 +229,7 @@ export function UpdatePresets(self: ModuleInstance): void {
 	presets['aux2_pinp1_en'] = {
 		type: 'button',
 		category: 'Aux 2',
-		name: 'AUX2 PiP1 En',
+		name: 'AUX2 PiP 1 Enable',
 		style: { text: 'PiP 1\nEN', size: sz, color: c.white, bgcolor: c.layer, show_topbar: false },
 		steps: [{ down: [{ actionId: 'toggle_aux_layer_pinp', options: { aux: '2', layer: '1' } }], up: [] }],
 		feedbacks: [
@@ -243,7 +243,7 @@ export function UpdatePresets(self: ModuleInstance): void {
 	presets['aux2_pinp1_on'] = {
 		type: 'button',
 		category: 'Aux 2',
-		name: 'AUX2 PiP1 AlwOn',
+		name: 'AUX2 PiP 1 Always On',
 		style: { text: 'PiP 1\nALW ON', size: sz, color: c.white, bgcolor: c.layer, show_topbar: false },
 		steps: [{ down: [{ actionId: 'toggle_aux_layer_pinp_always_on', options: { aux: '2', layer: '1' } }], up: [] }],
 		feedbacks: [
@@ -257,7 +257,7 @@ export function UpdatePresets(self: ModuleInstance): void {
 	presets['aux2_pinp2_en'] = {
 		type: 'button',
 		category: 'Aux 2',
-		name: 'AUX2 PiP2 En',
+		name: 'AUX2 PiP 2 Enable',
 		style: { text: 'PiP 2\nEN', size: sz, color: c.white, bgcolor: c.layer, show_topbar: false },
 		steps: [{ down: [{ actionId: 'toggle_aux_layer_pinp', options: { aux: '2', layer: '2' } }], up: [] }],
 		feedbacks: [
@@ -271,7 +271,7 @@ export function UpdatePresets(self: ModuleInstance): void {
 	presets['aux2_pinp2_on'] = {
 		type: 'button',
 		category: 'Aux 2',
-		name: 'AUX2 PiP2 AlwOn',
+		name: 'AUX2 PiP 2 Always On',
 		style: { text: 'PiP 2\nALW ON', size: sz, color: c.white, bgcolor: c.layer, show_topbar: false },
 		steps: [{ down: [{ actionId: 'toggle_aux_layer_pinp_always_on', options: { aux: '2', layer: '2' } }], up: [] }],
 		feedbacks: [
@@ -345,8 +345,8 @@ export function UpdatePresets(self: ModuleInstance): void {
 		presets[`pinp${layer}_pgm`] = {
 			type: 'button',
 			category: 'PinP & Key',
-			name: `PinP${layer} PGM`,
-			style: { text: `PiP${layer}\nPGM`, size: sz, color: c.white, bgcolor: c.layer, show_topbar: false },
+			name: `PiP ${layer} PGM`,
+			style: { text: `PiP ${layer}\nPGM`, size: sz, color: c.white, bgcolor: c.layer, show_topbar: false },
 			steps: [{ down: [{ actionId: 'pinp_pgm_toggle', options: { layer } }], up: [] }],
 			feedbacks: [
 				{ feedbackId: 'pinp_pgm_active', options: { layer }, style: { bgcolor: c.layer_on, color: c.black } },
@@ -355,8 +355,8 @@ export function UpdatePresets(self: ModuleInstance): void {
 		presets[`pinp${layer}_pvw`] = {
 			type: 'button',
 			category: 'PinP & Key',
-			name: `PinP${layer} PVW`,
-			style: { text: `PiP${layer}\nPVW`, size: sz, color: c.white, bgcolor: c.layer, show_topbar: false },
+			name: `PiP ${layer} PVW`,
+			style: { text: `PiP ${layer}\nPVW`, size: sz, color: c.white, bgcolor: c.layer, show_topbar: false },
 			steps: [{ down: [{ actionId: 'pinp_pvw_toggle', options: { layer } }], up: [] }],
 			feedbacks: [{ feedbackId: 'pinp_pvw_active', options: { layer }, style: { bgcolor: c.pvw_on, color: c.black } }],
 		}
@@ -370,16 +370,16 @@ export function UpdatePresets(self: ModuleInstance): void {
 	presets['pinp1_reset'] = {
 		type: 'button',
 		category: 'PinP & Key',
-		name: 'PiP1 Reset',
-		style: { text: 'PiP1\nRESET', size: sz, color: c.white, bgcolor: c.pinp, show_topbar: false },
+		name: 'PiP 1 Reset',
+		style: { text: 'PiP 1\nRESET', size: sz, color: c.white, bgcolor: c.pinp, show_topbar: false },
 		steps: [{ down: pinpResetActions(1), up: [] }],
 		feedbacks: [],
 	}
 	presets['pinp2_reset'] = {
 		type: 'button',
 		category: 'PinP & Key',
-		name: 'PiP2 Reset',
-		style: { text: 'PiP2\nRESET', size: sz, color: c.white, bgcolor: c.pinp, show_topbar: false },
+		name: 'PiP 2 Reset',
+		style: { text: 'PiP 2\nRESET', size: sz, color: c.white, bgcolor: c.pinp, show_topbar: false },
 		steps: [{ down: pinpResetActions(2), up: [] }],
 		feedbacks: [],
 	}
