@@ -38,75 +38,48 @@ now cleared explicitly, because the engaged state cannot be re-derived and a wro
 persists. Every other boolean has the same flaw but is re-established by the next poll within a
 cycle, so the stale window is half a second. Decide whether that is worth fixing generally.
 
-## Built but unverified — 2026-09-16
+## Built but unverified — 0.8.13
 
-**All seven changes in 0.8.10 passed.** What is unverified now is only what landed after that
-package. Needs a build; `TESTING-NEXT.md` §N has the checks.
+Fade To Black is confirmed on hardware and needs nothing further. What is still unverified:
 
-- **Split relabel.** Actions read `Split 1 (Vertical)` and `Split 2 (Horizontal)`, presets read
-  `Split 1 – Vertical` with faces `SPLIT / VERT` and `SPLIT / HORZ`, feedbacks and variable display
-  names follow. Confirmed against the panel 2026-09-16, which is what unblocked it.
-
-  **Display-only. Every id was left alone** — `split1_on`, `split1_off`, `split1_toggle`,
-  `split2_*`, both `*_active` feedbacks and both variable ids. §N3 is what proves an existing button
-  still fires, and it is the only check that matters.
-
-- **Doc corrections** — `HELP.md` gains the orientation, `PROTOCOL.md` records the settled protocol
-  facts. No code.
+- **The FTB fade colour.** Orange rather than the transition purple, so red on that button means one
+  thing only: the output is actually black. `TESTING-NEXT.md` §C.
+- **The Split relabel.** Actions, presets, faces, feedbacks and variable names all carry Vertical and
+  Horizontal. **Display-only — every id was left alone**, and §N3 is the check that proves an
+  existing button still fires.
+- **The readable raw echo.** Frames render as text rather than hex. §N5.
 
 ## Open — needs a decision
 
-- **Resolved 2026-09-16 — everything points at Bitfocus now.** `repository` and `bugs` in
-  `manifest.json` and `package.json`, plus every issue and discussion link in `README.md` and
-  `CONTRIBUTING.md`. `.github/ISSUE_TEMPLATE/config.yml` here now redirects to the released
-  repository rather than offering a form.
+- **Whether every state field should clear on disconnect.** Nothing does today: `destroyTcp()` stops
+  the timers and clears nothing, and `configUpdated()` reuses the same `ModuleInstance`. The FTB fade
+  flag is now cleared explicitly, because a fade is a one-second transient and a stuck one is simply
+  false. Every other boolean has the same flaw but is re-established by the next poll within a cycle,
+  so the stale window is half a second and nobody would notice. Worth deciding rather than leaving as
+  an inconsistency someone trips over later.
 
-  **The reason is version separation, and it is worth remembering:** this repository carries
-  experimental work, so a bug in something half-finished must not be mistaken for a bug in the
-  shipped module. Keeping reports on the release is what enforces that.
+## Queued — 0.8.14
 
-  The issue templates stay in this repository deliberately — they travel upstream with the code and
-  are the forms people should meet on the released repo.
+**Not yet — nothing is being built.** Whatever comes out of the outstanding checks in
+`TESTING-NEXT.md` lands here: C1, N3, N4, N5 and D1. If they all pass, 0.8.14 may not need to exist.
 
-  **One thing this does not do:** GitHub still allows issues here if someone goes looking. The
-  config only changes what the "new issue" chooser offers. Turning Issues off in this repository's
-  settings is the only thing that actually enforces it, and that is a GitHub setting rather than a
-  file.
+## Queued — 0.9, the tidy-up release
 
-- **Tagging — resolved 2026-09-10, no backfill.** Tags are `v0.4.0`, `v0.6.5` and `v0.8.5`, and
-  those are the states worth keeping. The earlier note claimed 0.6.2, 0.6.3 and 0.6.4 went untagged;
-  they cannot be tagged, because they were never committed. Committed history runs
-  0.4.0 → 0.6.0 → 0.6.5 → 0.7.0 → 0.8.2 → 0.8.4 → 0.8.5; 0.6.1, 0.6.2, 0.6.3, 0.6.4, 0.8.0, 0.8.1
-  and 0.8.3 exist in no commit's `package.json` and were local builds only. Of the four that could
-  be tagged (0.6.0, 0.7.0, 0.8.2, 0.8.4), none is worth retrieving — 0.8.2 and 0.8.4 were steps
-  toward 0.8.5 inside two days, 0.7.0 was the experimental hardware-run build, 0.6.0 is superseded.
-  **These are all pre-release dev versions, so backfill only if something specific needs
-  retrieving.** That changes at 1.0: once the module is submitted to bitfocus and people are running
-  released builds, a tag per release stops being tidiness and becomes how you answer "which code was
-  in the build that broke". **From 1.0: tag every release, once `yarn preflight` passes.**
-- **Node — resolved 2026-09-10, standardised on 22.** This machine now runs **v22.20.0**
-  (nvm-for-windows; 20.19.0 and 20.16.0 remain installed but unused). `.nvmrc` pins it, `engines`
-  (`^22.20`) is satisfied for the first time, and `yarn preflight` passes end to end on it.
+Decided 2026-09-16. Everything that is housekeeping rather than function is held for one deliberate
+pass, rather than dribbling into point releases where it obscures what actually changed.
 
-  **22 is a ceiling, not a preference.** `@companion-module/base`'s manifest schema accepts only
-  `node16`, `node18`, `node20` and `node22` for `runtime.type` — `node24` is not a valid value, so
-  moving to 24 is unavailable until bitfocus ships one. `@companion-module/base@1.14.1` declares
-  `engines: ^18.12 || ^22.8` and `@companion-module/tools@2.8.0` declares `^18.18 || ^22.18`; both
-  agree 22 is the top.
-
-  **After any `nvm use`, run `corepack enable`** — switching Node majors drops the yarn shim, and
-  `yarn` is simply missing until corepack is re-enabled.
-
-  _Open, deferred to w/c 2026-09-14: check the laptop's Node major, which may differ. `.nvmrc`
-  tells it to use 22.20.0 but will not switch it — run `nvm use` in the repo directory there.
-  If 22 is not installed on that machine: `nvm install 22.20.0`, then `corepack enable`._
-
-## Queued — next build cycle
-
-- **Test sheets and the code review stop shipping.** `TESTING.md`, `TESTING-NEXT.md` and
-  `CODE_REVIEW.md` go into `.gitignore` and come out of the index with `git rm --cached`. Files stay
-  on disk; losing their ongoing history is accepted pre-1.0. `working_doc.md` and `PROTOCOL.md` stay
-  tracked in both repos. Closes CODE_REVIEW §4.3. **Confirm before running it.**
+- **Untrack the test sheets and the code review.** `TESTING.md`, `TESTING-NEXT.md` and
+  `CODE_REVIEW.md` into `.gitignore` and out of the index with `git rm --cached`. Files stay on disk;
+  losing their ongoing history is accepted pre-1.0. `working_doc.md` and `PROTOCOL.md` stay tracked
+  in both repos. Closes CODE_REVIEW §4.3. **Confirm before running it.**
+- **Repository management.** Whatever remains of the two-repo split once the dust settles — issue
+  routing is done, but turning Issues off in this repository's settings is the only thing that
+  actually enforces it, and that is a GitHub setting rather than a file.
+- **Aesthetic and consistency pass.** Button faces, preset categories, colour use across the palette,
+  action naming. Nothing is known to be wrong; this is the read-it-cold pass that catches what months
+  of incremental change leave behind.
+- **Final documentation review.** `README.md` and `HELP.md` end to end, with the beta wording
+  revisited — they still describe the module as provided for evaluation.
 
 ## Queued for 1.0 release prep
 
@@ -115,43 +88,6 @@ package. Needs a build; `TESTING-NEXT.md` §N has the checks.
   downloadable 1.0 is something to set up rather than something that happens by itself. README
   currently promises "each release will carry its `.tgz` as a GitHub Release asset" — either make
   that true or change the sentence.
-
-## Follow-on from PROTOCOL.md — logged 2026-09-14
-
-The protocol knowledge itself now lives in [PROTOCOL.md](PROTOCOL.md). Only the actions are here.
-
-- **Try the Fade To Black query before 1.0.** Recorded as a lead in `PROTOCOL.md` §10.1 — Roland's
-  other command set, over the same socket, documents a direct query for the engaged state. Untested.
-  If it works it closes the public appeal in `README.md` and retires the block-read hunt; if it does
-  not, say so in §10.1 so nobody tries it twice. One line in a terminal.
-- **Settle the block-read contradiction 2026-09-15** — `TESTING-NEXT.md` §1b. Once it lands, update
-  `PROTOCOL.md` §8.6 from **Contested** to a fact and revisit `README.md`'s "parked as a device
-  limit" position.
-
----
-
-## Queued — once hardware testing clears
-
-Held until `TESTING-NEXT.md` is signed off, so nothing renames under the tester.
-
-- **Rewrite "layout" / "layer" / "PinP" for clarity — presets done 2026-09-15, naming still open.**
-
-  The preset half is closed: the four AUX-scoped "Layout" duplicates are gone and the two survivors
-  are renamed `PiP1 Reset` / `PiP2 Reset` under `PinP & Key`. That also closed CODE_REVIEW §6.2.
-
-  **Still to do:** the three words are used for three different things and the naming only separates
-  two of them so far.
-  - **PinP 1 and 2 are real hardware layers** — two address blocks, `0012xx` and `0013xx`, each with
-    its own source, PGM/PVW and full geometry, compositing simultaneously. The module calls them
-    layers already; nothing to change.
-  - **The device has no layout store.** Scene Memory (`0A0000`) is the only store-and-recall and it
-    is whole-scene. The word "Layout" is now gone from the presets — check `HELP.md` and `README.md`
-    do not reintroduce it before 1.0.
-  - **Window vs View geometry** is the remaining confusion, and the one that actually caught us out:
-    Window Position and View Position are different parameters at different addresses with different
-    ranges, and View Position only shows its effect once View Zoom is raised. The action names say
-    `Window` and `View` correctly, but nothing explains the relationship. A `static-text` note on the
-    View actions would have saved two test sessions.
 
 ## Not yet implemented
 

@@ -68,6 +68,18 @@ four poll cycles and buries the reply.
 
 ---
 
+## Not in this build — held for 0.9
+
+Decided 2026-09-16. Housekeeping gets one deliberate pass rather than dribbling into point releases
+where it obscures what actually changed: untracking the test sheets and the code review, the
+remaining repository management, an aesthetic and consistency pass over button faces, categories,
+colour use and action naming, and a final end-to-end documentation review including the beta wording.
+
+`working_doc.md` holds the detail. **Nothing is being built right now** — the next build is 0.8.14 if
+the checks above turn something up, and may not need to exist if they all pass.
+
+---
+
 ## Also changed in 0.8.11–0.8.13, no test needed
 
 Docs and config only, listed so nothing looks unexplained:
