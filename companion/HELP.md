@@ -1,4 +1,4 @@
-# Roland V-80HD — Companion Module v0.8.11
+# Roland V-80HD — Companion Module v0.8.12
 
 This module is currently in beta. It has been tested on physical hardware with firmware v1.20.201 and is provided for evaluation purposes. Use in production environments is at the operator's own discretion and risk.
 
@@ -194,6 +194,16 @@ The following states are polled and drive feedbacks:
 - Audio mute state (per input channel, main bus, AUX 1 bus, AUX 2 bus)
 - Transition type (Mix or Wipe)
 - Fade To Black – fade in progress, and Fade To Black – engaged
+
+**Use _engaged_ for an FTB button.** It lights for as long as the output is black, however that
+happened — from Companion, the V-80's panel, or the Roland RCS software. _Fade in progress_ lights
+only during the one-second transition, which is why a button using it alone appears to flash and
+then go dark while the output is still black.
+
+The FTB preset in the Transitions category carries both, so a button dropped from it shows the
+transition and then stays lit. **A button built before this will not update itself** — presets are
+copied when dropped rather than linked, so add the _engaged_ feedback by hand or drop a fresh one.
+
 - Wipe pattern and wipe direction
 - Test pattern active
 - Tally state per input (HDMI 1 to 4, SDI 1 to 4)

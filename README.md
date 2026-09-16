@@ -14,7 +14,7 @@ you want a version that has been through hardware testing.
 
 This module is currently in beta. It has been tested on physical hardware and is provided for evaluation. Use in production environments is at the operator's own discretion and risk.
 
-Current version: 0.8.11
+Current version: 0.8.12
 
 ---
 
@@ -205,6 +205,12 @@ Not every version below is a commit. Only 0.4.0, 0.6.0, 0.6.5, 0.7.0, 0.8.2, 0.8
 0.8.8 were ever committed; the rest — 0.6.1 to 0.6.4, 0.8.0, 0.8.1 and 0.8.3 — were local builds that
 went straight to hardware, so their entries record what changed rather than something you can check
 out. Tags exist for `v0.4.0`, `v0.6.5` and `v0.8.5`, which are the states worth returning to.
+
+### 0.8.12 — the FTB button uses the engaged state
+
+0.8.11 added the _Fade To Black – engaged_ feedback but left the FTB preset wired to _fade in progress_, so the button still lit for a second during the fade and went dark again while the output was black. The preset now carries both: the transition colour while the fade runs, then red for as long as the output is actually black.
+
+**An FTB button you have already built will not change on its own.** Presets are copied onto a button when you drop them, not referenced, so an existing button keeps the feedback it was created with. Either add _Fade To Black – engaged_ to it by hand, or drop a fresh FTB preset from the Transitions category.
 
 ### 0.8.11 — Fade To Black finally reports whether the output is black
 
