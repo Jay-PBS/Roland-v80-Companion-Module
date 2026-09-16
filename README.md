@@ -14,7 +14,7 @@ you want a version that has been through hardware testing.
 
 This module is currently in beta. It has been tested on physical hardware and is provided for evaluation. Use in production environments is at the operator's own discretion and risk.
 
-Current version: 0.8.12
+Current version: 0.8.13
 
 ---
 
@@ -205,6 +205,14 @@ Not every version below is a commit. Only 0.4.0, 0.6.0, 0.6.5, 0.7.0, 0.8.2, 0.8
 0.8.8 were ever committed; the rest — 0.6.1 to 0.6.4, 0.8.0, 0.8.1 and 0.8.3 — were local builds that
 went straight to hardware, so their entries record what changed rather than something you can check
 out. Tags exist for `v0.4.0`, `v0.6.5` and `v0.8.5`, which are the states worth returning to.
+
+### 0.8.13 — the FTB fade colour
+
+The fade-in-progress feedback was borrowing the transition colour, which put purple on a button whose other state is red. It is now orange, and red is reserved for the one thing that matters on that button: the output is actually black.
+
+Only a freshly dropped preset picks this up — an existing button keeps the styling it was created with.
+
+**Confirmed on hardware:** Fade To Black now reports the engaged state correctly, including when it is driven from the V-80's own panel, and the fade flag clears on a dropped connection instead of sticking lit.
 
 ### 0.8.12 — the FTB button uses the engaged state
 

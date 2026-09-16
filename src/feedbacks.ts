@@ -105,7 +105,9 @@ export function UpdateFeedbacks(self: ModuleInstance): void {
 			description:
 				'Lights only while a fade is running. For whether the output is actually black, use Fade To Black – engaged.',
 			type: 'boolean',
-			defaultStyle: { bgcolor: RED_BRIGHT, color: WHITE },
+			// Orange rather than red, so it reads as distinct from ftb_engaged at a glance when
+			// both are on one button. Red is reserved for "the output is actually black".
+			defaultStyle: { bgcolor: ORANGE_BRIGHT, color: WHITE },
 			options: [],
 			callback: () => self.ftbFading,
 		},

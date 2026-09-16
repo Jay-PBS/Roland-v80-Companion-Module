@@ -4,7 +4,7 @@ Live working notes: **open items only**.
 
 Once something is done and verified on hardware, delete it from this file. Anything worth keeping permanently belongs in [README.md](README.md) (project-facing) or [companion/HELP.md](companion/HELP.md) (user-facing), not here. This file is not a changelog and holds no logs — the changelog lives in the README.
 
-Last reviewed: 2026-09-15 · Working version: 0.8.12
+Last reviewed: 2026-09-15 · Working version: 0.8.13
 
 ---
 
@@ -16,7 +16,7 @@ Last reviewed: 2026-09-15 · Working version: 0.8.12
 | `yarn build`         | Passing                                                     |
 | `yarn lint`          | Passing — clean, 0 errors                                   |
 | `prettier --check .` | Passing                                                     |
-| `yarn package`       | Passing — `roland-v80hd-0.8.12.tgz` (untracked, local only) |
+| `yarn package`       | Passing — `roland-v80hd-0.8.13.tgz` (untracked, local only) |
 | GitHub Actions       | Passing — Node CI, green on `main`                          |
 | `yarn preflight`     | Passing — the pre-release gate                              |
 

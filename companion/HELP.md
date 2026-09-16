@@ -1,4 +1,4 @@
-# Roland V-80HD — Companion Module v0.8.12
+# Roland V-80HD — Companion Module v0.8.13
 
 This module is currently in beta. It has been tested on physical hardware with firmware v1.20.201 and is provided for evaluation purposes. Use in production environments is at the operator's own discretion and risk.
 

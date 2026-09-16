@@ -77,12 +77,12 @@ export function UpdatePresets(self: ModuleInstance): void {
 		// one to match wins, so engaged is placed second and takes the button whenever it is true.
 		//
 		// In practice they do not overlap. During a fade, ftb_active is true and ftb_engaged holds
-		// its previous value until QFTB settles on ON or OFF - so the button shows the transition
-		// colour while the fade runs, then red once the output is actually black. What an operator
-		// needs from this button is "is the output black", which is engaged; the fade colour is
-		// there so the button does not look inert for the second it takes to get there.
+		// its previous value until QFTB settles on ON or OFF - so the button shows orange while the
+		// fade runs, then red once the output is actually black. What an operator needs from this
+		// button is "is the output black", which is engaged; the orange is there so the button does
+		// not look inert for the second it takes to get there. Red is reserved for the real thing.
 		feedbacks: [
-			{ feedbackId: 'ftb_active', options: {}, style: { bgcolor: c.trans_on, color: c.black } },
+			{ feedbackId: 'ftb_active', options: {}, style: { bgcolor: c.layer_on, color: c.black } },
 			{ feedbackId: 'ftb_engaged', options: {}, style: { bgcolor: c.pgm_on, color: c.black } },
 		],
 	}
