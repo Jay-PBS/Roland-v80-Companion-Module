@@ -666,8 +666,9 @@ export class V80Api {
 			// 030207 is NOT the Fade To Black state. Capture 2026-09-04: six FTB presses
 			// produced twelve transitions of this byte, 00->01 while each fade ran and back to
 			// 00 once it finished, whether the result was black or live. It is a
-			// fade-in-progress flag. The steady FTB state is at an address not yet identified;
-			// it was the only polled byte that moved during that capture.
+			// fade-in-progress flag, and it was the only polled byte that moved during that
+			// capture. The engaged state is in no address at all - it is read with QFTB, see
+			// onFtbState.
 			case '030207':
 				this.self.ftbFading = val === 1
 				break

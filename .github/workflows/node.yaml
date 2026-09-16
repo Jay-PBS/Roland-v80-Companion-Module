@@ -29,9 +29,10 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Use Node.js 22.x
-        # Matches the runtime declared in companion/manifest.json. Local development
-        # currently runs Node 24, so this job is the only check that the module still
-        # builds on the version Companion actually ships.
+        # Matches the runtime declared in companion/manifest.json, and .nvmrc. Local
+        # development is pinned to the same major, so this is not the only place the
+        # build sees Node 22 - it is the only place it sees a clean checkout, which is
+        # what it is here to prove. Keep it aligned with manifest.runtime.type.
         uses: actions/setup-node@v6
         with:
           node-version: 22.x

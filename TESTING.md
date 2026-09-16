@@ -7,6 +7,15 @@
 **Tested build:** `roland-v80hd-0.8.3.tgz` · **Tester:** Jay · **Date:** 2026-09-08
 **Base:** 0.6.5 (`main` @ `68787f8`) · **Shipped as:** 0.8.5, tagged `v0.8.5` at the merge commit
 
+> **Two findings here were later overturned. Nothing below has been edited** — this is what was
+> observed on the day, and it stays that way. Read these two alongside it:
+>
+> - **The Fade To Black steady state.** Recorded here, and at the bottom of this sheet, as living at
+>   an address not yet identified. It lives at no address: it is read with `QFTB;` from Roland's
+>   mnemonic command set, **confirmed on hardware 2026-09-16**. `PROTOCOL.md` §10.1.
+> - **C7, View Position H and V.** Carried forward here as Open. They work — the travel is simply too
+>   small to see until View Zoom is raised. **Confirmed 2026-09-15.** `PROTOCOL.md` §10.2.
+
 ## Outcome
 
 **Verdict: merge.** No regressions against 0.6.5. The 0.7.0 password migration worked with no

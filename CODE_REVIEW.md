@@ -4,17 +4,19 @@
 **Reference:** `C:\GitHub\companion-module-template-ts` (Bitfocus TypeScript module template) plus the
 current [Companion Connection Developers' Guide](https://companion.free/for-developers/module-development/).
 
-**Status: acted on.** The review below is preserved as written against 0.6.5. What was done about
-each item is recorded in [§0 Status](#0-status-of-this-review), and §10's list is annotated with
-outcomes. The work is on `exp/code-review-0.7.0`, packaged as `roland-v80hd-0.7.0.tgz`, and has
-**not yet been tested against a V-80HD**.
+**Status: acted on, and confirmed on hardware.** The review below is preserved as written against
+0.6.5 — including its line references, which point at that commit rather than at today's files. What
+was done about each item is recorded in [§0 Status](#0-status-of-this-review), and §10's list is
+annotated with outcomes. The work shipped as `roland-v80hd-0.7.0.tgz` and was tested on a V-80HD as
+part of the 0.8.3 run on 2026-09-08, where it passed with no regressions against 0.6.5.
 
 ---
 
 ## 0. Status of this review
 
-**Branch:** `exp/code-review-0.7.0` (from `main` @ `68787f8`) · **Build:** `roland-v80hd-0.7.0.tgz`
-· **Applied:** 2026-09-04 · **Hardware test:** pending, Monday 2026-09-07
+**Written against:** `main` @ `68787f8` · **Build:** `roland-v80hd-0.7.0.tgz` · **Applied:**
+2026-09-04 · **Hardware test:** **passed 2026-09-08**, in the 0.8.3 run — see `TESTING.md`. The work
+was carried on `exp/code-review-0.7.0`, which was merged and deleted; it reached `main` in 0.8.5.
 
 Eight commits carry the code and doc changes, one review concern each, so a hardware failure
 bisects to a single cause. A ninth carries the version bump and changelog.
@@ -42,25 +44,25 @@ bisects to a single cause. A ninth carries the version bump and changelog.
 | §   | Item                                | Why                                                                                                                                                                                                                                     |
 | --- | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 6.2 | The four AUX "layout" presets       | **Done 2026-09-15.** Not a design question after all — `pinpTemplateActions()` took only a layer, so the four AUX copies were byte-for-byte duplicates of a layer-scoped operation. Deleted; the two survivors renamed Layout to Reset. |
-| 5.3 | Optimistic-update policy            | **Done 2026-09-15.** The freeze trio was the one genuine inconsistency and is fixed; the wider split is deliberate and now written down in `PROTOCOL.md` §7.3 rather than changed.                                                      |
+| 5.3 | Optimistic-update policy            | **Done 2026-09-15.** The freeze trio was the one genuine inconsistency and is fixed; the wider split is deliberate and now written down in `PROTOCOL.md` §7.4 rather than changed.                                                      |
 | 7.1 | Build artifacts in the working tree | **Done 2026-09-15.** No `.tgz` is tracked any more — `roland-v80hd-0.8.8.tgz` untracked with `git rm --cached`, `/*.tgz` covers the rest. Files stay on disk; README now points at building.                                            |
 
 **Still not done, all deliberate:**
 
-| §   | Item                             | Why                                                                                                                                                                                                                                                                                          |
-| --- | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 4.1 | Repository name vs manifest `id` | **Not a defect — reassessed 2026-09-15.** `id` is `roland-v80hd`, and the upstream repo is `companion-module-roland-v80hd`. That matches exactly. The mismatch only ever existed against this personal fork's name, which is not where the check applies.                                    |
-| 4.2 | `companion-module-checks.yaml`   | **Not applicable here, not blocked.** The check validates the _hosting repository's_ name, so it cannot pass in a fork named anything else and has no business being here. It passes upstream automatically.                                                                                 |
-| 4.3 | `working_doc.md` is tracked      | **Queued for the next build cycle** (moved from the 1.0 pass, 2026-09-15). `TESTING.md`, `TESTING-NEXT.md` and `CODE_REVIEW.md` get gitignored and `git rm --cached`; `working_doc.md` and `PROTOCOL.md` stay tracked. Files stay on disk. Losing their ongoing history is accepted pre-1.0. |
-| —   | 2.x API migration                | Out of scope, as the review says. 1.14.1 remains a fine place to submit from.                                                                                                                                                                                                                |
+| §   | Item                             | Why                                                                                                                                                                                                                                                                                                                       |
+| --- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 4.1 | Repository name vs manifest `id` | **Not a defect — reassessed 2026-09-15.** `id` is `roland-v80hd`, and the upstream repo is `companion-module-roland-v80hd`. That matches exactly. The mismatch only ever existed against this personal fork's name, which is not where the check applies.                                                                 |
+| 4.2 | `companion-module-checks.yaml`   | **Not applicable here, not blocked.** The check validates the _hosting repository's_ name, so it cannot pass in a fork named anything else and has no business being here. It passes upstream automatically.                                                                                                              |
+| 4.3 | `working_doc.md` is tracked      | **Held for 0.9, the tidy-up release** (moved from the 1.0 pass 2026-09-15, fixed to 0.9 on 2026-09-16). `TESTING.md`, `TESTING-NEXT.md` and `CODE_REVIEW.md` get gitignored and `git rm --cached`; `working_doc.md` and `PROTOCOL.md` stay tracked. Files stay on disk. Losing their ongoing history is accepted pre-1.0. |
+| —   | 2.x API migration                | Out of scope, as the review says. 1.14.1 remains a fine place to submit from.                                                                                                                                                                                                                                             |
 
 **The repository name was never a submission blocker**, and the original review overstated it. The
 check reads the name of the repo the workflow is running in. `bitfocus/companion-module-roland-v80hd`
 already satisfies it, so nothing needs renaming and nothing is waiting on anything.
 
-The one genuine submission-time item is smaller: `repository` and `bugs` in both
-`companion/manifest.json` and `package.json` point at this fork. Whether they should move to the
-bitfocus repo is a decision about where bug reports land, not a defect.
+The one genuine submission-time item was smaller, and it is **done**: `repository` and `bugs` in both
+`companion/manifest.json` and `package.json` now point at `bitfocus/companion-module-roland-v80hd`,
+which is where issues are routed.
 
 ### How it was verified
 
@@ -581,8 +583,9 @@ carefully evidenced part of the repo.
 
 ## 10. Recommended order of work
 
-Listed by value per unit of effort, with what actually happened. Twelve of the fifteen are done;
-see [§0](#0-status-of-this-review) for the full status table.
+Listed by value per unit of effort, with what actually happened. Fourteen of the fifteen are done,
+one is withdrawn as never having been a defect, and one — untracking this file and the test sheets —
+is held for 0.9. See [§0](#0-status-of-this-review) for the full status table.
 
 **Cheap, high visibility**
 
@@ -609,17 +612,20 @@ see [§0](#0-status-of-this-review) for the full status table.
 
 7. ~~Restore `.github/workflows/node.yaml` (§4.2).~~ **Done** — `a167c4c`, plus a `prettier --check`
    step.
-8. Gitignore `working_doc.md` (§4.3). **Queued for the next build cycle** — moved from the 1.0
-   pass on 2026-09-15. `TESTING.md`, `TESTING-NEXT.md` and this file go; `working_doc.md` and `PROTOCOL.md` stay. The files stay on disk; what ends is their
-   version history from that commit onward.
+8. Gitignore `working_doc.md` (§4.3). **Held for 0.9, the tidy-up release** — moved from the 1.0
+   pass on 2026-09-15, fixed to 0.9 on 2026-09-16. `TESTING.md`, `TESTING-NEXT.md` and this file go;
+   `working_doc.md` and `PROTOCOL.md` stay. The files stay on disk; what ends is their version
+   history from that commit onward.
 9. ~~Restore `.husky/pre-commit` (§7.2).~~ **Done** — `a167c4c`. It has run on every commit since,
    which is how we know it now works. The one-off `yarn husky` step is documented in the README,
    since `enableScripts: false` still prevents self-install.
 10. ~~Set `manifest.version` back to `0.0.0` (§3.3).~~ **Done** — `a167c4c`. Verified end to end: the
     packaged manifest carries `0.7.0`, injected from `package.json`, so the version-bump-per-build
     workflow is unaffected.
-11. Resolve the repository-name rule (§4.1). **Not done** — only at the point of upstream submission,
-    and it means renaming the repo.
+11. ~~Resolve the repository-name rule (§4.1).~~ **Withdrawn — reassessed 2026-09-15.** There is
+    nothing to resolve and nothing to rename. The check reads the name of the repository it runs in,
+    and `bitfocus/companion-module-roland-v80hd` already satisfies it against `id: roland-v80hd`.
+    The original review overstated this as a blocker; see [§0](#0-status-of-this-review).
 
 **Larger, optional**
 
@@ -628,13 +634,15 @@ see [§0](#0-status-of-this-review) for the full status table.
     but are tied to the canonical list with `satisfies`, so drift is now a build failure. The
     audio-label inconsistency was fixed for free, as predicted.
 13. ~~Delete the `main.ts` forwarding layer (§6.4).~~ **Done** — `f8d64b6`. 364 lines to 189.
-14. Decide what the four AUX "layout" presets are meant to do (§6.2). **Not done** — this is a
-    design decision, not a defect. Needs an answer before any code changes.
-15. Document, or make consistent, the optimistic-update policy (§5.3). **Half done** — `03aab67`
-    documents what disabling polling costs, in HELP.md, the README and the config field label
-    itself. The behaviour is deliberately **unchanged**: making it consistent moves ~20 commands at
-    once, and landing that beside the authentication changes would make a Monday failure ambiguous.
-    Next build.
+14. ~~Decide what the four AUX "layout" presets are meant to do (§6.2).~~ **Done 2026-09-15** — and
+    it turned out not to be a design decision at all. `pinpTemplateActions()` took only a layer, so
+    the four AUX copies emitted byte-for-byte identical commands; there is no per-AUX PinP geometry
+    in the protocol. Deleted, and the two survivors renamed Layout to Reset.
+15. ~~Document, or make consistent, the optimistic-update policy (§5.3).~~ **Done 2026-09-15.**
+    `03aab67` documented what disabling polling costs, in HELP.md, the README and the config field
+    label itself. The freeze trio was then found to be the one genuine inconsistency and was fixed —
+    On, Off and Toggle now share `cmdSetFreeze`. The wider split stays deliberate rather than
+    changed, and the reasoning is written down in `PROTOCOL.md` §7.4.
 
 A 2.x API migration is **not** on this list. It is a separate piece of work (typed
 `ModuleSchema`, `secrets`, the new preset sections/`type: 'simple'` model, `runEntrypoint` removal),

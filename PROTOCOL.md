@@ -446,8 +446,9 @@ not `00`.
 
 > **`030207` is not the Fade To Black state.** Six FTB presses produced twelve transitions of this
 > byte — `00`→`01` while each fade ran, back to `00` once it finished, _whether the result was black
-> or live_. It is a fade-in-progress flag. The steady engaged state is at an address nobody has
-> found. **Open** — see §10.1.
+> or live_. It is a fade-in-progress flag. **The steady engaged state is in no address at all** —
+> read it with `QFTB;` from the mnemonic command set. **Confirmed** 2026-09-16, and worth reading in
+> full: §10.1 records how every route through this protocol was eliminated first.
 
 > **`030800` is pushed to RCS's session but not to yours.** Five start/stop cycles driven from
 > Companion produced the `0A0800` writes and **no `030800` in either direction** — the device does
@@ -1148,4 +1149,4 @@ Corrections and additions are welcome, particularly on anything marked **Open** 
 Please bring evidence: a capture, a byte sequence, or a stated firmware version — and say which
 marker your finding earns.
 
-Issues: <https://github.com/Jay-PBS/Roland-v80-Companion-Module/issues>
+Issues: <https://github.com/bitfocus/companion-module-roland-v80hd/issues>
