@@ -84,11 +84,18 @@ it rejects the correct password too. **Confirmed.**
 
 Once locked out, the only remedy is to stop and wait. **Confirmed.**
 
-### 1.3 Two behaviours worth designing around
+### 1.3 Three things worth designing around
 
 **The authentication window is under 100 ms.** Too short to press a button inside by hand. Two test
 cases in the module's own test plan are recorded as untestable for this reason — reaching them needs
 an automated harness. **Confirmed.**
+
+**Companion flags a dropped connection on every key.** Not a device behaviour, but it belongs with
+them: when the connection drops, Companion marks each affected button with a warning triangle. A
+client on that surface therefore does not need to clear or invalidate its cached state defensively —
+stale values are already shown as unreliable, and polled values re-establish themselves within a
+cycle of reconnecting. Worth knowing before building an "unknown" state to solve a problem the
+surface already solves.
 
 **A second control session is accepted and then ignored.** The device completes the TCP handshake
 for a second controller and then sends it nothing at all — no password prompt, no banner, no error.

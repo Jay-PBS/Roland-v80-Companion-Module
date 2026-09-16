@@ -51,12 +51,17 @@ Fade To Black is confirmed on hardware and needs nothing further. What is still 
 
 ## Open — needs a decision
 
-- **Whether every state field should clear on disconnect.** Nothing does today: `destroyTcp()` stops
-  the timers and clears nothing, and `configUpdated()` reuses the same `ModuleInstance`. The FTB fade
-  flag is now cleared explicitly, because a fade is a one-second transient and a stuck one is simply
-  false. Every other boolean has the same flaw but is re-established by the next poll within a cycle,
-  so the stale window is half a second and nobody would notice. Worth deciding rather than leaving as
-  an inconsistency someone trips over later.
+**Nothing.**
+
+_Closed 2026-09-16 — clearing state on disconnect._ Not needed. **Companion marks every key with a
+red warning triangle when a connection drops**, so a stale feedback is already flagged as unreliable
+without the module doing anything, and every polled field re-establishes itself within a cycle of
+reconnecting.
+
+That is worth remembering beyond this one question: **do not design defensively around a dropped
+connection.** The surface already tells the operator. The FTB fade flag is still cleared explicitly,
+because a fade is a one-second transient and a stuck one is plainly false — but that is correctness
+for its own sake rather than a fix for anything an operator would have seen.
 
 ## Queued — 0.8.14
 
