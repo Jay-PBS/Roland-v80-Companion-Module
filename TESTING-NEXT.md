@@ -3,7 +3,7 @@
 > **Open tasks only.** Cleared items are deleted, not recorded — the closed record lives in git
 > history and in `PROTOCOL.md`. `TESTING.md` is the 2026-09-08 run and is not edited.
 
-**Build under test:** `roland-v80hd-0.8.11.tgz` · **Tester:** Jay · **Firmware:** v1.20.201
+**Build under test:** `roland-v80hd-0.8.12.tgz` · **Tester:** Jay · **Firmware:** v1.20.201
 **Last updated:** 2026-09-16
 
 Three groups, none verified: **Q** the Fade To Black engaged state, **N** the Split relabel and the
@@ -25,6 +25,13 @@ cycle and wired to a new feedback.
 | Q5  | `$(v80hd:ftb)` reads `ENGAGED` / `CLEAR`; `$(v80hd:ftb_fading)` reads `ON` / `OFF`             |        |
 | Q6  | **Pull the network mid-fade** — the fade feedback goes dark instead of sticking lit            |        |
 | Q7  | Engage from the **Roland RCS software**, if it is to hand — the feedback should still follow   |        |
+| Q8  | **Drop a fresh FTB preset** from Transitions — it stays lit for as long as the output is black |        |
+| Q9  | During the fade it shows the transition colour, then red once engaged — two distinct states    |        |
+
+**Use a freshly dropped preset for the whole Q group.** An FTB button built before 0.8.12 still
+carries only _fade in progress_ — presets are copied when dropped rather than linked, so an existing
+button keeps the feedback it was created with. That is what made 0.8.11 look broken: the feature
+worked, the button was not wired to it.
 
 **Q3 is the whole point of the change.** The old feedback could never track a panel press. Q6 is the
 disconnect fix — note that `engaged` deliberately **holds** its value through a disconnect while
@@ -67,7 +74,7 @@ four poll cycles and buries the reply.
 
 ---
 
-## Also changed in 0.8.11, no test needed
+## Also changed in 0.8.11 and 0.8.12, no test needed
 
 Docs and config only, listed so nothing looks unexplained:
 
