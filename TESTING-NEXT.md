@@ -26,6 +26,7 @@ landed since that package** and need a new build: the Split relabel, and the doc
 | **B1** | **Block reads do not work** — settled, see below                         |
 | **B2** | **The device does not push `0A0504` to us** — settled, see below         |
 | **F1** | **Split 1 is vertical, Split 2 is horizontal** — confirmed on the panel  |
+| **V8** | **Raw echo works both ways** — `Raw TX:` and the reply, confirmed        |
 
 ### What B1 and B2 settled
 
@@ -43,6 +44,16 @@ which documents a direct query and is one line in a terminal.
 direction during a capture that otherwise completed correctly. That is the `030800` trap for the
 second time: a push seen in an RCS recording is not proof it reaches your session.
 
+### V8, for the record
+
+```
+Raw TX: RQH:001500,000001;
+Raw RX [44b]: <STX>DTH:0C0007,00;<LF><STX>ACK;<LF><STX>DTH:001500,29;<LF><STX>ACK;<LF>
+```
+
+`DTH:001500,29;` is the answer — PGM source `0x29`, Input 1. It arrived **in the same segment as a
+poll reply**, which is §2.4's batching demonstrated in one line.
+
 ### Two findings that came free with the log
 
 Both now in `PROTOCOL.md` §2.3 and §2.4:
@@ -55,35 +66,6 @@ Both now in `PROTOCOL.md` §2.3 and §2.4:
 ---
 
 ## Still open
-
-### V8 — raw echo, needs the `Raw TX:` line
-
-The `Raw RX` half is proven beyond doubt: 24 lines, 3172 bytes, correctly framed. **The `Raw TX:`
-line was not in the pasted log**, so the send side is unconfirmed.
-
-It almost certainly fired — the RX echo only arms inside `cmdRaw`, so nothing would have been logged
-at all otherwise. But the point of the echo is that both directions are visible, so it is worth one
-look.
-
-**Turn polling off first** — connection config, untick `Enable polling`. The echo arms for two
-seconds, and with polling on that catches four poll cycles and buries the reply. Your 2026-09-16 log
-had 142 frames in it for exactly this reason. Turn it back on afterwards.
-
-| #   | Step                                                                               | Expected                                                        | Result |
-| --- | ---------------------------------------------------------------------------------- | --------------------------------------------------------------- | ------ |
-| V8a | Polling off. Fire `RQH:001500,000001;` — a read of the PGM source, changes nothing | `Raw TX:` then one `Raw RX` holding `DTH:001500,xx;` and `ACK;` |        |
-| V8b | Fire `DTH:02015E,00;` — test pattern off, a no-op if none is running               | `Raw TX:` then a `Raw RX` holding `ACK;` and no `DTH:`          |        |
-| V8c | Fire `RQH:030200,000030;` — the block read, now cleanly isolated                   | `Raw TX:` and **no `Raw RX` at all**. Confirms B1 in one line   |        |
-
-**The echo now renders frames readably**, so the expected output of V8a is literally:
-
-```
-Raw TX: RQH:001500,000001;
-Raw RX [22b]: <STX>DTH:001500,29;<LF><STX>ACK;<LF>
-```
-
-`29` is the PGM source byte — `0x29` is Input 1. The byte count stays first, because it is the only
-thing that distinguishes a real multi-byte reply from a one-byte one.
 
 ### V9 — PinP Reset presets could not be found
 

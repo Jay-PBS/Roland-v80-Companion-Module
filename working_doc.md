@@ -30,10 +30,9 @@ not push `0A0504` to our session. `PROTOCOL.md` §8.6 and §4.11 carry the detai
 
 Left over from the 0.8.10 run, small:
 
-- **V8** — the `Raw TX:` line was missing from the pasted log. The RX half is proven; the send side
-  is unconfirmed, and the echo exists precisely so both are visible.
 - **V9** — the two `PiP Reset` presets could not be located. They are verified present in the 0.8.10
   bundle under `PinP & Key`. Check the installed version first, then look outside the Aux categories.
+  This is the only unexplained result left.
 
 **Fade To Black is the one real casualty.** The block-diff plan depended on block reads and is dead.
 `PROTOCOL.md` §10.1 lists what replaces it: capture RCS toggling FTB, walk `03xxxx` a byte at a
