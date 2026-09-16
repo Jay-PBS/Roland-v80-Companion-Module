@@ -24,61 +24,30 @@ splitting across boundaries — even though it refuses batched requests.
 
 ---
 
-## Q. Settle the FTB query — no build needed
+## Q. Fade To Black — verify the engaged state
 
-**Do this before any FTB code is written.** It decides the whole design — see the plan.
+**`QFTB;` works.** Confirmed 2026-09-16: `FTB:OFF;` with FTB clear, `FTB:ON;` engaged. Built and
+polled; needs a build to test.
 
-Roland's other command set documents a direct FTB state query. It has never been tried on this
-device, and it is one raw command.
+| #   | Check                                                                                                | Result |
+| --- | ---------------------------------------------------------------------------------------------------- | ------ |
+| Q1  | **Connect with FTB already engaged.** `Fade To Black – engaged` lights within a second or two        |        |
+| Q2  | Toggle from Companion — the engaged feedback follows                                                 |        |
+| Q3  | **Toggle on the V-80 panel — the engaged feedback follows.** This is what the redesign exists for    |        |
+| Q4  | `Fade To Black – fade in progress` still lights only during the fade, and goes dark after            |        |
+| Q5  | `$(v80hd:ftb)` reads `ENGAGED` / `CLEAR`; `$(v80hd:ftb_fading)` reads `ON` / `OFF`                   |        |
+| Q6  | **Pull the network mid-fade.** Both feedbacks go dark rather than sticking lit, `$(ftb)` → `UNKNOWN` |        |
+| Q7  | Engage FTB from the **Roland RCS software** if convenient — the feedback should still follow         |        |
 
-**Turn polling off first** (connection config → untick `Enable polling`), then fire through
-`Advanced – Send raw LAN command`:
+**Q3 is the one that matters.** The old feedback could never track a panel press, and that was the
+whole point of the redesign. Q6 is the disconnect bug fix; Q7 is a bonus if RCS is to hand.
 
-```
-QFTB;
-```
+**Watch the poll budget.** The cycle is now 65 commands rather than 64. With the device already
+answering only ~58% of polls (`PROTOCOL.md` §7.2), note whether the engaged feedback feels sluggish —
+if it does, `QFTB;` may be better sent every second cycle than every cycle.
 
-Expected per Roland's spec: `FTB:a;ACK;` where `a` is `OFF`, `ON`, `FADEIN` or `FADEOUT`. The raw
-echo logs both directions at info level, so no debug checkbox is needed.
-
-| #   | Step                                                        | Result |
-| --- | ----------------------------------------------------------- | ------ |
-| Q1  | FTB **clear**. Fire `QFTB;`. Record the whole `Raw RX` line |
-
---log
-log: You can view older logs on disk at: C:\Users\jayid\AppData\Roaming\companion\logs
-26.09.16 14:31:07 Surface/Handler/streamdeck:A00SA4502K9QLM: Button 1/1/1 pressed
-26.09.16 14:31:07 Instance/Connection/v80hd: Raw TX: QFTB;
-26.09.16 14:31:07 Instance/Connection/v80hd: Raw RX [16b]: 02 46 54 42 3a 4f 46 46 3b 0a 02 41 43 4b 3b 0a
-26.09.16 14:31:07 Surface/Handler/streamdeck:A00SA4502K9QLM: Button 1/1/1 released
-26.09.16 14:31:09 Instance/Connection/v80hd: Raw RX [22b]: 02 44 54 48 3a 30 30 31 35 30 30 2c 32 39 3b 0a 02 41 43 4b 3b 0a
-
-| |
-| Q2 | FTB **engaged and settled**. Fire `QFTB;` again. Record it |  
---log
-log: You can view older logs on disk at: C:\Users\jayid\AppData\Roaming\companion\logs
-26.09.16 14:32:11 log: Log cleared
-26.09.16 14:32:14 Surface/Handler/streamdeck:A00SA4502K9QLM: Button 1/2/1 pressed
-26.09.16 14:32:14 Surface/Handler/streamdeck:A00SA4502K9QLM: Button 1/2/1 released
-26.09.16 14:32:18 Data/Database: backup complete in 126.82760000042617ms
-26.09.16 14:32:18 Surface/Handler/streamdeck:A00SA4502K9QLM: Button 1/1/1 pressed
-26.09.16 14:32:18 Instance/Connection/v80hd: Raw TX: QFTB;
-26.09.16 14:32:18 Instance/Connection/v80hd: Raw RX [15b]: 02 46 54 42 3a 4f 4e 3b 0a 02 41 43 4b 3b 0a
-26.09.16 14:32:19 Surface/Handler/streamdeck:A00SA4502K9QLM: Button 1/1/1 released
-|
-| Q3 | Do the two replies differ, and match reality? | |
-
-**Q2 is the one that matters.** A reply to Q1 alone only proves the device accepts the command; it
-does not prove the value tracks anything. Both are needed.
-
-| Outcome                        | Consequence                                                   |
-| ------------------------------ | ------------------------------------------------------------- |
-| Two different, correct replies | **Branch A** — the feedback becomes authoritative. Best case  |
-| Same reply both times          | Accepted but meaningless — treat as a failure, go to Branch B |
-| `ERR:` or no `Raw RX` at all   | **Branch B** — inference, with the drift limits documented    |
-
-If Branch A works it also reopens `FTB:ON;` / `FTB:OFF;` as absolute writes, which would replace the
-`0B003C` toggle — queued separately, not part of this change.
+**Breaking change to check:** `$(v80hd:ftb)` no longer returns `FADING`/`IDLE`. Any button expression
+testing `= "FADING"` is now dead and needs pointing at `$(v80hd:ftb_fading)` instead.
 
 ---
 
