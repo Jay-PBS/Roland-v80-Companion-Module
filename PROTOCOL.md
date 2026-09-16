@@ -721,7 +721,37 @@ freezes, 8 tally. At 500 ms that is about 128 commands per second.
 
 Adding still tally (§9.4) would take the cycle to 93, which is why it was left out.
 
-### 7.2 The batching trap
+### 7.2 The device answers only about half the polls
+
+**Measured 2026-09-16 over 177 seconds of a live connection: 22,661 `RQH` sent, 13,239 `DTH`
+returned. 58%.** No TCP retransmissions and no lost segments in the capture — the requests went out
+and roughly two in five were simply never answered.
+
+The consequence is not what you would guess. The median gap between consecutive samples of a given
+address is a healthy **0.51 s**, exactly the poll interval. The tail is the problem:
+
+| Percentile | Gap between samples of one address |
+| ---------- | ---------------------------------- |
+| Median     | 0.51 s                             |
+| 90th       | 1.99 s                             |
+| 99th       | 5.03 s                             |
+| Max        | **6.52 s**                         |
+
+**13% of gaps are long enough to hide a complete state transition.** A Fade To Black takes about a
+second at the default mix time, and 26 of 200 observed gaps exceeded 1.5 s. In the same capture, one
+of six FTB presses produced no observed change in `030207` at all — not because the press failed, but
+because a 3.5-second gap swallowed the entire fade.
+
+**So "polled every 500 ms" describes intent, not delivery.** If you are writing a client, do not
+document your feedback latency as the poll interval, and do not treat a transient state as reliably
+observable by polling. Levels and steady states survive a missed sample; a one-second flag may not.
+
+Cause unestablished. The obvious suspect is load — 64 commands every 500 ms is ~128 per second into
+a device whose panel locked up at a 250 ms interval (§7.1), so the two findings may be the same
+finding seen from different sides. Whether a smaller poll set or a longer interval raises the answer
+rate has not been tested.
+
+### 7.3 The batching trap
 
 **The device does not answer a batched write. At all.** Not even an `ACK`.
 
@@ -747,7 +777,7 @@ Fixing it was measurable in the same terms: **18,838 sent, 15,518 returned**, ag
 > **Nothing between 1 and 63 commands per write has been tested.** If you need to reduce traffic,
 > find the chunk size the device tolerates on hardware rather than assuming one.
 
-### 7.3 Optimistic updates — when to trust your own write
+### 7.4 Optimistic updates — when to trust your own write
 
 A client that lights its own feedback the moment a button is pressed feels better than one that
 waits up to 500 ms for the poll to confirm. Whether that is safe depends on the parameter, and the
@@ -774,28 +804,34 @@ lit on a tally button — briefly telling them something false about what is on 
   half freezes permanently at whatever it last showed. Nothing corrects it. That is the real cost of
   turning polling off, and it is larger than "feedbacks lag a bit".
 
-### 7.4 What the device pushes unprompted
+### 7.5 What the device pushes to you: nothing
 
-| Register                       | Behaviour                                                                          |
-| ------------------------------ | ---------------------------------------------------------------------------------- |
-| `0E0000`                       | 1 Hz keepalive, both directions                                                    |
-| `030604`                       | 1 Hz clock counter                                                                 |
-| `0A0504`                       | Capture screen state, ~60 ms after a toggle — **to RCS's session only, see §4.11** |
-| `0F0000` / `0F0300` / `0F0600` | Audio meters, 36-byte payloads, **only while audio is present**                    |
-| `0E0001,01` … `0E0002`         | Brackets a **full parameter dump** after every capture                             |
-| `030800`                       | Stream & Record status — **to RCS's session, not yours**                           |
+**Measured 2026-09-16: 75 seconds of an idle connection produced 8,843 `DTH:` frames and 8,843
+`ACK;` frames and not one other byte.** Every frame answered something we asked. A second 177-second
+capture covering three Fade To Black cycles produced the same result — no address arrived that had
+not been requested.
 
-**Captured.**
+This corrects a section that previously listed six registers as pushed. **They are pushed to Roland's
+RCS software, not to a second control session.** The evidence accumulated one register at a time
+before the pattern was obvious:
 
-**The full dump is `000000` through `600xxx`** — the device's entire parameter set, reloaded rather
-than sent as per-parameter deltas. So the device _does_ push without polling, but only as a wholesale
-reload and only after a capture. Whether that could replace or reduce polling is **Open**; it would
-need a multi-byte parser first.
+| Register                          | Documented from                    | Reaches our session?                     |
+| --------------------------------- | ---------------------------------- | ---------------------------------------- |
+| `030800` Stream & Record status   | RCS capture                        | **No** — must be polled                  |
+| `0A0504` capture state            | RCS capture, 16 cycles             | **No**                                   |
+| `0E0000` keepalive, 1 Hz          | RCS capture                        | **No** — zero in 75 s where RCS sees ~75 |
+| `030604` clock counter, 1 Hz      | RCS capture                        | **No** — same                            |
+| `0E0001`…`0E0002` full dump       | RCS capture, after a still capture | Not seen; window contained no capture    |
+| `0F0000`/`0F0300`/`0F0600` meters | RCS capture, audio present         | Not seen; audio state unknown            |
 
-Note the upper bound. The address space extends to `600xxx`, far beyond anything documented or
-anything this module touches.
+The first four are conclusive. The last two were observed under conditions the measurement windows
+did not reproduce, so they are unproven rather than disproven — but the pattern is not encouraging.
 
-### 7.5 What the device does not do
+> **The rule: treat every push documented from an RCS recording as unproven for your own session.**
+> If you need a value, poll it. This device appears to volunteer nothing to anyone but RCS, and four
+> separate features in this module were built or debugged on the opposite assumption.
+
+### 7.6 What the device does not do
 
 **It does not echo physical panel presses.** Ten presses of `[CAPTURE IMAGE]` produced zero frames
 attributable to the press — only the `0A0504` state change that follows. **Disproven**, definitively,
@@ -983,24 +1019,30 @@ capturing RCS driving it.
 
 ### 10.1 Open: Fade To Black engaged state
 
-`030207` is a fade-in-progress flag (§4.10). The address carrying the steady engaged state has not
-been found, and it was the only polled byte that moved during the capture that established this.
+`030207` is a fade-in-progress flag (§4.10). The steady engaged state has never been located, and
+two routes are now closed rather than untried.
 
-**The block-diff approach is dead.** It was the obvious plan — read `030200` with FTB off, read it
-again with FTB engaged, diff the two — and it depended on block reads working. They do not (§8.6),
-confirmed 2026-09-16. Nothing in that plan survives.
+**Measured 2026-09-16.** Three engage / hold ~30 s / release cycles, driven from a client, captured
+in full at the packet level:
+
+- **Only `030207` changed.** Not one of the other 63 polled addresses moved, in any of the three
+  holds. A thirty-second hold is long enough that a steady state cannot hide behind a transient.
+- **Nothing arrived unasked.** No address outside the polled set appeared at any point.
+
+**So the engaged state is not in the polled set, and it is not pushed.** Combined with §8.6 — block
+reads return nothing — the two obvious search methods are both exhausted.
 
 **What is left:**
 
-- **Capture RCS toggling FTB.** RCS clearly knows the state, and this is the technique that produced
-  `0B002A`, the capture sequence, the Stream & Record pair and the tally answer. It is the method
-  with the best record in this project by a distance (§11).
-- **Walk `03xxxx` one byte at a time.** Slow but possible now that single reads are known to work —
-  poll a candidate range with FTB off, repeat with it engaged, and compare. The address space is
-  large and `03` is entirely undocumented, so scope it before starting.
 - **Roland's other command set** documents a direct query returning `OFF`, `ON`, `FADEIN` or
-  `FADEOUT`. It is out of scope for this document and untested here, but it is one line in a
-  terminal and would answer the question outright. Try it before either of the above.
+  `FADEOUT`. Out of scope for this document, untested here, and one line in a terminal. **Try this
+  first** — it is the only remaining route that is cheap.
+- **Walk `03xxxx` with single reads.** Single-byte reads work; block reads do not. So the search is
+  one address at a time: read a candidate with FTB off, read it engaged, compare. `03` is entirely
+  undocumented, so scope the range before starting, and note §7.2 — with two in five replies
+  dropped, a single sample proving nothing means sampling each candidate several times.
+- **Capture RCS toggling FTB.** The technique with the best record in this project (§11). RCS
+  clearly knows the state, so whatever it reads is on the wire in its session.
 
 ### 10.2 Resolved: PinP View Position
 

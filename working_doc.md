@@ -24,14 +24,17 @@ Last reviewed: 2026-09-15 · Working version: 0.8.10
 
 ## Open — needs hardware
 
-**Nothing.** The 0.8.10 run cleared every check and answered both open protocol questions on
-2026-09-16.
+**Fade To Black — two routes now closed, not untried.** Captured 2026-09-16 at the packet level
+across three engage / hold 30 s / release cycles: **only `030207` changed**, not one of the other 63
+polled addresses moved, and **nothing arrived unasked**. Combined with block reads returning nothing
+(§8.6), the engaged state is neither polled nor pushed and neither obvious search method survives.
 
-The one long-standing unknown that remains is **the Fade To Black engaged state**, and it is parked
-rather than open: the block-diff plan that would have found it depended on block reads, which do not
-work. `PROTOCOL.md` §10.1 lists the three routes left — capture RCS toggling FTB, walk `03xxxx` a
-byte at a time, or try the direct query in Roland's other command set, which is one line in a
-terminal and would answer it outright. **Try that one first.**
+What is left, cheapest first — `PROTOCOL.md` §10.1:
+
+1. **The direct query in Roland's other command set.** One line in a terminal. Returns
+   `OFF`/`ON`/`FADEIN`/`FADEOUT`. Untested here.
+2. **Walk `03xxxx` with single reads**, several samples per candidate because of the drop rate below.
+3. **Capture RCS toggling FTB** — the technique with the best record in this project.
 
 ## Built but unverified — 2026-09-16
 
@@ -80,6 +83,19 @@ package. Needs a build; `TESTING-NEXT.md` §N has the checks.
   If 22 is not installed on that machine: `nvm install 22.20.0`, then `corepack enable`._
 
 ## Queued — next build cycle
+
+- **Correct the feedback-latency claim in README and HELP.** Four places say feedback "may lag up to
+  500ms". **Measured 2026-09-16: that is wrong.** The device answers only 58% of polls — 22,661 sent,
+  13,239 returned, with no TCP loss — so the gap between samples of a given address runs median
+  0.51 s, 90th percentile 1.99 s, 99th 5.03 s, **max 6.52 s**. Thirteen percent of gaps are long
+  enough to hide a complete one-second transition; one of six FTB presses in that capture produced no
+  observed change at all because a 3.5 s gap swallowed the fade.
+
+  `README.md:83`, `companion/HELP.md:21`, `:311`, `:324`. `PROTOCOL.md` §7.2 has the measurement.
+
+  **Worth considering alongside it:** whether a smaller poll set or a longer interval raises the
+  answer rate. 64 commands per 500 ms is ~128/sec into a device whose panel locked up at 250 ms, so
+  the drop rate and the lockout may be the same problem seen from two sides. Untested.
 
 - **Rewrite HELP's Image Capture section — after final testing.** The current text describes the
   button as busy for the full ten seconds, which the timeout fix changed: it returns in about a
