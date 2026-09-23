@@ -16,7 +16,8 @@ import {
 } from './api.js'
 
 // Corporate colour palette — bright = active, deep = inactive default. Same seven brights the
-// presets use, so a feedback added by hand lands on the palette rather than beside it.
+// presets use, so a feedback added by hand lands on the palette rather than beside it. The one
+// exception is the two bus mute feedbacks, below.
 const RED_BRIGHT = combineRgb(0xef, 0x44, 0x44) // #EF4444
 const GREEN_BRIGHT = combineRgb(0x22, 0xc5, 0x5e) // #22C55E
 const BLUE_BRIGHT = combineRgb(0x3b, 0x82, 0xf6) // #3B82F6
@@ -25,6 +26,9 @@ const AMBER_BRIGHT = combineRgb(0xfa, 0xcc, 0x15) // #FACC15
 const PURPLE_BRIGHT = combineRgb(0xa8, 0x55, 0xf7) // #A855F7
 const CYAN_BRIGHT = combineRgb(0x06, 0xb6, 0xd4) // #06B6D4
 const BLACK = combineRgb(0x00, 0x00, 0x00)
+// Bus mutes sit off the palette on purpose (0.9.1) - lavender, so a muted bus reads differently
+// from every other lit state on the surface. Black text still applies.
+const MUTE_LAVENDER = combineRgb(0xc0, 0xc0, 0xff) // #C0C0FF
 
 // Every defaultStyle below carries BLACK, and none carries white. 0.8.5 measured white against all
 // seven brights at 1.53-3.96:1, under the 4.5 threshold, and moved the presets to black text on an
@@ -267,14 +271,14 @@ export function UpdateFeedbacks(self: ModuleInstance): void {
 		main_bus_muted: {
 			name: 'Main Bus – Muted',
 			type: 'boolean',
-			defaultStyle: { bgcolor: AMBER_BRIGHT, color: BLACK },
+			defaultStyle: { bgcolor: MUTE_LAVENDER, color: BLACK },
 			options: [],
 			callback: () => self.mainBusMute,
 		},
 		aux_bus_muted: {
 			name: 'AUX Bus – Muted',
 			type: 'boolean',
-			defaultStyle: { bgcolor: AMBER_BRIGHT, color: BLACK },
+			defaultStyle: { bgcolor: MUTE_LAVENDER, color: BLACK },
 			options: [{ id: 'aux', type: 'number', label: 'AUX (1 or 2)', default: 1, min: 1, max: 2 }],
 			callback: (fb) => (Number(fb.options.aux) === 2 ? self.aux2BusMute : self.aux1BusMute),
 		},

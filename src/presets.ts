@@ -5,7 +5,7 @@ import { TEST_PATTERNS, PHYSICAL_INPUTS } from './api.js'
 
 export function UpdatePresets(self: ModuleInstance): void {
 	const presets: CompanionPresetDefinitions = {}
-	const sz = 16
+	const sz = 24
 
 	// Corporate colour palette - deep = inactive button bg, bright = active feedback.
 	// The deeps are the bright colours scaled down in RGB, so hue is preserved exactly and an
@@ -14,6 +14,8 @@ export function UpdatePresets(self: ModuleInstance): void {
 	// 1.7-2.3:1 and active was hard to tell from inactive on the panel.
 	// Active states carry black text: white fails on every bright colour here (1.53-3.96
 	// against a 4.5 threshold), so a lit button used to be harder to read, not easier.
+	// Exception, 0.9.1: a muted bus is lavender with dark red text, a deliberate choice
+	// rather than the contrast rule - #990000 on #8080FF is about 2.7:1.
 	const c = {
 		// Reds
 		pgm: combineRgb(0x4e, 0x0c, 0x0c), // Red Deep    #4E0C0C — PGM / Record / Stream
@@ -39,9 +41,10 @@ export function UpdatePresets(self: ModuleInstance): void {
 		// PinP on the AUX bus
 		pinp: combineRgb(0x0a, 0x4c, 0x46), // Teal Deep
 		pinp_on: combineRgb(0x06, 0xb6, 0xd4), // Cyan Bright
-		// Audio
+		// Audio - bus mutes only; per-channel input mutes are not in the presets
 		audio: combineRgb(0x0d, 0x22, 0x5f), // Blue Deep
-		audio_on: combineRgb(0xfa, 0xcc, 0x15), // Amber Bright (muted = amber)
+		audio_on: combineRgb(0x80, 0x80, 0xff), // Lavender #8080FF (bus muted)
+		audio_on_text: combineRgb(0x99, 0x00, 0x00), // Dark Red #990000
 		// Memory / Utility
 		mem: combineRgb(0x77, 0x51, 0x02), // Amber Deep
 		util: combineRgb(0x40, 0x40, 0x40),
@@ -159,8 +162,8 @@ export function UpdatePresets(self: ModuleInstance): void {
 	presets['aux1_pinp1_en'] = {
 		type: 'button',
 		category: 'Aux 1',
-		name: 'AUX1 PiP 1 Enable',
-		style: { text: 'PiP 1\nEN', size: sz, color: c.white, bgcolor: c.layer, show_topbar: false },
+		name: 'AUX1 PiP 1 Toggle',
+		style: { text: 'PiP 1\nTOGGLE', size: sz, color: c.white, bgcolor: c.layer, show_topbar: false },
 		steps: [{ down: [{ actionId: 'toggle_aux_layer_pinp', options: { aux: '1', layer: '1' } }], up: [] }],
 		feedbacks: [
 			{
@@ -187,8 +190,8 @@ export function UpdatePresets(self: ModuleInstance): void {
 	presets['aux1_pinp2_en'] = {
 		type: 'button',
 		category: 'Aux 1',
-		name: 'AUX1 PiP 2 Enable',
-		style: { text: 'PiP 2\nEN', size: sz, color: c.white, bgcolor: c.layer, show_topbar: false },
+		name: 'AUX1 PiP 2 Toggle',
+		style: { text: 'PiP 2\nTOGGLE', size: sz, color: c.white, bgcolor: c.layer, show_topbar: false },
 		steps: [{ down: [{ actionId: 'toggle_aux_layer_pinp', options: { aux: '1', layer: '2' } }], up: [] }],
 		feedbacks: [
 			{
@@ -229,8 +232,8 @@ export function UpdatePresets(self: ModuleInstance): void {
 	presets['aux2_pinp1_en'] = {
 		type: 'button',
 		category: 'Aux 2',
-		name: 'AUX2 PiP 1 Enable',
-		style: { text: 'PiP 1\nEN', size: sz, color: c.white, bgcolor: c.layer, show_topbar: false },
+		name: 'AUX2 PiP 1 Toggle',
+		style: { text: 'PiP 1\nTOGGLE', size: sz, color: c.white, bgcolor: c.layer, show_topbar: false },
 		steps: [{ down: [{ actionId: 'toggle_aux_layer_pinp', options: { aux: '2', layer: '1' } }], up: [] }],
 		feedbacks: [
 			{
@@ -257,8 +260,8 @@ export function UpdatePresets(self: ModuleInstance): void {
 	presets['aux2_pinp2_en'] = {
 		type: 'button',
 		category: 'Aux 2',
-		name: 'AUX2 PiP 2 Enable',
-		style: { text: 'PiP 2\nEN', size: sz, color: c.white, bgcolor: c.layer, show_topbar: false },
+		name: 'AUX2 PiP 2 Toggle',
+		style: { text: 'PiP 2\nTOGGLE', size: sz, color: c.white, bgcolor: c.layer, show_topbar: false },
 		steps: [{ down: [{ actionId: 'toggle_aux_layer_pinp', options: { aux: '2', layer: '2' } }], up: [] }],
 		feedbacks: [
 			{
@@ -425,25 +428,29 @@ export function UpdatePresets(self: ModuleInstance): void {
 		type: 'button',
 		category: 'Audio',
 		name: 'Main Mute',
-		style: { text: 'MAIN\nMUTE', size: sz, color: c.white, bgcolor: c.audio, show_topbar: false },
+		style: { text: 'MAIN\nMUTED', size: sz, color: c.white, bgcolor: c.audio, show_topbar: false },
 		steps: [{ down: [{ actionId: 'main_bus_mute_toggle', options: {} }], up: [] }],
-		feedbacks: [{ feedbackId: 'main_bus_muted', options: {}, style: { bgcolor: c.audio_on, color: c.black } }],
+		feedbacks: [{ feedbackId: 'main_bus_muted', options: {}, style: { bgcolor: c.audio_on, color: c.audio_on_text } }],
 	}
 	presets['aux1_mute'] = {
 		type: 'button',
 		category: 'Audio',
 		name: 'AUX1 Mute',
-		style: { text: 'AUX1\nMUTE', size: sz, color: c.white, bgcolor: c.audio, show_topbar: false },
+		style: { text: 'AUX1\nMUTED', size: sz, color: c.white, bgcolor: c.audio, show_topbar: false },
 		steps: [{ down: [{ actionId: 'aux_bus_mute_toggle', options: { aux: '1' } }], up: [] }],
-		feedbacks: [{ feedbackId: 'aux_bus_muted', options: { aux: 1 }, style: { bgcolor: c.audio_on, color: c.black } }],
+		feedbacks: [
+			{ feedbackId: 'aux_bus_muted', options: { aux: 1 }, style: { bgcolor: c.audio_on, color: c.audio_on_text } },
+		],
 	}
 	presets['aux2_mute'] = {
 		type: 'button',
 		category: 'Audio',
 		name: 'AUX2 Mute',
-		style: { text: 'AUX2\nMUTE', size: sz, color: c.white, bgcolor: c.audio, show_topbar: false },
+		style: { text: 'AUX2\nMUTED', size: sz, color: c.white, bgcolor: c.audio, show_topbar: false },
 		steps: [{ down: [{ actionId: 'aux_bus_mute_toggle', options: { aux: '2' } }], up: [] }],
-		feedbacks: [{ feedbackId: 'aux_bus_muted', options: { aux: 2 }, style: { bgcolor: c.audio_on, color: c.black } }],
+		feedbacks: [
+			{ feedbackId: 'aux_bus_muted', options: { aux: 2 }, style: { bgcolor: c.audio_on, color: c.audio_on_text } },
+		],
 	}
 
 	// ── Freeze ────────────────────────────────────────────────────────────────
@@ -521,7 +528,7 @@ export function UpdatePresets(self: ModuleInstance): void {
 			type: 'button',
 			category: 'Image Capture',
 			name: `Capture to Still ${slot}`,
-			style: { text: `CAP\n${slot}`, size: sz, color: c.white, bgcolor: c.mem, show_topbar: false },
+			style: { text: `Capture\n${slot}`, size: sz, color: c.white, bgcolor: c.mem, show_topbar: false },
 			steps: [{ down: [{ actionId: 'capture_image', options: { slot, source: 'hdmi_1' } }], up: [] }],
 			feedbacks: [],
 		}

@@ -14,7 +14,7 @@ you want a version that has been through hardware testing.
 
 This module is currently in beta. It has been tested on physical hardware and is provided for evaluation. Use in production environments is at the operator's own discretion and risk.
 
-Current version: 0.9.0
+Current version: 0.9.1
 
 ---
 
@@ -207,6 +207,22 @@ Not every version below is a commit. Only 0.4.0, 0.6.0, 0.6.5, 0.7.0, 0.8.2, 0.8
 0.8.8 were ever committed; the rest — 0.6.1 to 0.6.4, 0.8.0, 0.8.1 and 0.8.3 — were local builds that
 went straight to hardware, so their entries record what changed rather than something you can check
 out. Tags exist for `v0.4.0`, `v0.6.5` and `v0.8.5`, which are the states worth returning to.
+
+### 0.9.1 — preset faces, second pass
+
+**Presentation only, like 0.9.0.** No ids, protocol or behaviour changed. Companion copies a preset's
+face onto a button when you drop it, so buttons you have already built keep their old look — drop the
+preset again to pick up the new one.
+
+- **Every preset face is now 24pt**, up from 16. Checked on the three-line faces, which are the
+  tightest fit.
+- **The PiP enable buttons read `PiP 1` / `TOGGLE`**, not `PiP 1` / `EN`, because the button toggles.
+  The preset names follow: `AUX1 PiP 1 Toggle` rather than `AUX1 PiP 1 Enable`.
+- **The Image Capture buttons read `Capture` / `1`–`8`**, not `CAP`.
+- **Bus mutes are lavender, not amber.** The Main, AUX 1 and AUX 2 mute buttons now read `MUTED`, and
+  when muted they show #8080FF with dark red #990000 text. Added by hand, the `Main Bus – Muted` and
+  `AUX Bus – Muted` feedbacks now default to #C0C0FF with black text. Per-channel input mutes stay
+  amber.
 
 ### 0.9.0 — the aesthetic and consistency pass
 

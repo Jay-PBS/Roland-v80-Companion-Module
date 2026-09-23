@@ -10,6 +10,12 @@ DEBUG-*
 /.vscode
 TESING NOTES.xlsx
 
+# Test sheets and the code review stay on disk but are not tracked (CODE_REVIEW §4.3, 0.9.1).
+# working_doc.md and PROTOCOL.md stay tracked.
+/TESTING.md
+/TESTING-NEXT.md
+/CODE_REVIEW.md
+
 # Reference material: keep the small LAN/RS-232 command doc, exclude the bulk.
 # Roland's GPL source release (~445MB, two files exceed GitHub's 100MB limit)
 # and the 20MB reference manual are kept locally only.

@@ -4,7 +4,7 @@ Live working notes: **open items only**.
 
 Once something is done and verified on hardware, delete it from this file. Anything worth keeping permanently belongs in [README.md](README.md) (project-facing) or [companion/HELP.md](companion/HELP.md) (user-facing), not here. This file is not a changelog and holds no logs — the changelog lives in the README.
 
-Last reviewed: 2026-09-16 · Working version: 0.9.0
+Last reviewed: 2026-09-23 · Working version: 0.9.1
 
 ---
 
@@ -16,7 +16,7 @@ Last reviewed: 2026-09-16 · Working version: 0.9.0
 | `yarn build`         | Passing                                                    |
 | `yarn lint`          | Passing — clean, 0 errors                                  |
 | `prettier --check .` | Passing                                                    |
-| `yarn package`       | Passing — `roland-v80hd-0.9.0.tgz` (untracked, local only) |
+| `yarn package`       | Passing — `roland-v80hd-0.9.1.tgz` (untracked, local only) |
 | GitHub Actions       | Passing — Node CI, green on `main`                         |
 | `yarn preflight`     | Passing — the pre-release gate                             |
 
@@ -32,21 +32,23 @@ it directly. Confirmed on hardware both ways — `FTB:OFF;` clear, `FTB:ON;` eng
 recorded as blocked on a multi-byte decoder — audio levels, metering, source names — have plain-ASCII
 equivalents in the mnemonic set. Worth a look before anyone writes that decoder. `PROTOCOL.md` §10.1.
 
-## Built, not yet on hardware — 0.9.0
+## Built, not yet on hardware — 0.9.0 and 0.9.1
 
-**0.9.0 is the aesthetic and consistency pass, built 2026-09-16 and not yet run against a V-80HD.**
-It is presentation only — display names, button faces and default feedback colours, all of which
-Companion copies onto a button rather than referencing. No id changed, so nothing already built
-moves, and there is no protocol or behaviour change to regress.
+**0.9.0 is the aesthetic and consistency pass (2026-09-16); 0.9.1 is a second pass on the preset
+faces (2026-09-23). Neither has run against a V-80HD yet.** Both are presentation only — display
+names, button faces and default colours, all of which Companion copies onto a button rather than
+referencing. No id changed, so nothing already built moves, and there is no protocol or behaviour
+change to regress.
 
-What to look at on the next hardware session, none of it urgent:
+What to look at on the next hardware session, none of it urgent — `TESTING-NEXT.md` P1–P5:
 
-- The renamed actions appear under their new names and still fire — `PinP & Key – …`,
-  `Stream & Record – Start` / `– Stop`, `Test Pattern – All Outputs (toggle)` / `– Off`,
-  `Set AUX Linked PGM – mode` / `Toggle AUX Linked PGM – mode`, `Utility – Sync state now`
-- A feedback added by hand arrives with black text on its bright background, and reads better lit
-  than unlit
-- The `PiP 1` / `PiP 2` button faces fit at 16pt without wrapping
+- The renamed 0.9.0 actions appear under their new names and still fire
+- A feedback added by hand arrives with black text, and reads better lit than unlit
+- Every face fits at 24pt — `AUX LINK`, the test pattern names and `Capture` are the likeliest to
+  wrap
+- The new face text: `TOGGLE` on the Aux PiP buttons, `Capture` / 1–8, `MUTED` on the bus mutes
+- The bus mute colours read well — #990000 on #8080FF is about 2.7:1, below the palette's 4.5 rule,
+  chosen deliberately; switch to black text if it does not read at a distance
 
 **Everything through 0.8.13 is verified on hardware:** Fade To Black including the engaged state and
 panel tracking, the Split relabel, the readable raw echo, the FTB fade colour, and the on-button
@@ -75,16 +77,9 @@ for its own sake rather than a fix for anything an operator would have seen.
 ## Queued — the rest of the 0.9 tidy-up
 
 Decided 2026-09-16. Everything that is housekeeping rather than function gets one deliberate pass
-rather than dribbling into point releases where it obscures what actually changed.
+rather than dribbling into point releases where it obscures what actually changed. None of what
+remains is a code change.
 
-**0.9.0 took the aesthetic pass and nothing else.** The items below are what remains, and none of
-them is a code change — they are repository decisions and a documentation read. 0.8.14 was never
-built and is not needed; 0.8.13 closed everything that was outstanding.
-
-- **Untrack the test sheets and the code review.** `TESTING.md`, `TESTING-NEXT.md` and
-  `CODE_REVIEW.md` into `.gitignore` and out of the index with `git rm --cached`. Files stay on disk;
-  losing their ongoing history is accepted pre-1.0. `working_doc.md` and `PROTOCOL.md` stay tracked
-  in both repos. Closes CODE_REVIEW §4.3. **Confirm before running it.**
 - **Repository management.** Whatever remains of the two-repo split once the dust settles — issue
   routing is done, but turning Issues off in this repository's settings is the only thing that
   actually enforces it, and that is a GitHub setting rather than a file.
@@ -95,12 +90,11 @@ built and is not needed; 0.8.13 closed everything that was outstanding.
   revisited — they still describe the module as provided for evaluation. The README's empty
   `## Roadmap` heading was removed on 2026-09-16 rather than filled; decide in this pass whether a
   public roadmap earns a section, given this file already holds one.
-- **Build artifacts in the working tree.** 20 `.tgz` builds (0.4.0 → 0.9.0) plus
-  `TESING NOTES.xlsx`, all gitignored, none tracked, all sitting in the repo root. Nothing is broken
-  by them, but the version-bump-per-build rule and a directory holding every historical build is a
-  good way to install the wrong one — `CODE_REVIEW.md` §7.1 raises the same point. Decide what to
-  keep; note the `.gitignore` entry carries the `TESING` typo, so correcting the filename would
-  un-ignore it. **Confirm before deleting anything.**
+
+**Old builds live outside the repo.** Every `.tgz` before the current one, and `TESING NOTES.xlsx`,
+moved to `C:\GitHub\v80hd-builds\` on 2026-09-23. Only the build under test sits in the repo root;
+move the previous one out when the next is built. `TESTING.md`, `TESTING-NEXT.md` and
+`CODE_REVIEW.md` stopped being tracked the same day — they stay on disk and are gitignored.
 
 ## Queued for 1.0 release prep
 
@@ -115,12 +109,15 @@ built and is not needed; 0.8.13 closed everything that was outstanding.
 Addresses, payloads and the reasoning are all in [PROTOCOL.md](PROTOCOL.md) §9. Only the intent is
 here.
 
-**Wanted, worth building:**
+**Shelved — build if requested:**
+
+Nothing here is planned. Each item waits for a user to ask for it.
 
 - **Source and still names** (`0220xx`). Dropdowns and button labels carrying the operator's own
   names instead of fixed text. Blocked only on an ASCII payload decoder — `parseDth` truncates every
-  reply to its first byte. **This is the one banked capture finding still worth building**, and the
-  same decoder unblocks audio levels and metering at the same time.
+  reply to its first byte — though the mnemonic command set may reach the names without one
+  (`PROTOCOL.md` §10.1). The same decoder would also unblock audio levels and metering. Shelved
+  2026-09-23.
 
 **Decided against, not blocked:** Scene Memory, audio level control, audio metering, still tally.
 Each has a reason recorded in `PROTOCOL.md` §9 — respectively an unwritable save address,
