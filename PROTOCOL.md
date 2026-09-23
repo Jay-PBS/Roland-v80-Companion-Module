@@ -1004,8 +1004,8 @@ putting behind a toggle rather than always-on.
 | `022400`        | "SDI 1"                 |
 | `022800` onward | "Still 1", "Still 2", … |
 
-**Captured.** Blocked only by the multi-byte decoder — of everything in this section, this is the one
-most worth building.
+**Captured.** Blocked only by the multi-byte decoder, or possibly reachable through the mnemonic set
+(§10.1). Shelved 2026-09-23 — to be built if users request it.
 
 ### 9.6 Panel Lock — `020300`–`020347`
 
