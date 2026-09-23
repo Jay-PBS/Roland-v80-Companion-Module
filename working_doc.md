@@ -4,7 +4,7 @@ Live working notes: **open items only**.
 
 Once something is done and verified on hardware, delete it from this file. Anything worth keeping permanently belongs in [README.md](README.md) (project-facing) or [companion/HELP.md](companion/HELP.md) (user-facing), not here. This file is not a changelog and holds no logs — the changelog lives in the README.
 
-Last reviewed: 2026-09-23 · Working version: 0.9.1
+Last reviewed: 2026-09-23 · Working version: 0.9.2
 
 ---
 
@@ -16,7 +16,7 @@ Last reviewed: 2026-09-23 · Working version: 0.9.1
 | `yarn build`         | Passing                                                    |
 | `yarn lint`          | Passing — clean, 0 errors                                  |
 | `prettier --check .` | Passing                                                    |
-| `yarn package`       | Passing — `roland-v80hd-0.9.1.tgz` (untracked, local only) |
+| `yarn package`       | Passing — `roland-v80hd-0.9.2.tgz` (untracked, local only) |
 | GitHub Actions       | Passing — Node CI, green on `main`                         |
 | `yarn preflight`     | Passing — the pre-release gate                             |
 
@@ -44,7 +44,7 @@ What to look at on the next hardware session, none of it urgent — `TESTING-NEX
 
 - The renamed 0.9.0 actions appear under their new names and still fire
 - A feedback added by hand arrives with black text, and reads better lit than unlit
-- Every face fits at 24pt — `AUX LINK`, the test pattern names and `Capture` are the likeliest to
+- A dropped preset shows Text Size about 23 in the editor, and every face fits — `AUX LINK`, the test pattern names and `Capture` are the likeliest to
   wrap
 - The new face text: `TOGGLE` on the Aux PiP buttons, `Capture` / 1–8, `MUTED` on the bus mutes
 - The bus mute colours read well — #990000 on #8080FF is about 2.7:1, below the palette's 4.5 rule,

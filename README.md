@@ -14,7 +14,7 @@ you want a version that has been through hardware testing.
 
 This module is currently in beta. It has been tested on physical hardware and is provided for evaluation. Use in production environments is at the operator's own discretion and risk.
 
-Current version: 0.9.1
+Current version: 0.9.2
 
 ---
 
@@ -208,14 +208,20 @@ Not every version below is a commit. Only 0.4.0, 0.6.0, 0.6.5, 0.7.0, 0.8.2, 0.8
 went straight to hardware, so their entries record what changed rather than something you can check
 out. Tags exist for `v0.4.0`, `v0.6.5` and `v0.8.5`, which are the states worth returning to.
 
+### 0.9.2 — preset text size corrected
+
+**0.9.1's 24pt faces arrived at 40.** Companion's newer button editor measures Text Size as a
+percentage of the button height and scales a preset's size by about 5/3 on the way in, so the 24 the
+module sent became 40. Presets now send 14, which the editor shows as about 23 — the size actually
+checked on the surface. Presentation only; nothing else changed.
+
 ### 0.9.1 — preset faces, second pass
 
 **Presentation only, like 0.9.0.** No ids, protocol or behaviour changed. Companion copies a preset's
 face onto a button when you drop it, so buttons you have already built keep their old look — drop the
 preset again to pick up the new one.
 
-- **Every preset face is now 24pt**, up from 16. Checked on the three-line faces, which are the
-  tightest fit.
+- **Every preset face was meant to be 24** — it arrived at 40; see 0.9.2.
 - **The PiP enable buttons read `PiP 1` / `TOGGLE`**, not `PiP 1` / `EN`, because the button toggles.
   The preset names follow: `AUX1 PiP 1 Toggle` rather than `AUX1 PiP 1 Enable`.
 - **The Image Capture buttons read `Capture` / `1`–`8`**, not `CAP`.

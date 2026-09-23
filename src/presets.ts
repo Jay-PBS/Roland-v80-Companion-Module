@@ -5,7 +5,10 @@ import { TEST_PATTERNS, PHYSICAL_INPUTS } from './api.js'
 
 export function UpdatePresets(self: ModuleInstance): void {
 	const presets: CompanionPresetDefinitions = {}
-	const sz = 24
+	// Legacy point size. Companion's layered-button editor shows Text Size as a percentage of the
+	// button height and scales a preset's number by about 5/3 on the way in - 0.9.1 sent 24 and the
+	// editor showed 40. 14 lands at about 23, the size chosen by eye in the editor on 2026-09-23.
+	const sz = 14
 
 	// Corporate colour palette - deep = inactive button bg, bright = active feedback.
 	// The deeps are the bright colours scaled down in RGB, so hue is preserved exactly and an
