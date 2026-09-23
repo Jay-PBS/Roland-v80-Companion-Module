@@ -211,8 +211,8 @@ out. Tags exist for `v0.4.0`, `v0.6.5` and `v0.8.5`, which are the states worth 
 ### 0.9.2 — preset text size corrected
 
 **0.9.1's 24pt faces arrived at 40.** Companion's newer button editor measures Text Size as a
-percentage of the button height and scales a preset's size by about 5/3 on the way in, so the 24 the
-module sent became 40. Presets now send 14, which the editor shows as about 23 — the size actually
+percentage of the button height and scales a preset's size by 5/3 on the way in, so the 24 the
+module sent became 40. Presets now send 14, which the editor shows as 23.3 — confirmed on the surface, and the size actually
 checked on the surface. Presentation only; nothing else changed.
 
 ### 0.9.1 — preset faces, second pass

@@ -44,7 +44,7 @@ What to look at on the next hardware session, none of it urgent — `TESTING-NEX
 
 - The renamed 0.9.0 actions appear under their new names and still fire
 - A feedback added by hand arrives with black text, and reads better lit than unlit
-- A dropped preset shows Text Size about 23 in the editor, and every face fits — `AUX LINK`, the test pattern names and `Capture` are the likeliest to
+- Every face fits at the confirmed size (23.3 in the editor) — `AUX LINK`, the test pattern names and `Capture` are the likeliest to
   wrap
 - The new face text: `TOGGLE` on the Aux PiP buttons, `Capture` / 1–8, `MUTED` on the bus mutes
 - The bus mute colours read well — #990000 on #8080FF is about 2.7:1, below the palette's 4.5 rule,
