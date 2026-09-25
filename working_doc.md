@@ -32,25 +32,17 @@ it directly. Confirmed on hardware both ways — `FTB:OFF;` clear, `FTB:ON;` eng
 recorded as blocked on a multi-byte decoder — audio levels, metering, source names — have plain-ASCII
 equivalents in the mnemonic set. Worth a look before anyone writes that decoder. `PROTOCOL.md` §10.1.
 
-## Built, not yet on hardware — 0.9.0 and 0.9.1
+## Hardware — 0.9.0 to 0.9.2
 
-**0.9.0 is the aesthetic and consistency pass (2026-09-16); 0.9.1 is a second pass on the preset
-faces (2026-09-23). Neither has run against a V-80HD yet.** Both are presentation only — display
-names, button faces and default colours, all of which Companion copies onto a button rather than
-referencing. No id changed, so nothing already built moves, and there is no protocol or behaviour
-change to regress.
+**Passed on hardware 2026-09-25**, all but one check: the renamed actions, the feedback default
+style, every face at 23.3, the new face text and the bus mute colours. Stream & Record was already
+confirmed and only its display name changed.
 
-What to look at on the next hardware session, none of it urgent — `TESTING-NEXT.md` P1–P5:
+- **Still to test:** `Utility – Sync state now`, with polling off — `TESTING-NEXT.md` S1
+- **Decision:** the bus mute text. #990000 on #8080FF is hard to read at a distance (about 2.7:1);
+  black would be about 6.4:1
 
-- The renamed 0.9.0 actions appear under their new names and still fire
-- A feedback added by hand arrives with black text, and reads better lit than unlit
-- Every face fits at the confirmed size (23.3 in the editor) — `AUX LINK`, the test pattern names and `Capture` are the likeliest to
-  wrap
-- The new face text: `TOGGLE` on the Aux PiP buttons, `Capture` / 1–8, `MUTED` on the bus mutes
-- The bus mute colours read well — #990000 on #8080FF is about 2.7:1, below the palette's 4.5 rule,
-  chosen deliberately; switch to black text if it does not read at a distance
-
-**Everything through 0.8.13 is verified on hardware:** Fade To Black including the engaged state and
+**Also verified on hardware, through 0.8.13:** Fade To Black including the engaged state and
 panel tracking, the Split relabel, the readable raw echo, the FTB fade colour, and the on-button
 detail blocks. A split button from before the Vertical/Horizontal rename and a raw-command button
 from an older version both still fire — confirmed 2026-09-25.
