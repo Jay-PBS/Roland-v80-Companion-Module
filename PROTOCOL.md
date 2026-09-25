@@ -425,6 +425,11 @@ All R/W, all polled. **Confirmed.**
 > or a re-press restores it. Never assume a write to `020115`/`020116` stuck — read it back. Auto
 > Link restores at the next transition; Manual Link holds your selection until you re-select it.
 
+> **The front panel does not show AUX follow set over LAN.** Setting the mode and `020115` follow
+> from Companion made AUX 1 follow PGM on the multiview, and the polled feedback tracked it, but the
+> V-80HD front panel showed no change. **Observed** 2026-09-25. Not yet checked: whether the panel
+> shows it when the same setting is made from the unit's menu or from RCS.
+
 **Per-input freeze** runs `020902`–`020909` for HDMI 1-4 then SDI 1-4. Note it **starts at `02`**,
 not `00`.
 
