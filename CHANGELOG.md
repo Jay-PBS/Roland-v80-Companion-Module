@@ -8,6 +8,14 @@ Not every version below is a commit. Only 0.4.0, 0.6.0, 0.6.5, 0.7.0, 0.8.2, 0.8
 went straight to hardware, so their entries record what changed rather than something you can check
 out. Tags exist for `v0.4.0`, `v0.6.5` and `v0.8.5`, which are the states worth returning to.
 
+### Unreleased
+
+- **Muted bus buttons use black text.** The dark red #990000 on lavender was hard to read at a
+  distance, at about 2.7:1; black on the same #8080FF is about 6.4:1. Drop the Audio presets again
+  to pick it up.
+- **HELP.md corrected on polling off.** The Program source keeps updating, about every 1.5 seconds,
+  because the connection watchdog reads it. Everything else stops until **Sync state now** is pressed.
+
 ### 0.9.2 — preset text size corrected
 
 **0.9.1's 24pt faces arrived at 40.** Companion's newer button editor measures Text Size as a

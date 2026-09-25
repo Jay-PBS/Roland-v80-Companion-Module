@@ -17,8 +17,8 @@ export function UpdatePresets(self: ModuleInstance): void {
 	// 1.7-2.3:1 and active was hard to tell from inactive on the panel.
 	// Active states carry black text: white fails on every bright colour here (1.53-3.96
 	// against a 4.5 threshold), so a lit button used to be harder to read, not easier.
-	// Exception, 0.9.1: a muted bus is lavender with dark red text, a deliberate choice
-	// rather than the contrast rule - #990000 on #8080FF is about 2.7:1.
+	// A muted bus is lavender (#8080FF), off the palette on purpose, with the same black text -
+	// about 6.4:1. Dark red was tried and read poorly at a distance (about 2.7:1).
 	const c = {
 		// Reds
 		pgm: combineRgb(0x4e, 0x0c, 0x0c), // Red Deep    #4E0C0C — PGM / Record / Stream
@@ -47,7 +47,6 @@ export function UpdatePresets(self: ModuleInstance): void {
 		// Audio - bus mutes only; per-channel input mutes are not in the presets
 		audio: combineRgb(0x0d, 0x22, 0x5f), // Blue Deep
 		audio_on: combineRgb(0x80, 0x80, 0xff), // Lavender #8080FF (bus muted)
-		audio_on_text: combineRgb(0x99, 0x00, 0x00), // Dark Red #990000
 		// Memory / Utility
 		mem: combineRgb(0x77, 0x51, 0x02), // Amber Deep
 		util: combineRgb(0x40, 0x40, 0x40),
@@ -433,7 +432,7 @@ export function UpdatePresets(self: ModuleInstance): void {
 		name: 'Main Mute',
 		style: { text: 'MAIN\nMUTED', size: sz, color: c.white, bgcolor: c.audio, show_topbar: false },
 		steps: [{ down: [{ actionId: 'main_bus_mute_toggle', options: {} }], up: [] }],
-		feedbacks: [{ feedbackId: 'main_bus_muted', options: {}, style: { bgcolor: c.audio_on, color: c.audio_on_text } }],
+		feedbacks: [{ feedbackId: 'main_bus_muted', options: {}, style: { bgcolor: c.audio_on, color: c.black } }],
 	}
 	presets['aux1_mute'] = {
 		type: 'button',
@@ -441,9 +440,7 @@ export function UpdatePresets(self: ModuleInstance): void {
 		name: 'AUX1 Mute',
 		style: { text: 'AUX1\nMUTED', size: sz, color: c.white, bgcolor: c.audio, show_topbar: false },
 		steps: [{ down: [{ actionId: 'aux_bus_mute_toggle', options: { aux: '1' } }], up: [] }],
-		feedbacks: [
-			{ feedbackId: 'aux_bus_muted', options: { aux: 1 }, style: { bgcolor: c.audio_on, color: c.audio_on_text } },
-		],
+		feedbacks: [{ feedbackId: 'aux_bus_muted', options: { aux: 1 }, style: { bgcolor: c.audio_on, color: c.black } }],
 	}
 	presets['aux2_mute'] = {
 		type: 'button',
@@ -451,9 +448,7 @@ export function UpdatePresets(self: ModuleInstance): void {
 		name: 'AUX2 Mute',
 		style: { text: 'AUX2\nMUTED', size: sz, color: c.white, bgcolor: c.audio, show_topbar: false },
 		steps: [{ down: [{ actionId: 'aux_bus_mute_toggle', options: { aux: '2' } }], up: [] }],
-		feedbacks: [
-			{ feedbackId: 'aux_bus_muted', options: { aux: 2 }, style: { bgcolor: c.audio_on, color: c.audio_on_text } },
-		],
+		feedbacks: [{ feedbackId: 'aux_bus_muted', options: { aux: 2 }, style: { bgcolor: c.audio_on, color: c.black } }],
 	}
 
 	// ── Freeze ────────────────────────────────────────────────────────────────

@@ -38,8 +38,8 @@ equivalents in the mnemonic set. Worth a look before anyone writes that decoder.
 style, every face at 23.3, the new face text and the bus mute colours. Stream & Record was already
 confirmed and only its display name changed.
 
-- **Decision:** the bus mute text. #990000 on #8080FF is hard to read at a distance (about 2.7:1);
-  black would be about 6.4:1
+- **Changed since, not yet built:** the bus mute text is now black (about 6.4:1), after #990000
+  read poorly at a distance. Check it on the next build
 
 **Also verified on hardware, through 0.8.13:** Fade To Black including the engaged state and
 panel tracking, the Split relabel, the readable raw echo, the FTB fade colour, and the on-button
