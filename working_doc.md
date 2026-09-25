@@ -86,10 +86,6 @@ remains is a code change.
   **`bitfocus/main` is 2 commits ahead of here** as of the last fetch on 2026-09-14: two Dependabot
   bumps touching `yarn.lock` only (js-yaml 4.3.1→4.3.2, colord 2.10.0). `git fetch bitfocus` before
   the next push upstream, since there may be more by then.
-- **Final documentation review.** The README was cut to a short landing page on 2026-09-25, with
-  the changelog moved to `CHANGELOG.md` and build notes to `DEVELOPMENT.md`. Still to do: `HELP.md`
-  end to end, and the beta wording in both — they still describe the module as provided for
-  evaluation.
 
 **Old builds live outside the repo.** Every `.tgz` before the current one, and `TESING NOTES.xlsx`,
 moved to `C:\GitHub\v80hd-builds\` on 2026-09-23. Only the build under test sits in the repo root;
