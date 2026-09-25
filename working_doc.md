@@ -2,7 +2,7 @@
 
 Live working notes: **open items only**.
 
-Once something is done and verified on hardware, delete it from this file. Anything worth keeping permanently belongs in [README.md](README.md) (project-facing) or [companion/HELP.md](companion/HELP.md) (user-facing), not here. This file is not a changelog and holds no logs — the changelog lives in the README.
+Once something is done and verified on hardware, delete it from this file. Anything worth keeping permanently belongs in [README.md](README.md) (project-facing, kept short), [CHANGELOG.md](CHANGELOG.md), [DEVELOPMENT.md](DEVELOPMENT.md) or [companion/HELP.md](companion/HELP.md) (user-facing), not here. This file is not a changelog and holds no logs — the changelog lives in [CHANGELOG.md](CHANGELOG.md).
 
 Last reviewed: 2026-09-23 · Working version: 0.9.2
 
@@ -86,10 +86,10 @@ remains is a code change.
   **`bitfocus/main` is 2 commits ahead of here** as of the last fetch on 2026-09-14: two Dependabot
   bumps touching `yarn.lock` only (js-yaml 4.3.1→4.3.2, colord 2.10.0). `git fetch bitfocus` before
   the next push upstream, since there may be more by then.
-- **Final documentation review.** `README.md` and `HELP.md` end to end, with the beta wording
-  revisited — they still describe the module as provided for evaluation. The README's empty
-  `## Roadmap` heading was removed on 2026-09-16 rather than filled; decide in this pass whether a
-  public roadmap earns a section, given this file already holds one.
+- **Final documentation review.** The README was cut to a short landing page on 2026-09-25, with
+  the changelog moved to `CHANGELOG.md` and build notes to `DEVELOPMENT.md`. Still to do: `HELP.md`
+  end to end, and the beta wording in both — they still describe the module as provided for
+  evaluation.
 
 **Old builds live outside the repo.** Every `.tgz` before the current one, and `TESING NOTES.xlsx`,
 moved to `C:\GitHub\v80hd-builds\` on 2026-09-23. Only the build under test sits in the repo root;
@@ -100,9 +100,9 @@ move the previous one out when the next is built. `TESTING.md`, `TESTING-NEXT.md
 
 - **Decide how 1.0 is distributed.** Whether it ships as a GitHub Release asset, or whether the
   module store is the only route. Releases currently carry `v0.4.0` with no assets at all, so a
-  downloadable 1.0 is something to set up rather than something that happens by itself. README
-  currently promises "each release will carry its `.tgz` as a GitHub Release asset" — either make
-  that true or change the sentence.
+  downloadable 1.0 is something to set up rather than something that happens by itself. The README
+  no longer promises Release assets (removed 2026-09-25) — it says the module is intended for the
+  store and shows how to build a `.tgz`. Update the Install section once this is decided.
 
 ## Not yet implemented
 
