@@ -8,7 +8,11 @@ Not every version below is a commit. Only 0.4.0, 0.6.0, 0.6.5, 0.7.0, 0.8.2, 0.8
 went straight to hardware, so their entries record what changed rather than something you can check
 out. Tags exist for `v0.4.0`, `v0.6.5` and `v0.8.5`, which are the states worth returning to.
 
-### Unreleased
+### 1.0.0 — first stable release
+
+**Every action, feedback, variable and preset has been tested on a V-80HD** (firmware v1.20.201), and
+0.9.0–0.9.2 passed their hardware checks on 2026-09-25. No protocol or id changes since 0.9.2, so
+buttons built on any 0.9.x version carry straight over.
 
 - **Muted bus buttons use black text.** The dark red #990000 on lavender was hard to read at a
   distance, at about 2.7:1; black on the same #8080FF is about 6.4:1. Drop the Audio presets again
