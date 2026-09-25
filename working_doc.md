@@ -52,13 +52,8 @@ What to look at on the next hardware session, none of it urgent — `TESTING-NEX
 
 **Everything through 0.8.13 is verified on hardware:** Fade To Black including the engaged state and
 panel tracking, the Split relabel, the readable raw echo, the FTB fade colour, and the on-button
-detail blocks.
-
-Two things are recorded as **verified by inspection rather than on hardware**, because neither has a
-subject to test against and neither is worth manufacturing an old build for — a split button built
-before the rename, and a raw-command button from an older version. Both become testable naturally in
-a later regression pass. The ids were all left untouched and a Companion button resolves actions by
-id, so the reasoning is sound; it is simply not the same as having seen it.
+detail blocks. A split button from before the Vertical/Horizontal rename and a raw-command button
+from an older version both still fire — confirmed 2026-09-25.
 
 ## Open — needs a decision
 
