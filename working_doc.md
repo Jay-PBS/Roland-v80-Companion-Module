@@ -80,10 +80,7 @@ Decided 2026-09-16. Everything that is housekeeping rather than function gets on
 rather than dribbling into point releases where it obscures what actually changed. None of what
 remains is a code change.
 
-- **Repository management.** Whatever remains of the two-repo split once the dust settles — issue
-  routing is done, but turning Issues off in this repository's settings is the only thing that
-  actually enforces it, and that is a GitHub setting rather than a file.
-  **`bitfocus/main` is 2 commits ahead of here** as of the last fetch on 2026-09-14: two Dependabot
+- **Sync from Bitfocus.** **`bitfocus/main` is 2 commits ahead of here** as of the last fetch on 2026-09-14: two Dependabot
   bumps touching `yarn.lock` only (js-yaml 4.3.1→4.3.2, colord 2.10.0). `git fetch bitfocus` before
   the next push upstream, since there may be more by then.
 
@@ -151,9 +148,12 @@ one, and never was.
 
 **The submission-time item that was open here is done.** `repository` and `bugs` in
 `companion/manifest.json` and `package.json` both point at `bitfocus/companion-module-roland-v80hd`,
-which is where issues are routed — by `CONTRIBUTING.md`, by the README and by the issue chooser in
-`.github/ISSUE_TEMPLATE/config.yml`, which turns the blank option off so a report cannot land here by
-accident.
+which is where issues with released versions go. **Issues stay on in this repository, by decision
+(2026-09-25):** after 1.0, people testing development builds report here. `CONTRIBUTING.md` and the
+README say so — released version to Bitfocus, development build here. The issue chooser in
+`.github/ISSUE_TEMPLATE/config.yml` still leads with the Bitfocus link, and its text says issues do
+not belong here; revisit it when development testing starts, remembering it travels upstream with
+the code.
 
 `yarn preflight` (`format` → `lint:fix` → `build` → `package`) remains the local pre-release gate.
 

@@ -2,8 +2,8 @@
 
 Bitfocus Companion module for the Roland V-80HD Direct Streaming Video Switcher, controlled over LAN.
 
-- **Released module and issues:** [bitfocus/companion-module-roland-v80hd](https://github.com/bitfocus/companion-module-roland-v80hd)
-- **Development repository:** [Jay-PBS/Roland-v80-Companion-Module](https://github.com/Jay-PBS/Roland-v80-Companion-Module) — may contain untested work; use the release for shows
+- **Released module:** [bitfocus/companion-module-roland-v80hd](https://github.com/bitfocus/companion-module-roland-v80hd) — report issues with released versions here
+- **Development repository:** [Jay-PBS/Roland-v80-Companion-Module](https://github.com/Jay-PBS/Roland-v80-Companion-Module) — may contain untested work; use the release for shows. Report issues with development builds here
 
 Developed and maintained by Purple Badger Solutions — projects@purplebadgersolutions.co.uk
 

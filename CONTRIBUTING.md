@@ -8,11 +8,16 @@ That constraint shapes what can and cannot be accepted.
 
 ## Bug reports are welcome
 
-**Issues belong on the released repository: [bitfocus/companion-module-roland-v80hd](https://github.com/bitfocus/companion-module-roland-v80hd).**
-Open one using the [bug report form](https://github.com/bitfocus/companion-module-roland-v80hd/issues/new/choose). The repository you may have found
-this in, `Jay-PBS/Roland-v80-Companion-Module`, is where development happens and carries
-experimental work; keeping reports on the released module is what stops a bug in something
-half-finished being mistaken for a bug in the shipped version. The more of the following you can include, the faster it gets resolved:
+Where to report depends on which version you are running:
+
+- **A released version** (from the module store or a release): report it on
+  [bitfocus/companion-module-roland-v80hd](https://github.com/bitfocus/companion-module-roland-v80hd/issues/new/choose).
+- **A development build** (built from `Jay-PBS/Roland-v80-Companion-Module`): report it on
+  [Jay-PBS/Roland-v80-Companion-Module](https://github.com/Jay-PBS/Roland-v80-Companion-Module/issues),
+  and say which commit or `.tgz` version you built.
+
+Keeping the two apart stops a bug in something half-finished being mistaken for a bug in the
+shipped version. The more of the following you can include, the faster it gets resolved:
 
 - V-80HD firmware version, and the Companion and module versions.
 - What you did, what you expected, and what happened instead.
