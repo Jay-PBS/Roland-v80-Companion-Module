@@ -65,9 +65,10 @@ for its own sake rather than a fix for anything an operator would have seen.
 **The 0.9 tidy-up is finished.** Bitfocus's two Dependabot bumps were merged in on 2026-09-25, so
 this repo is level with upstream.
 
-**1.0.1 is the version to submit — 2026-09-25.** `v1.0.0` reached Bitfocus without its checks
-workflow, so the portal showed it as unchecked; 1.0.1 restores the workflow with identical module
-code. Submit `v1.0.1` in the Bitfocus Developer Portal once its check is green on Bitfocus.
+**1.0.1 submitted for review — 2026-09-25.** Submitted in the Bitfocus Developer Portal after the
+module checks passed on Bitfocus. `v1.0.0` reached Bitfocus without its checks workflow; 1.0.1
+restores it with identical module code. Pending volunteer review — feedback arrives in the portal,
+and once approved it is live for Companion 4.0+.
 
 **Every future release:** bump `package.json`, `yarn preflight`, tag `vX.Y.Z`, push `main` and the tag
 to both remotes (`git fetch bitfocus` first), then Submit Version in the developer portal. Process
