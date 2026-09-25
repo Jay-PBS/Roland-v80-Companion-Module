@@ -60,28 +60,20 @@ connection.** The surface already tells the operator. The FTB fade flag is still
 because a fade is a one-second transient and a stuck one is plainly false — but that is correctness
 for its own sake rather than a fix for anything an operator would have seen.
 
-## Queued — the rest of the 0.9 tidy-up
+## 1.0 release
 
-Decided 2026-09-16. Everything that is housekeeping rather than function gets one deliberate pass
-rather than dribbling into point releases where it obscures what actually changed. None of what
-remains is a code change.
+**The 0.9 tidy-up is finished.** Bitfocus's two Dependabot bumps were merged in on 2026-09-25, so
+this repo is level with upstream.
 
-- **Sync from Bitfocus.** **`bitfocus/main` is 2 commits ahead of here** as of the last fetch on 2026-09-14: two Dependabot
-  bumps touching `yarn.lock` only (js-yaml 4.3.1→4.3.2, colord 2.10.0). `git fetch bitfocus` before
-  the next push upstream, since there may be more by then.
+**How 1.0 ships — decided 2026-09-25.** 1.0 goes on this repository, Jay tells Bitfocus, and Bitfocus
+take it from there into the released module and the store. No GitHub Release asset is planned.
+Before telling them: `git fetch bitfocus` in case anything new has landed upstream, then build, run
+`yarn preflight` and tag `v1.0.0`.
 
 **Old builds live outside the repo.** Every `.tgz` before the current one, and `TESING NOTES.xlsx`,
-moved to `C:\GitHub\v80hd-builds\` on 2026-09-23. Only the build under test sits in the repo root;
-move the previous one out when the next is built. `TESTING.md`, `TESTING-NEXT.md` and
-`CODE_REVIEW.md` stopped being tracked the same day — they stay on disk and are gitignored.
-
-## Queued for 1.0 release prep
-
-- **Decide how 1.0 is distributed.** Whether it ships as a GitHub Release asset, or whether the
-  module store is the only route. Releases currently carry `v0.4.0` with no assets at all, so a
-  downloadable 1.0 is something to set up rather than something that happens by itself. The README
-  no longer promises Release assets (removed 2026-09-25) — it says the module is intended for the
-  store and shows how to build a `.tgz`. Update the Install section once this is decided.
+live in `C:\GitHub\v80hd-builds\`. Only the build under test sits in the repo root; move the previous
+one out when the next is built. `TESTING.md`, `TESTING-NEXT.md` and `CODE_REVIEW.md` are gitignored
+and stay on disk.
 
 ## Not yet implemented
 
