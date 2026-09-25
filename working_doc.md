@@ -34,11 +34,10 @@ equivalents in the mnemonic set. Worth a look before anyone writes that decoder.
 
 ## Hardware — 0.9.0 to 0.9.2
 
-**Passed on hardware 2026-09-25**, all but one check: the renamed actions, the feedback default
+**Passed on hardware 2026-09-25:** the renamed actions, including Sync state now, the feedback default
 style, every face at 23.3, the new face text and the bus mute colours. Stream & Record was already
 confirmed and only its display name changed.
 
-- **Still to test:** `Utility – Sync state now`, with polling off — `TESTING-NEXT.md` S1
 - **Decision:** the bus mute text. #990000 on #8080FF is hard to read at a distance (about 2.7:1);
   black would be about 6.4:1
 

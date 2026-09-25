@@ -372,7 +372,8 @@ R/W, polled. **Confirmed.** `001403` unused.
 | `001501` | Preview (PST) source | Source byte |
 
 R/W, polled. **Confirmed.** `001500` doubles as the module's watchdog nudge — a cheap read with a
-guaranteed reply.
+guaranteed reply. A side effect: with polling off, the Program source still tracks the panel,
+about every 1.5 s, while nothing else does. **Observed** 2026-09-25.
 
 ### 4.8 Audio
 
