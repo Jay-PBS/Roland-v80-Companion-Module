@@ -65,10 +65,13 @@ for its own sake rather than a fix for anything an operator would have seen.
 **The 0.9 tidy-up is finished.** Bitfocus's two Dependabot bumps were merged in on 2026-09-25, so
 this repo is level with upstream.
 
-**How 1.0 ships — decided 2026-09-25.** 1.0 goes on this repository, Jay tells Bitfocus, and Bitfocus
-take it from there into the released module and the store. No GitHub Release asset is planned.
-Before telling them: `git fetch bitfocus` in case anything new has landed upstream, then build, run
-`yarn preflight` and tag `v1.0.0`.
+**1.0.0 is on Bitfocus — 2026-09-25.** `main` and tag `v1.0.0` pushed to
+`bitfocus/companion-module-roland-v80hd`; Jay is submitting the tag in the Bitfocus Developer Portal,
+where volunteers review it. Once approved it is live for Companion 4.0+.
+
+**Every future release:** bump `package.json`, `yarn preflight`, tag `vX.Y.Z`, push `main` and the tag
+to both remotes (`git fetch bitfocus` first), then Submit Version in the developer portal. Process
+per companion.free, "Releasing your module"
 
 **Old builds live outside the repo.** Every `.tgz` before the current one, and `TESING NOTES.xlsx`,
 live in `C:\GitHub\v80hd-builds\`. Only the build under test sits in the repo root; move the previous
