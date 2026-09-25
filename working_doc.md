@@ -4,7 +4,7 @@ Live working notes: **open items only**.
 
 Once something is done and verified on hardware, delete it from this file. Anything worth keeping permanently belongs in [README.md](README.md) (project-facing, kept short), [CHANGELOG.md](CHANGELOG.md), [DEVELOPMENT.md](DEVELOPMENT.md) or [companion/HELP.md](companion/HELP.md) (user-facing), not here. This file is not a changelog and holds no logs — the changelog lives in [CHANGELOG.md](CHANGELOG.md).
 
-Last reviewed: 2026-09-25 · Working version: 1.0.0
+Last reviewed: 2026-09-25 · Working version: 1.0.1
 
 ---
 
@@ -16,7 +16,7 @@ Last reviewed: 2026-09-25 · Working version: 1.0.0
 | `yarn build`         | Passing                                                    |
 | `yarn lint`          | Passing — clean, 0 errors                                  |
 | `prettier --check .` | Passing                                                    |
-| `yarn package`       | Passing — `roland-v80hd-1.0.0.tgz` (untracked, local only) |
+| `yarn package`       | Passing — `roland-v80hd-1.0.1.tgz` (untracked, local only) |
 | GitHub Actions       | Passing — Node CI, green on `main`                         |
 | `yarn preflight`     | Passing — the pre-release gate                             |
 
@@ -65,9 +65,9 @@ for its own sake rather than a fix for anything an operator would have seen.
 **The 0.9 tidy-up is finished.** Bitfocus's two Dependabot bumps were merged in on 2026-09-25, so
 this repo is level with upstream.
 
-**1.0.0 is on Bitfocus — 2026-09-25.** `main` and tag `v1.0.0` pushed to
-`bitfocus/companion-module-roland-v80hd`; Jay is submitting the tag in the Bitfocus Developer Portal,
-where volunteers review it. Once approved it is live for Companion 4.0+.
+**1.0.1 is the version to submit — 2026-09-25.** `v1.0.0` reached Bitfocus without its checks
+workflow, so the portal showed it as unchecked; 1.0.1 restores the workflow with identical module
+code. Submit `v1.0.1` in the Bitfocus Developer Portal once its check is green on Bitfocus.
 
 **Every future release:** bump `package.json`, `yarn preflight`, tag `vX.Y.Z`, push `main` and the tag
 to both remotes (`git fetch bitfocus` first), then Submit Version in the developer portal. Process
@@ -110,8 +110,11 @@ Record". It is implemented, on `0A0800`, and confirmed on hardware — the note 
 requests: `yarn install --immutable`, `yarn build`, `yarn lint`, `prettier --check .` on Node 22.x,
 with `permissions: contents: read` and superseded runs cancelled. Green on `main`.
 
-**The `companion-module-checks` workflow remains deleted, and that is correct — not a workaround.**
-It failed at its first step:
+**`companion-module-checks` runs only on the Bitfocus repository.** It is guarded with
+`github.repository_owner == 'bitfocus'`, so it is skipped here. It was deleted from this repo once,
+and pushing 1.0.0 carried the deletion to Bitfocus. The developer portal reads that run as the tag's
+"prechecks", so without it 1.0.0 showed as unchecked. Restored in 1.0.1. **Do not delete it again.**
+Here it would fail at its first step:
 
 ```
 Unknown repository name format: Roland-v80-Companion-Module.
@@ -120,7 +123,7 @@ Repository name must start with companion-module- or companion-surface-
 
 **The check validates the name of the repository it is running in.** It is Bitfocus's own CI, meant
 to run in a Bitfocus module repo, and it cannot pass in a personal fork whatever the fork is called.
-Keeping it here would only add a permanently red check that proves nothing.
+That is why it is guarded rather than left to run here.
 
 **Nothing needs renaming.** `bitfocus/companion-module-roland-v80hd` already satisfies the rule, and
 `manifest.id` is `roland-v80hd`, which is exactly what that repo name resolves to. The two agree

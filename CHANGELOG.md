@@ -8,6 +8,13 @@ Not every version below is a commit. Only 0.4.0, 0.6.0, 0.6.5, 0.7.0, 0.8.2, 0.8
 went straight to hardware, so their entries record what changed rather than something you can check
 out. Tags exist for `v0.4.0`, `v0.6.5` and `v0.8.5`, which are the states worth returning to.
 
+### 1.0.1 — Bitfocus module checks restored
+
+**No change to the module itself** — the code is identical to 1.0.0. Pushing 1.0.0 to the released
+repository removed Bitfocus's `companion-module-checks` workflow, which this development repository
+had deleted because it cannot pass here. Without it the developer portal showed 1.0.0 as unchecked.
+The workflow is back, and now runs only on the Bitfocus repository.
+
 ### 1.0.0 — first stable release
 
 **Every action, feedback, variable and preset has been tested on a V-80HD** (firmware v1.20.201), and

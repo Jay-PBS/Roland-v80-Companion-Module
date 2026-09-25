@@ -1,0 +1,21 @@
+name: Companion Module Checks
+
+on:
+  push:
+
+jobs:
+  check:
+    name: Check module
+
+    # Bitfocus's module checks validate the repository name, so they can only pass in the released
+    # repo (bitfocus/companion-module-roland-v80hd). Skipped in the development repo, where they
+    # would always fail. The developer portal reads this run as the tag's "prechecks".
+    if: ${{ github.repository_owner == 'bitfocus' && !contains(github.repository, 'companion-module-template-') }}
+
+    permissions:
+      packages: read
+
+    uses: bitfocus/actions/.github/workflows/module-checks.yaml@main
+    # with:
+    #   upload-artifact: true # uncomment this to upload the built package as an artifact to this workflow that you can download and share with others
+
