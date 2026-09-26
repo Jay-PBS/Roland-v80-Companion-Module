@@ -219,7 +219,6 @@ export class V80Api {
 	// raw command's reply is visible without the debug flag - see cmdRaw.
 	private rawEchoUntil = 0
 	private debounceTimer?: NodeJS.Timeout
-	private authTimer?: NodeJS.Timeout
 	private watchdogTimer?: NodeJS.Timeout
 	private authSent = false
 	private isConnected = false
@@ -279,13 +278,15 @@ export class V80Api {
 			this.lastRxTime = Date.now()
 			this.cycleStartTime = Date.now()
 			this.self.updateStatus(InstanceStatus.Connecting, 'Authenticating')
-			// The device prompts "Enter password:" ~10ms after connect. Wait for it so the
-			// password is only sent once — sending it unprompted too leaves a stray line the
-			// device parses as a command (observed ERR:0 on the wire). Fallback covers
-			// firmware that opens the session without prompting.
-			this.authTimer = setTimeout(() => {
-				if (!this.authSent && this.isConnected) this.sendPassword()
-			}, 1500)
+			// The device prompts "Enter password:" ~10ms after connect, and the password is sent
+			// only in answer to it - see onPasswordPrompt. Sent unprompted, it is a stray line the
+			// device parses as a command (observed ERR:0 on the wire, PROTOCOL.md §1.2).
+			//
+			// There used to be a 1.5s fallback that sent it anyway, for firmware that never
+			// prompts. No V-80HD firmware is known to do that, and the fallback had a failure of
+			// its own: a prompt arriving after it was read as a rejection of a correct password.
+			// If no prompt comes at all - the device ignores a second control session - the
+			// watchdog's authentication-stalled check rebuilds the connection.
 		})
 		this.tcp.on('data', (data: Buffer) => this.handleIncoming(data))
 		this.startWatchdog()
@@ -341,7 +342,6 @@ export class V80Api {
 	public destroyTcp(): void {
 		this.stopPolling()
 		this.stopDebounce()
-		this.stopAuthTimer()
 		this.stopWatchdog()
 		try {
 			this.tcp?.destroy()
@@ -369,13 +369,6 @@ export class V80Api {
 		this.self.changedState()
 	}
 
-	private stopAuthTimer(): void {
-		if (this.authTimer) {
-			clearTimeout(this.authTimer)
-			this.authTimer = undefined
-		}
-	}
-
 	// A failed login ends this connection for good. Retrying cannot succeed - the password is the
 	// one the device just refused - and every attempt counts towards the brute-force lockout, which
 	// then refuses the correct password too (PROTOCOL.md §1.2). So close the socket, which also
@@ -399,7 +392,6 @@ export class V80Api {
 	}
 
 	private onPasswordPrompt(): void {
-		this.stopAuthTimer()
 		if (this.authSent) {
 			// Re-prompt after we already answered means the password was rejected. Do not
 			// resend — answering every prompt with the same password loops until the device
@@ -527,7 +519,6 @@ export class V80Api {
 		// isAuthenticated is reset to false at every point a connection ends or restarts, so a
 		// genuine re-authentication after a drop is never blocked.
 		if (this.isAuthenticated) return
-		this.stopAuthTimer()
 		this.isAuthenticated = true
 		this.self.log('info', 'Connection ready – requesting initial state')
 		this.self.updateStatus(InstanceStatus.Ok)
