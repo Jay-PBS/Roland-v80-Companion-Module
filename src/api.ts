@@ -545,9 +545,8 @@ export class V80Api {
 		// Idempotency guard. Two paths reach here - the "Welcome to" banner and the "VER:"
 		// line - and the device sends both in one exchange, so without this the full 64-command
 		// requestCoreState() burst goes out twice back to back and "Connection ready" is logged
-		// twice. Safe because
-		// isAuthenticated is reset to false at every point a connection ends or restarts, so a
-		// genuine re-authentication after a drop is never blocked.
+		// twice. Safe because isAuthenticated is reset to false at every point a connection ends
+		// or restarts, so a genuine re-authentication after a drop is never blocked.
 		if (this.isAuthenticated) return
 		this.isAuthenticated = true
 		this.outageMessages.clear()
