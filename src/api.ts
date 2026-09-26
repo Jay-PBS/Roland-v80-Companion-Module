@@ -251,8 +251,14 @@ export class V80Api {
 		return (this.self.secrets?.password || this.self.config.password || '').trim()
 	}
 
+	// Trimmed, because a pasted address often carries a trailing space, and the connection error
+	// that produces does not point at the cause.
+	private get host(): string {
+		return (this.self.config.host ?? '').trim()
+	}
+
 	public initTcp(): void {
-		if (!this.self.config.host || !this.self.config.port) {
+		if (!this.host || !this.self.config.port) {
 			this.self.updateStatus(InstanceStatus.BadConfig, 'Missing host/port')
 			return
 		}
@@ -269,7 +275,7 @@ export class V80Api {
 		this.isAuthenticated = false
 		this.rxBuffer = ''
 		this.cycleStartTime = Date.now()
-		this.tcp = new TCPHelper(this.self.config.host, this.self.config.port, { reconnect: true })
+		this.tcp = new TCPHelper(this.host, this.self.config.port, { reconnect: true })
 		this.tcp.on('status_change', (status, message) => {
 			this.self.updateStatus(status, message)
 			if (status !== InstanceStatus.Ok) {
@@ -284,7 +290,7 @@ export class V80Api {
 			this.stopPolling()
 		})
 		this.tcp.on('connect', () => {
-			this.logOncePerOutage('info', `Connected to ${this.self.config.host}:${this.self.config.port}`)
+			this.logOncePerOutage('info', `Connected to ${this.host}:${this.self.config.port}`)
 			this.isConnected = true
 			this.rxBuffer = ''
 			this.authSent = false
