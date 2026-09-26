@@ -171,10 +171,11 @@ There is a matching preset in its own **Advanced** preset category. It ships wit
 string, so fill the command in on the button after dropping it on a page. It is kept in a category
 of its own so it is not picked up by accident while browsing the ordinary presets.
 
-Several actions work this way now. The action list shows a single short line, and the fuller note
-or warning appears once the action is on a button, above its options — Send raw LAN command,
-Capture Image to Still, Stream & Record Start and Stop, Test Pattern, and the two AUX Linked PGM
-actions.
+Several actions carry a fuller note or warning that appears once the action is on a button, above
+its options — Send raw LAN command, Capture Image to Still, Stream & Record Start and Stop, Test
+Pattern, and the two AUX Linked PGM actions. The ones that can do something you cannot take back —
+Send raw LAN command, Capture Image to Still, and Stream & Record Start and Stop — also show a
+one-line warning in the action list, before you pick them.
 
 ---
 
