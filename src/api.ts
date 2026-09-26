@@ -225,9 +225,23 @@ export class V80Api {
 	private isAuthenticated = false
 	private lastRxTime = 0
 	private cycleStartTime = 0
+	// Connection messages already logged during the current outage - see logOncePerOutage.
+	private outageMessages = new Set<string>()
 
 	constructor(self: ModuleInstance) {
 		this.self = self
+	}
+
+	// A connection problem repeats for as long as it lasts. A switcher that is switched off fails
+	// every reconnect attempt, and one held by the Roland RCS software ignores this session and
+	// stalls every rebuild, indefinitely. Logged every time, that was an error every 2s and a
+	// warning every 6-12s until it came back. The connection status already shows the outage
+	// continuously, so each distinct message is logged once at its own level and repeats go to
+	// debug. The set clears once a session authenticates, so the next outage is reported afresh.
+	private logOncePerOutage(level: 'info' | 'warn' | 'error', message: string): void {
+		const repeat = this.outageMessages.has(message)
+		this.outageMessages.add(message)
+		this.self.log(repeat ? 'debug' : level, message)
 	}
 
 	// The password lives in the secrets store from 0.7.0 on. The config fallback covers a
@@ -265,12 +279,12 @@ export class V80Api {
 			}
 		})
 		this.tcp.on('error', (err) => {
-			this.self.log('error', `TCP error: ${err.message}`)
+			this.logOncePerOutage('error', `TCP error: ${err.message}`)
 			this.isConnected = false
 			this.stopPolling()
 		})
 		this.tcp.on('connect', () => {
-			this.self.log('info', `Connected to ${this.self.config.host}:${this.self.config.port}`)
+			this.logOncePerOutage('info', `Connected to ${this.self.config.host}:${this.self.config.port}`)
 			this.isConnected = true
 			this.rxBuffer = ''
 			this.authSent = false
@@ -334,7 +348,7 @@ export class V80Api {
 	}
 
 	private forceReconnect(reason: string): void {
-		this.self.log('warn', `Reconnecting: ${reason}`)
+		this.logOncePerOutage('warn', `Reconnecting: ${reason}`)
 		this.destroyTcp()
 		this.initTcp()
 	}
@@ -520,6 +534,7 @@ export class V80Api {
 		// genuine re-authentication after a drop is never blocked.
 		if (this.isAuthenticated) return
 		this.isAuthenticated = true
+		this.outageMessages.clear()
 		this.self.log('info', 'Connection ready – requesting initial state')
 		this.self.updateStatus(InstanceStatus.Ok)
 		this.requestCoreState()
