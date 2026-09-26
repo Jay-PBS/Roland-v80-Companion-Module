@@ -1317,24 +1317,23 @@ export class V80Api {
 		const slotHex = this.hb(Math.max(0, Math.min(31, Math.round(stillSlot) - 1)))
 		const session = this.session
 
-		this.sendCmd(this.dth('0A0501', slotHex))
-		if (!(await this.waitSameSession(250, session))) {
-			this.captureStopped(stillSlot)
-			return
+		// Each step is a command and the wait after it. Every wait checks the connection is still
+		// the one the capture started on - see waitSameSession.
+		const steps: [cmd: string, waitMs: number][] = [
+			[this.dth('0A0501', slotHex), 250], // select still slot
+			// The device needs roughly 560ms to answer 04 (ready) after arming. Waiting longer
+			// than observed rather than racing it, since a premature execute is silent.
+			[this.dth('0A0504', '03'), 800], // arm
+			[this.dth('0A0500', this.hb(srcByte)), 250], // select source
+		]
+		for (const [cmd, waitMs] of steps) {
+			this.sendCmd(cmd)
+			if (!(await this.waitSameSession(waitMs, session))) {
+				this.captureStopped(stillSlot)
+				return
+			}
 		}
-		this.sendCmd(this.dth('0A0504', '03'))
-		// The device needs roughly 560ms to answer 04 (ready) after arming. Waiting longer
-		// than observed rather than racing it, since a premature execute is silent.
-		if (!(await this.waitSameSession(800, session))) {
-			this.captureStopped(stillSlot)
-			return
-		}
-		this.sendCmd(this.dth('0A0500', this.hb(srcByte)))
-		if (!(await this.waitSameSession(250, session))) {
-			this.captureStopped(stillSlot)
-			return
-		}
-		this.sendCmd(this.dth('0A0504', '07'))
+		this.sendCmd(this.dth('0A0504', '07')) // execute
 		this.self.log('info', `Capture requested: Still ${stillSlot} <- ${sourceKey}`)
 		// Capture mode leaves its screen up on the monitor, so dismiss it once the still is
 		// written - but not a moment before. The device needs far longer than its own
