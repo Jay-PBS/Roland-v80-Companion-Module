@@ -240,6 +240,14 @@ export class V80Api {
 			this.self.updateStatus(InstanceStatus.BadConfig, 'Missing host/port')
 			return
 		}
+		// The V-80HD accepts no LAN control until a network password is set on the unit (PROTOCOL.md
+		// §1.1), so without one there is nothing to connect to. Connecting anyway used to mark the
+		// session authenticated at once and poll straight into the device's password prompt - 65
+		// lines every 500ms, each a candidate failed attempt towards the lockout.
+		if (!this.password) {
+			this.self.updateStatus(InstanceStatus.BadConfig, 'Enter the network password set on the device')
+			return
+		}
 		this.self.updateStatus(InstanceStatus.Connecting)
 		this.isConnected = false
 		this.isAuthenticated = false
@@ -267,19 +275,14 @@ export class V80Api {
 			this.isAuthenticated = false
 			this.lastRxTime = Date.now()
 			this.cycleStartTime = Date.now()
-			const pw = this.password
-			if (pw) {
-				this.self.updateStatus(InstanceStatus.Connecting, 'Authenticating')
-				// The device prompts "Enter password:" ~10ms after connect. Wait for it so the
-				// password is only sent once — sending it unprompted too leaves a stray line the
-				// device parses as a command (observed ERR:0 on the wire). Fallback covers
-				// firmware that opens the session without prompting.
-				this.authTimer = setTimeout(() => {
-					if (!this.authSent && this.isConnected) this.sendPassword()
-				}, 1500)
-			} else {
-				this.onAuthenticated()
-			}
+			this.self.updateStatus(InstanceStatus.Connecting, 'Authenticating')
+			// The device prompts "Enter password:" ~10ms after connect. Wait for it so the
+			// password is only sent once — sending it unprompted too leaves a stray line the
+			// device parses as a command (observed ERR:0 on the wire). Fallback covers
+			// firmware that opens the session without prompting.
+			this.authTimer = setTimeout(() => {
+				if (!this.authSent && this.isConnected) this.sendPassword()
+			}, 1500)
 		})
 		this.tcp.on('data', (data: Buffer) => this.handleIncoming(data))
 		this.startWatchdog()
@@ -387,11 +390,8 @@ export class V80Api {
 			this.self.updateStatus(InstanceStatus.ConnectionFailure, 'Authentication failed – check password')
 			return
 		}
-		const pw = this.password
-		if (!pw) {
-			this.self.updateStatus(InstanceStatus.BadConfig, 'Device requires a password but none is configured')
-			return
-		}
+		// No empty-password branch: initTcp() refuses to connect without one, and the password
+		// cannot change on this instance - a config save builds a new V80Api.
 		this.sendPassword()
 	}
 
@@ -502,10 +502,10 @@ export class V80Api {
 	}
 
 	private onAuthenticated(): void {
-		// Idempotency guard. Three paths reach here - the no-password branch in initTcp, the
-		// "Welcome to" banner and the "VER:" line - and the device sends both banner lines in
-		// one exchange, so without this the full 64-command requestCoreState() burst goes out
-		// twice back to back and "Connection ready" is logged twice. Safe because
+		// Idempotency guard. Two paths reach here - the "Welcome to" banner and the "VER:"
+		// line - and the device sends both in one exchange, so without this the full 64-command
+		// requestCoreState() burst goes out twice back to back and "Connection ready" is logged
+		// twice. Safe because
 		// isAuthenticated is reset to false at every point a connection ends or restarts, so a
 		// genuine re-authentication after a drop is never blocked.
 		if (this.isAuthenticated) return
