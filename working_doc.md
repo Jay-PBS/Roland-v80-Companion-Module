@@ -4,7 +4,7 @@ Live working notes: **open items only**.
 
 Once something is done and verified on hardware, delete it from this file. Anything worth keeping permanently belongs in [README.md](README.md) (project-facing, kept short), [CHANGELOG.md](CHANGELOG.md), [DEVELOPMENT.md](DEVELOPMENT.md) or [companion/HELP.md](companion/HELP.md) (user-facing), not here. This file is not a changelog and holds no logs — the changelog lives in [CHANGELOG.md](CHANGELOG.md).
 
-Last reviewed: 2026-09-26 · Working version: 1.0.3 (branch `fix/1.0.2-review`)
+Last reviewed: 2026-09-26 · Working version: 1.0.4 (branch `fix/1.0.2-review`)
 
 ---
 
@@ -24,15 +24,17 @@ Last reviewed: 2026-09-26 · Working version: 1.0.3 (branch `fix/1.0.2-review`)
 
 ## Open — needs hardware
 
-**1.0.3 test — `TESTING-NEXT.md`.** 1.0.2 passed its hardware test on 2026-09-26, and found two
-things now fixed on the branch:
+**1.0.4 test — `TESTING-NEXT.md`.** Three hardware rounds so far, all on 2026-09-26:
 
-- **Capture freeze:** a second capture sent too soon froze the unit. Captures are now locked for
-  10 s, with a WAIT ! feedback.
-- **Slow reconnect:** the retry interval is now 6 s instead of 12 s.
+- **1.0.2 passed**, and found the capture freeze and the slow reconnect.
+- **1.0.3 fixed both, and passed.** It also showed that some wrong passwords get no reply. On that
+  silence the module reconnected and resent the password every ~6 s.
+- **1.0.4 stops instead.**
 
-The version is **1.0.3**, the one to submit. It needs BUILD GO, then the capture-lock gate in the
-sheet. The deliberate lockout (G4) is optional.
+**1.0.4 is the one to submit.** It needs BUILD GO, then the short gate in the sheet: one wrong
+password, and only one attempt in 30 s. The sheet's Q1 and Q2 are the two open questions (where
+module debug output shows, and what the switcher sends after a wrong password). They are for
+PROTOCOL.md and don't hold up the release.
 
 **Protocol:** Fade To Black was the last open protocol question and it was answered
 2026-09-16: the engaged state is in no address, and `QFTB;` from Roland's mnemonic command set reads
@@ -62,9 +64,9 @@ reviews followed, one of them independent. Both are in `CODE_REVIEW.md`, and its
 compared" section holds the combined list.
 
 **All 11 items are done on branch `fix/1.0.2-review`**, one commit each, with the version at
-1.0.2. The Roland PDF is untracked and still on disk. 1.0.2 was built and hardware-tested on
-2026-09-26. Its two fixes, the capture lock and the 6 s reconnect, make the submitted version
-**1.0.3**. Not yet merged or tagged, and nothing has gone to Bitfocus.
+1.0.2. The Roland PDF is untracked and still on disk. Hardware testing added the capture lock
+and the 6 s reconnect (1.0.3), and the stop on an unanswered password (1.0.4), so **the submitted
+version is 1.0.4**. Not yet merged or tagged, and nothing has gone to Bitfocus.
 
 **Both ultrareviews are done (2026-09-26, free runs 1 and 2 of 3).**
 
@@ -76,9 +78,9 @@ Raw findings and the assessment are in `CODE_REVIEW.md`, Reviews 3 and 4.
 
 **Next, in order:**
 
-1. BUILD GO for 1.0.3, then the capture-lock checks in `TESTING-NEXT.md`.
-2. Merge `fix/1.0.2-review` into `main`, tag `v1.0.3`, push to both remotes, and resubmit in the
-   portal with a reply listing the changes.
+1. BUILD GO for 1.0.4, then the P1–P3 gate in `TESTING-NEXT.md`.
+2. Merge `fix/1.0.2-review` into `main`, tag `v1.0.4`, push to origin and, with Jay's explicit
+   yes, to Bitfocus. Then resubmit in the portal with a reply listing the changes.
 
 **Sync state now stays for this release**, by decision (2026-09-26). It is mostly redundant with
 polling always on, but removing an action breaks buttons that use it. Revisit in 1.1.
