@@ -16,7 +16,7 @@ Last reviewed: 2026-09-26 · Working version: 1.0.4 (branch `fix/1.0.2-review`)
 | `yarn build`         | Passing                                                    |
 | `yarn lint`          | Passing — clean, 0 errors                                  |
 | `prettier --check .` | Passing                                                    |
-| `yarn package`       | Passing — `roland-v80hd-1.0.3.tgz` (untracked, local only) |
+| `yarn package`       | Passing — `roland-v80hd-1.0.4.tgz` (untracked, local only) |
 | GitHub Actions       | Node CI green on `main`; check `fix/1.0.2-review`          |
 | `yarn preflight`     | Passing — the pre-release gate                             |
 
