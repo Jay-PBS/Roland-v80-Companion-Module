@@ -155,6 +155,10 @@ accept the press that dismisses it. Shorter waits were tried and broke the captu
 Do not fire two captures less than 7 seconds apart, or the first one's dismissal can land on the
 second one's screen.
 
+If the connection drops or the connection config is saved while a capture is running, the module
+stops the capture rather than pressing buttons on the new connection, and logs a warning. Check the
+still, and close the capture screen on the unit if it was left open.
+
 ### Utility
 
 - Utility – Sync state now — forces an immediate poll

@@ -227,6 +227,10 @@ export class V80Api {
 	private cycleStartTime = 0
 	// Connection messages already logged during the current outage - see logOncePerOutage.
 	private outageMessages = new Set<string>()
+	// Bumped whenever the connection to the device ends: destroyTcp(), a socket error, or
+	// TCPHelper reporting any status but Ok, which covers its own reconnects as well as ours.
+	// The capture sequence checks it after every wait - see waitSameSession.
+	private session = 0
 
 	constructor(self: ModuleInstance) {
 		this.self = self
@@ -279,6 +283,7 @@ export class V80Api {
 		this.tcp.on('status_change', (status, message) => {
 			this.self.updateStatus(status, message)
 			if (status !== InstanceStatus.Ok) {
+				this.session++
 				this.isConnected = false
 				this.isAuthenticated = false
 				this.stopPolling()
@@ -286,6 +291,7 @@ export class V80Api {
 		})
 		this.tcp.on('error', (err) => {
 			this.logOncePerOutage('error', `TCP error: ${err.message}`)
+			this.session++
 			this.isConnected = false
 			this.stopPolling()
 		})
@@ -360,6 +366,7 @@ export class V80Api {
 	}
 
 	public destroyTcp(): void {
+		this.session++
 		this.stopPolling()
 		this.stopDebounce()
 		this.stopWatchdog()
@@ -927,9 +934,15 @@ export class V80Api {
 	// certainly a no-op in 0.8.1 and 0.8.2 - which matches 1200ms and 7000ms behaving
 	// identically on hardware. One press was not enough either, so the post-capture screen
 	// is evidently not the same single toggle RCS drives when idle.
-	public async cmdExitCaptureFunction(): Promise<void> {
+	//
+	// Gated on the connection instead: `session` is the one the capture ran on, and the second
+	// press is skipped if that connection has ended in the 300ms between them.
+	public async cmdExitCaptureFunction(session: number): Promise<void> {
 		this.cmdToggleCaptureMode()
-		await this.delay(300)
+		if (!(await this.waitSameSession(300, session))) {
+			this.captureScreenMayBeOpen()
+			return
+		}
 		this.cmdToggleCaptureMode()
 	}
 	public cmdSetTransitionType(t: 'mix' | 'wipe'): void {
@@ -1256,6 +1269,29 @@ export class V80Api {
 		return new Promise((resolve) => setTimeout(resolve, ms))
 	}
 
+	// Waits, then reports whether the connection that was current when the wait began still is.
+	// The capture sequence runs for about 8.5s in all, and a step that wakes after a disconnect,
+	// a reconnect or a config change must not carry on: the device session it was driving has
+	// gone. Worse, [CAPTURE IMAGE] is a toggle, so pressing it blind on a new session could
+	// open the capture screen on the live multiview instead of closing it. Stopping leaves at
+	// worst a capture screen up, which the log says to close on the unit.
+	private async waitSameSession(ms: number, session: number): Promise<boolean> {
+		await this.delay(ms)
+		return session === this.session
+	}
+	private captureStopped(stillSlot: number): void {
+		this.self.log(
+			'warn',
+			`Capture to Still ${stillSlot} stopped - the connection dropped part-way. Check the still, and close the capture screen on the unit if it is open.`,
+		)
+	}
+	private captureScreenMayBeOpen(): void {
+		this.self.log(
+			'warn',
+			'Capture screen not closed - the connection dropped first. Close it on the unit if it is still open.',
+		)
+	}
+
 	// Capture a live input into a still memory slot.
 	//
 	// Sequence confirmed 2026-09-04 by capturing the Roland RCS software over six captures
@@ -1277,15 +1313,25 @@ export class V80Api {
 			return
 		}
 		const slotHex = this.hb(Math.max(0, Math.min(31, Math.round(stillSlot) - 1)))
+		const session = this.session
 
 		this.sendCmd(this.dth('0A0501', slotHex))
-		await this.delay(250)
+		if (!(await this.waitSameSession(250, session))) {
+			this.captureStopped(stillSlot)
+			return
+		}
 		this.sendCmd(this.dth('0A0504', '03'))
 		// The device needs roughly 560ms to answer 04 (ready) after arming. Waiting longer
 		// than observed rather than racing it, since a premature execute is silent.
-		await this.delay(800)
+		if (!(await this.waitSameSession(800, session))) {
+			this.captureStopped(stillSlot)
+			return
+		}
 		this.sendCmd(this.dth('0A0500', this.hb(srcByte)))
-		await this.delay(250)
+		if (!(await this.waitSameSession(250, session))) {
+			this.captureStopped(stillSlot)
+			return
+		}
 		this.sendCmd(this.dth('0A0504', '07'))
 		this.self.log('info', `Capture requested: Still ${stillSlot} <- ${sourceKey}`)
 		// Capture mode leaves its screen up on the monitor, so dismiss it once the still is
@@ -1301,25 +1347,29 @@ export class V80Api {
 		// away, in about 1.3s, and the dismissal finishes on its own. Device behaviour is
 		// unchanged; only the promise boundary moved.
 		//
-		// The close is cmdExitCaptureFunction, which is deliberately ungated - see the comment
-		// on it. One consequence of the long wait: starting a second capture inside 7s means
-		// the first close can land on the second capture's screen. Firing captures that fast is
-		// not a real workflow, and the action description says so.
-		void this.dismissCaptureScreen()
+		// The close is cmdExitCaptureFunction, which is deliberately ungated on the screen state -
+		// see the comment on it - but is skipped if the connection ends during the wait. One
+		// consequence of the long wait: starting a second capture inside 7s means the first
+		// close can land on the second capture's screen. Firing captures that fast is not a real
+		// workflow, and the action description says so.
+		void this.dismissCaptureScreen(session)
 	}
 
 	// Split out of cmdCaptureImage so the action can resolve without waiting on it. Nothing
 	// awaits this, so it has to swallow nothing: any failure is logged here or it is invisible.
-	private async dismissCaptureScreen(): Promise<void> {
+	private async dismissCaptureScreen(session: number): Promise<void> {
 		try {
-			await this.delay(7000)
+			if (!(await this.waitSameSession(7000, session))) {
+				this.captureScreenMayBeOpen()
+				return
+			}
 			// Logged so a hardware run shows whether this fired and what the device thought the
 			// screen was doing, without needing another packet capture.
 			this.self.log(
 				'info',
 				`Exiting capture function (screen reported ${this.self.captureModeOpen ? 'open' : 'closed'})`,
 			)
-			await this.cmdExitCaptureFunction()
+			await this.cmdExitCaptureFunction(session)
 		} catch (err) {
 			this.self.log('warn', `Capture screen dismissal failed: ${err instanceof Error ? err.message : String(err)}`)
 		}
