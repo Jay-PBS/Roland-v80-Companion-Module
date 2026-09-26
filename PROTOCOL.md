@@ -699,8 +699,14 @@ this took four attempts to establish:
 > This is exactly what made 1200 ms and 7000 ms behave identically on hardware while both were
 > broken.
 
-> **Do not fire two captures less than 7 seconds apart**, or the first close lands on the second
-> capture's screen.
+> **Never start a capture while the previous one is still finishing.** On 2026-09-26 a second
+> capture sent too soon after the first **froze the V-80HD in capture mode, and only a hard power
+> cycle recovered it** (firmware v1.20.201). The first capture's close had been skipped because the
+> connection was rebuilt mid-capture, so the unit was very likely still inside the first capture.
+> **Observed**, once. How long "too soon" is has not been measured. The module now refuses any
+> capture within 10 s of the previous one starting: about 1.3 s of commands, the 7 s wait and the
+> close, with margin. Allow at least that. Even without a freeze, a second capture inside 7 s
+> would take the first one's close on its own screen.
 
 **The capture screen does not block the unit's other menus.** Open a menu while a capture runs and
 the menu stays up with the capture visibly continuing behind it. The two ignore each other. That is

@@ -520,7 +520,8 @@ export function UpdatePresets(self: ModuleInstance): void {
 	// ── Image Capture ─────────────────────────────────────────────────────────
 	// Still 1-8 from HDMI In 1 as a starting point; change the source on the button.
 	// A capture takes about 10 seconds and overwrites the slot without asking - most of that
-	// is the 7s hold before the capture screen is dismissed. See cmdCaptureImage.
+	// is the 7s hold before the capture screen is dismissed. See cmdCaptureImage. A press within
+	// 10s of the last capture starting is ignored and the button shows WAIT ! - see capture_wait.
 	for (let slot = 1; slot <= 8; slot++) {
 		presets[`capture_still_${slot}`] = {
 			type: 'button',
@@ -528,7 +529,9 @@ export function UpdatePresets(self: ModuleInstance): void {
 			name: `Capture to Still ${slot}`,
 			style: { text: `Capture\n${slot}`, size: sz, color: c.white, bgcolor: c.mem, show_topbar: false },
 			steps: [{ down: [{ actionId: 'capture_image', options: { slot, source: 'hdmi_1' } }], up: [] }],
-			feedbacks: [],
+			feedbacks: [
+				{ feedbackId: 'capture_wait', options: {}, style: { bgcolor: c.tp_on, color: c.black, text: 'WAIT !' } },
+			],
 		}
 	}
 

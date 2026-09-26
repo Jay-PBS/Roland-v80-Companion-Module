@@ -464,7 +464,7 @@ export function UpdateActions(self: ModuleInstance): void {
 					type: 'static-text',
 					label: 'Note',
 					value:
-						'Takes about 10 seconds and overwrites the slot without asking. Do not fire two captures less than 7 seconds apart, or the first screen close can land on the second capture.',
+						'Takes about 10 seconds and overwrites the slot without asking. Further capture presses are ignored for 10 seconds from the start of a capture, because a second capture sent too soon can freeze the V-80HD. Add the Image Capture – wait feedback to show WAIT ! when that happens.',
 				},
 				{ id: 'slot', type: 'number', label: 'Still slot', default: 1, min: 1, max: 32 },
 				{

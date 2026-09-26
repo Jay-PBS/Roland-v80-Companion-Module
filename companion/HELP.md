@@ -152,12 +152,16 @@ That seven-second wait is deliberate and cannot be shortened. Capture mode leave
 the monitor, and the unit needs far longer than its own "capture done" reply suggests before it will
 accept the press that dismisses it. Shorter waits were tried and broke the capture outright.
 
-Do not fire two captures less than 7 seconds apart, or the first one's dismissal can land on the
-second one's screen.
+**One capture at a time, 10 seconds apart.** A second capture sent while the first is still finishing
+can freeze the V-80HD in capture mode, and only a power cycle recovers it. So for 10 seconds after a
+capture starts, any further capture press is ignored — nothing is sent to the unit — and a warning is
+logged. The **Image Capture – wait** feedback shows **WAIT !** on the button when that happens, until
+the 10 seconds are up. The Image Capture presets carry it already; add it by hand to capture buttons
+built before 1.0.3.
 
 If the connection drops or the connection config is saved while a capture is running, the module
 stops the capture rather than pressing buttons on the new connection, and logs a warning. Check the
-still, and close the capture screen on the unit if it was left open.
+still, and close the capture screen on the unit if it was left open **before capturing again**.
 
 ### Utility
 
@@ -210,6 +214,7 @@ copied when dropped rather than linked, so add the _engaged_ feedback by hand or
 - Test pattern active
 - Tally state per input (HDMI 1 to 4, SDI 1 to 4)
 - Stream & Record active, and the specific state (Stopped, Starting, Running, Stopping)
+- Image Capture – wait: shows WAIT ! when a capture press is ignored because the previous capture is still finishing
 
 Stream & Record state is polled with everything else. The device reports it on `030800`, but a
 packet capture on 2026-09-04 showed it pushes that status only to the Roland RCS session and never

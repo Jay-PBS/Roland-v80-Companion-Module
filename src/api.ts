@@ -20,6 +20,13 @@ export const SRC_INPUT16 = 0x38
 // while the screen is shut opens it. Never send it ungated.
 const CAPTURE_MODE_SW = '0B002A'
 
+// How long after a capture starts before another one may. A second capture sent while the first
+// was still finishing froze a V-80HD in capture mode on 2026-09-26, and only a power cycle
+// recovered it. A capture's commands take about 1.3s and the screen closes at about 8.3s, so
+// 10s leaves margin. The lock lives on ModuleInstance, not here, so a config save or reconnect
+// mid-capture - which builds a new V80Api - cannot reset it.
+export const CAPTURE_LOCK_MS = 10000
+
 // Shown when the device refuses the password. The module does not retry on its own - see
 // stopAfterAuthFailure - so the status says what the user has to do.
 const AUTH_FAILED_STATUS = 'Authentication failed – check the password, then save the config'
@@ -1314,6 +1321,25 @@ export class V80Api {
 			this.self.log('warn', `Unknown capture source: ${sourceKey}`)
 			return
 		}
+		// Refused rather than queued while the previous capture is still finishing - see
+		// CAPTURE_LOCK_MS. The press does nothing on the wire, and the capture_wait feedback
+		// shows WAIT ! on the button until the lock ends.
+		const lockedFor = this.self.captureLockedUntil - Date.now()
+		if (lockedFor > 0) {
+			this.self.log(
+				'warn',
+				`Capture ignored - the previous capture is still finishing. Try again in ${Math.ceil(lockedFor / 1000)}s.`,
+			)
+			this.self.refuseCapture()
+			return
+		}
+		// Without a session every command below would be dropped one by one, each with its own
+		// warning, and the lock would start for a capture that never happened.
+		if (!this.isAuthenticated) {
+			this.self.log('warn', 'Capture not started - not connected to the device')
+			return
+		}
+		this.self.startCaptureLock()
 		const slotHex = this.hb(Math.max(0, Math.min(31, Math.round(stillSlot) - 1)))
 		const session = this.session
 
@@ -1349,10 +1375,8 @@ export class V80Api {
 		// unchanged; only the promise boundary moved.
 		//
 		// The close is cmdExitCaptureFunction, which is deliberately ungated on the screen state -
-		// see the comment on it - but is skipped if the connection ends during the wait. One
-		// consequence of the long wait: starting a second capture inside 7s means the first
-		// close can land on the second capture's screen. Firing captures that fast is not a real
-		// workflow, and the action description says so.
+		// see the comment on it - but is skipped if the connection ends during the wait. A second
+		// capture cannot start inside that wait: the capture lock covers it with margin.
 		void this.dismissCaptureScreen(session)
 	}
 
