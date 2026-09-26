@@ -71,7 +71,7 @@ followed:
 
 **Next, in order:**
 
-1. The D1–D4 smoke test of `roland-v80hd-1.0.5.tgz`.
+1. ~~The D1–D4 smoke test~~ — **passed 2026-09-26.**
 2. Merge `fix/1.0.5` into `main`, tag `v1.0.5`, and push to origin. With Jay's explicit yes, push
    `main` and the tag to Bitfocus, and wait for the module checks to go green.
 3. Jay submits v1.0.5 in the portal, with a reply listing the changes.

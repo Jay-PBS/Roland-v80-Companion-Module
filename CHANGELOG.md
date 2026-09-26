@@ -11,6 +11,8 @@ out. Tags exist for `v0.4.0`, `v0.6.5` and `v0.8.5`, which are the states worth 
 ### 1.0.5 — the debug logging checkbox is gone
 
 **The version resubmitted to Bitfocus.** It carries everything in 1.0.2–1.0.4 below, plus one change.
+**Hardware-tested 2026-09-26:** the checkbox is gone, existing connections start normally, the raw
+LAN command's echo still logs both directions, and each wrong password makes one attempt and stops.
 
 - **No more "Enable debug logging" checkbox.** In testing on Companion 5, ticking it showed nothing:
   its output never appeared on the Log page, even with Debug selected, so the box did nothing a user
