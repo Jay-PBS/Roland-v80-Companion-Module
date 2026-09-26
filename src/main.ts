@@ -93,7 +93,8 @@ export class ModuleInstance extends InstanceBase<ModuleConfig, ModuleSecrets> {
 	}
 
 	// The api is built before the definitions are registered, because the action callbacks
-	// reach through to it directly and `api` is declared with a definite assignment.
+	// reach through to it directly and `api` is declared with a definite assignment. Teardown
+	// still uses `?.`, so a destroy that arrives before init has finished cannot throw.
 	async init(config: ModuleConfig, _isFirstInit: boolean, secrets: ModuleSecrets): Promise<void> {
 		this.config = config
 		this.secrets = secrets ?? { password: '' }
@@ -102,12 +103,12 @@ export class ModuleInstance extends InstanceBase<ModuleConfig, ModuleSecrets> {
 		this.api.initTcp()
 	}
 	async destroy(): Promise<void> {
-		this.api.destroyTcp()
+		this.api?.destroyTcp()
 	}
 	async configUpdated(config: ModuleConfig, secrets: ModuleSecrets): Promise<void> {
 		this.config = config
 		this.secrets = secrets ?? { password: '' }
-		this.api.destroyTcp()
+		this.api?.destroyTcp()
 		this.api = new V80Api(this)
 		this.setupModule()
 		this.api.initTcp()
