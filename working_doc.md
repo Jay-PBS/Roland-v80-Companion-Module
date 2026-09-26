@@ -4,7 +4,7 @@ Live working notes: **open items only**.
 
 Once something is done and verified on hardware, delete it from this file. Anything worth keeping permanently belongs in [README.md](README.md) (project-facing, kept short), [CHANGELOG.md](CHANGELOG.md), [DEVELOPMENT.md](DEVELOPMENT.md) or [companion/HELP.md](companion/HELP.md) (user-facing), not here. This file is not a changelog and holds no logs — the changelog lives in [CHANGELOG.md](CHANGELOG.md).
 
-Last reviewed: 2026-09-25 · Working version: 1.0.1
+Last reviewed: 2026-09-26 · Working version: 1.0.2 (branch `fix/1.0.2-review`)
 
 ---
 
@@ -44,6 +44,24 @@ The black bus mute text replaced #990000 in 1.0.0 and reads clearly — confirme
 panel tracking, the Split relabel, the readable raw echo, the FTB fade colour, and the on-button
 detail blocks. A split button from before the Vertical/Horizontal rename and a raw-command button
 from an older version both still fire — confirmed 2026-09-25.
+
+## Open — 1.0.2, Bitfocus review fixes
+
+**1.0.1 was returned by the Bitfocus review on 2026-09-26** with two required changes. Two code
+reviews followed, one of them independent. Both are in `CODE_REVIEW.md`, and its "Two reviews
+compared" section holds the combined list.
+
+**All 11 items are done on branch `fix/1.0.2-review`**, one commit each, with the version at
+1.0.2. The Roland PDF is untracked and still on disk. Nothing is merged, tagged, built or tested
+on hardware, and nothing has gone to Bitfocus.
+
+**Next, in order:**
+
+1. Jay runs `/code-review ultra` on the branch, using a free run. Check that the dialog shows
+   about a dozen files and a few hundred lines.
+2. Verify its findings and fix what's real.
+3. BUILD GO, then the hardware checks in `CODE_REVIEW.md` Review 1 §4, plus a deliberate lockout.
+4. Merge, tag `v1.0.2`, and resubmit, with a portal reply listing the changes.
 
 ## Open — needs a decision
 
