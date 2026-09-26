@@ -31,7 +31,7 @@ A connection watchdog runs every second and recovers the link automatically:
 
 This covers silent network loss, where the socket remains open but the device is no longer reachable. If the module still does not reconnect, disable and re-enable it in Companion.
 
-The V-80HD applies a brute-force lockout after repeated failed password attempts, and will reject even the correct password while that lockout is active. The module detects this and reports "Device auth lockout — wait and retry" rather than continuing to retry. Wait for the device to clear the lockout before reconnecting.
+The V-80HD applies a brute-force lockout after repeated failed password attempts, and will reject even the correct password while that lockout is active. So the module never retries a password on its own. If the device rejects the password or reports the lockout, the module closes the connection and shows the reason in the connection status. It stays stopped until you save the connection config, or disable and re-enable the connection. After a lockout, wait for the device to clear it first.
 
 ---
 
@@ -335,7 +335,9 @@ Variables are accessed as $(instance_label:variable_id), for example $(v80hd:pro
 
 Module shows as disconnected — check the IP address, confirm port 8023, and ensure a network password has been set on the device via Menu, Network, Network Password.
 
-Module reports a device auth lockout — the V-80HD has locked out after repeated failed password attempts and will reject even a correct password until it clears. Confirm the password matches the one set on the device, then wait before retrying.
+Module reports authentication failed — the device rejected the password. Correct it in the connection config and save; the module does not retry a rejected password by itself.
+
+Module reports a device auth lockout — the V-80HD has locked out after repeated failed password attempts and will reject even a correct password until it clears. Confirm the password matches the one set on the device, wait for the lockout to clear, then disable and re-enable the connection.
 
 Feedbacks not updating — allow a few seconds rather than half a second, since the device does not answer every poll. If feedbacks remain static after that, disable and re-enable the connection.
 

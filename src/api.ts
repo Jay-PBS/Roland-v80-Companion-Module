@@ -20,6 +20,10 @@ export const SRC_INPUT16 = 0x38
 // while the screen is shut opens it. Never send it ungated.
 const CAPTURE_MODE_SW = '0B002A'
 
+// Shown when the device refuses the password. The module does not retry on its own - see
+// stopAfterAuthFailure - so the status says what the user has to do.
+const AUTH_FAILED_STATUS = 'Authentication failed – check the password, then save the config'
+
 // The eight physical inputs in panel order. Canonical: the freeze and tally address maps, the
 // freeze and tally dropdowns, the capture source list and the freeze and tally presets all key
 // off this one list. `short` is the button-label form used by the presets.
@@ -218,7 +222,6 @@ export class V80Api {
 	private authTimer?: NodeJS.Timeout
 	private watchdogTimer?: NodeJS.Timeout
 	private authSent = false
-	private authFailed = false
 	private isConnected = false
 	private isAuthenticated = false
 	private lastRxTime = 0
@@ -305,7 +308,7 @@ export class V80Api {
 	}
 
 	private watchdogTick(): void {
-		if (!this.tcp || this.authFailed) return
+		if (!this.tcp) return
 		const now = Date.now()
 		if (this.isConnected && this.isAuthenticated) {
 			// Nudge the device if quiet, then give up. Poll replies normally arrive every 500ms,
@@ -373,6 +376,23 @@ export class V80Api {
 		}
 	}
 
+	// A failed login ends this connection for good. Retrying cannot succeed - the password is the
+	// one the device just refused - and every attempt counts towards the brute-force lockout, which
+	// then refuses the correct password too (PROTOCOL.md §1.2). So close the socket, which also
+	// stops the watchdog and TCPHelper's own reconnect, and stay closed. A retry comes from the
+	// user: saving the config or re-enabling the connection builds a fresh V80Api.
+	//
+	// Before this, a failed login only stopped the watchdog. TCPHelper still reconnected after any
+	// socket drop, and the new session answered the next prompt with the same wrong password.
+	//
+	// The status is set after destroyTcp() so nothing overwrites it. TCPHelper.destroy() removes
+	// its listeners without emitting a status of its own.
+	private stopAfterAuthFailure(logMessage: string, status: string): void {
+		this.self.log('error', logMessage)
+		this.destroyTcp()
+		this.self.updateStatus(InstanceStatus.ConnectionFailure, status)
+	}
+
 	private sendPassword(): void {
 		this.authSent = true
 		this.tcp?.send(this.password + '\r\n').catch((err: Error) => this.self.log('debug', `TX failed: ${err.message}`))
@@ -384,10 +404,7 @@ export class V80Api {
 			// Re-prompt after we already answered means the password was rejected. Do not
 			// resend — answering every prompt with the same password loops until the device
 			// locks out ("Wait a moment"), which then rejects even correct passwords.
-			this.self.log('error', 'Authentication failed – device rejected the password')
-			this.authFailed = true
-			this.stopPolling()
-			this.self.updateStatus(InstanceStatus.ConnectionFailure, 'Authentication failed – check password')
+			this.stopAfterAuthFailure('Authentication failed – device rejected the password', AUTH_FAILED_STATUS)
 			return
 		}
 		// No empty-password branch: initTcp() refuses to connect without one, and the password
@@ -476,18 +493,19 @@ export class V80Api {
 			return
 		}
 		if (/^Authentication error/i.test(line)) {
-			this.self.log('error', 'Authentication failed')
-			this.authFailed = true
-			this.isConnected = false
-			this.stopPolling()
-			this.self.updateStatus(InstanceStatus.ConnectionFailure, 'Authentication failed')
+			this.stopAfterAuthFailure('Authentication failed', AUTH_FAILED_STATUS)
 			return
 		}
 		if (/^Wait a moment/i.test(line)) {
 			// Device brute-force lockout — it will reject even the correct password until it
-			// clears. Surface it instead of silently retrying.
-			this.self.log('error', 'Device auth lockout active ("Wait a moment") – pause before retrying')
-			this.self.updateStatus(InstanceStatus.ConnectionFailure, 'Device auth lockout – wait and retry')
+			// clears, and "the only remedy is to stop and wait" (PROTOCOL.md §1.2). This used to
+			// set the status and carry on, so six seconds later the watchdog rebuilt the
+			// connection and answered the next prompt with the password again, for as long as the
+			// lockout lasted.
+			this.stopAfterAuthFailure(
+				'Device auth lockout active ("Wait a moment") – wait for it to clear, then disable and re-enable the connection',
+				'Device auth lockout – wait, then disable and re-enable the connection',
+			)
 			return
 		}
 		if (/^Welcome to /i.test(line)) {
@@ -511,7 +529,6 @@ export class V80Api {
 		if (this.isAuthenticated) return
 		this.stopAuthTimer()
 		this.isAuthenticated = true
-		this.authFailed = false
 		this.self.log('info', 'Connection ready – requesting initial state')
 		this.self.updateStatus(InstanceStatus.Ok)
 		this.requestCoreState()
