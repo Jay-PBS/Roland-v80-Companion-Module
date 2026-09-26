@@ -51,8 +51,8 @@ controller disconnecting.
   one trigger. What actually happens depends on the unit's Stream&Record menu, so check that
   before putting it on a button.
 - **PinP View Position is only visible once View Zoom is raised.**
-- **Transition type feedback is partial.** It can show the wrong state after the transition is
-  changed on the front panel.
+- **Image Capture is one at a time, 10 seconds apart.** A second capture sent too soon can freeze the
+  V-80HD, so presses inside that window are ignored, and the button shows **WAIT !**.
 - **Audio control is mute only, by design.** The front-panel level knobs are not motorised, so a
   level set from Companion would silently disagree with the unit. Level control and metering could
   be added on request — [raise an issue](https://github.com/bitfocus/companion-module-roland-v80hd/issues).

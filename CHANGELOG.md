@@ -6,7 +6,9 @@ short version; this is the full record, including why things changed.
 Not every version below is a commit. Only 0.4.0, 0.6.0, 0.6.5, 0.7.0, 0.8.2, 0.8.4, 0.8.5, 0.8.6, 0.8.7 and
 0.8.8 were ever committed; the rest — 0.6.1 to 0.6.4, 0.8.0, 0.8.1 and 0.8.3 — were local builds that
 went straight to hardware, so their entries record what changed rather than something you can check
-out. Tags exist for `v0.4.0`, `v0.6.5` and `v0.8.5`, which are the states worth returning to.
+out. Tags exist for `v0.4.0`, `v0.6.5` and `v0.8.5`, which are the states worth returning to, and
+for every release from 1.0 on: `v1.0.0`, `v1.0.1` and `v1.0.5`. `v1.0.4` is a development-repo
+tag only, never released. 1.0.2 to 1.0.4 were test builds, listed below for the record.
 
 ### 1.0.5 — the debug logging checkbox is gone
 
@@ -23,8 +25,9 @@ LAN command's echo still logs both directions, and each wrong password makes one
 ### 1.0.4 — an unanswered password stops the module (test build, not released)
 
 **Tagged in the development repository, never submitted.** Its changes ship in 1.0.5. It carries
-everything in 1.0.2 and 1.0.3 below, plus one fix from the 1.0.3 hardware test. **Hardware-tested 2026-09-26:** each wrong password made exactly one
-attempt and stopped, the correct password connected at once, and a preset and capture sweep passed.
+everything in 1.0.2 and 1.0.3 below, plus one fix from the 1.0.3 hardware test.
+**Hardware-tested 2026-09-26:** each wrong password made exactly one attempt and stopped, the correct
+password connected at once, and a preset and capture sweep passed.
 
 - **A password that gets no answer is treated as wrong.** In testing, some wrong passwords drew no
   reply at all. After 6 seconds of that silence, the module used to reconnect, and the new
@@ -35,7 +38,7 @@ attempt and stopped, the correct password connected at once, and a preset and ca
 
 ### 1.0.3 — capture lock and faster reconnect (test build, not released)
 
-**Built and tested on hardware on 2026-09-26, never submitted.** Its changes ship in 1.0.4. The capture
+**Built and tested on hardware on 2026-09-26, never submitted.** Its changes ship in 1.0.5. The capture
 lock, the WAIT ! feedback and the faster reconnect all passed. The same test found the unanswered-
 password case that 1.0.4 fixes. No existing ids changed; one feedback is new.
 
@@ -52,7 +55,7 @@ password case that 1.0.4 fixes. No existing ids changed; one feedback is new.
 
 ### 1.0.2 — Bitfocus review fixes (test build, not released)
 
-**Built and tested on hardware on 2026-09-26, never submitted.** Its changes ship in 1.0.4. The test
+**Built and tested on hardware on 2026-09-26, never submitted.** Its changes ship in 1.0.5. The test
 passed the login, lockout-stop, config, logging and lifecycle checks, and found the capture freeze
 that 1.0.3 fixes.
 

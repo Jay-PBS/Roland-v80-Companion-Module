@@ -145,7 +145,7 @@ to notice a dead link. That was reported as too slow on hardware and halved. **C
 
 One Windows-specific note: a connect attempt to an unreachable host takes about **21 s** to time
 out, so recycling the socket keeps attempts fresh rather than stacking timers. The module recycled
-every 12 s until 1.0.3. After a cable pull, the link then took up to 12 s to return once the cable
+every 12 s until 1.0.5. After a cable pull, the link then took up to 12 s to return once the cable
 was back. **Observed** 2026-09-26. It now recycles every 6 s, which still leaves room for the
 Windows connect retry at about 3 s.
 
@@ -396,7 +396,7 @@ R/W, polled. **Confirmed.** `001403` unused.
 
 R/W, polled. **Confirmed.** `001500` doubles as the module's watchdog nudge — a cheap read with a
 guaranteed reply. A side effect: with polling off, the Program source still tracks the panel,
-about every 1.5 s, while nothing else does. **Observed** 2026-09-25, before 1.0.2 removed the option
+about every 1.5 s, while nothing else does. **Observed** 2026-09-25, before 1.0.5 removed the option
 to turn polling off.
 
 ### 4.8 Audio
@@ -766,8 +766,9 @@ poll it. See §4.10.
 **500 ms is the floor. 250 ms locked the panel up.** **Confirmed** — this is a hardware limit, not a
 preference.
 
-The module's cycle is **64 individual reads**: 33 enumerated core addresses, 15 audio mutes, 8 input
-freezes, 8 tally. At 500 ms that is about 128 commands per second.
+The module's cycle is **65 individual commands**: 64 reads (33 enumerated core addresses, 15 audio
+mutes, 8 input freezes, 8 tally) and one `QFTB;` for the Fade To Black state (§10.1). At 500 ms that
+is about 130 commands per second.
 
 Adding still tally (§9.4) would take the cycle to 93, which is why it was left out.
 
@@ -796,7 +797,7 @@ because a 3.5-second gap swallowed the entire fade.
 document your feedback latency as the poll interval, and do not treat a transient state as reliably
 observable by polling. Levels and steady states survive a missed sample; a one-second flag may not.
 
-Cause unestablished. The obvious suspect is load — 64 commands every 500 ms is ~128 per second into
+Cause unestablished. The obvious suspect is load — 65 commands every 500 ms is ~130 per second into
 a device whose panel locked up at a 250 ms interval (§7.1), so the two findings may be the same
 finding seen from different sides. Whether a smaller poll set or a longer interval raises the answer
 rate has not been tested.
@@ -853,7 +854,7 @@ lit on a tally button — briefly telling them something false about what is on 
 - **Without polling**, the optimistic half keeps working from the client and the non-optimistic
   half freezes permanently at whatever it last showed. Nothing corrects it. That is the real cost of
   not polling, and it is larger than "feedbacks lag a bit". It is why this module removed its option
-  to switch polling off in 1.0.2.
+  to switch polling off in 1.0.5.
 
 ### 7.5 What the device pushes to you: nothing
 
@@ -1184,7 +1185,7 @@ was exercised against a V-80HD on **v1.20.201**.
 debug logging (verbose TX/RX)" checkbox logged every segment, frame and value. It was removed
 because:
 
-- **Companion showed none of it.** It logged at `debug` level, and on Companion 5.0.5 nothing
+- **Companion showed none of it.** It logged at `debug` level, and on Companion 5 nothing
   appeared on the Log page with Debug ticked, nor in Companion's log files, which hold `info` and
   above only. So the checkbox visibly did nothing — the same fault the Bitfocus review found in the
   polling checkbox.
