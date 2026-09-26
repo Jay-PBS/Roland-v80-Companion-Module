@@ -21,7 +21,7 @@ shipped version. The more of the following you can include, the faster it gets r
 
 - V-80HD firmware version, and the Companion and module versions.
 - What you did, what you expected, and what happened instead.
-- A debug log covering the failure. Tick **Enable debug logging (verbose TX/RX)** in the connection config, reproduce the problem, then attach the `TX` and `RX RAW` lines from the Companion log. These show exactly what went to the device and what came back, and are usually the difference between a diagnosis and a guess.
+- The Companion log covering the failure, from the connection starting to the problem. If the fault is in what the device answers, the **Advanced – Send raw LAN command** action (with **Allow advanced actions** ticked) logs both what was sent and the device's reply, byte count included. The lines start `Raw TX` and `Raw RX`. Those are usually the difference between a diagnosis and a guess.
 
 If the problem is with Companion itself rather than this module, report it against [Companion](https://github.com/bitfocus/companion/issues) instead.
 

@@ -8,10 +8,22 @@ Not every version below is a commit. Only 0.4.0, 0.6.0, 0.6.5, 0.7.0, 0.8.2, 0.8
 went straight to hardware, so their entries record what changed rather than something you can check
 out. Tags exist for `v0.4.0`, `v0.6.5` and `v0.8.5`, which are the states worth returning to.
 
-### 1.0.4 — an unanswered password stops the module
+### 1.0.5 — the debug logging checkbox is gone
 
-**The version resubmitted to Bitfocus.** It carries everything in 1.0.2 and 1.0.3 below, plus one fix
-from the 1.0.3 hardware test. **Hardware-tested 2026-09-26:** each wrong password made exactly one
+**The version resubmitted to Bitfocus.** It carries everything in 1.0.2–1.0.4 below, plus one change.
+**Hardware-tested 2026-09-26:** the checkbox is gone, existing connections start normally, the raw
+LAN command's echo still logs both directions, and each wrong password makes one attempt and stops.
+
+- **No more "Enable debug logging" checkbox.** In testing on Companion 5, ticking it showed nothing:
+  its output never appeared on the Log page, even with Debug selected, so the box did nothing a user
+  could see. The verbose logging behind it is removed too. The normal log is unchanged: connections,
+  errors, captures, and the raw LAN command's echo of what the device sends back. Nothing needs
+  changing on existing connections.
+
+### 1.0.4 — an unanswered password stops the module (test build, not released)
+
+**Tagged in the development repository, never submitted.** Its changes ship in 1.0.5. It carries
+everything in 1.0.2 and 1.0.3 below, plus one fix from the 1.0.3 hardware test. **Hardware-tested 2026-09-26:** each wrong password made exactly one
 attempt and stopped, the correct password connected at once, and a preset and capture sweep passed.
 
 - **A password that gets no answer is treated as wrong.** In testing, some wrong passwords drew no

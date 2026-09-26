@@ -1,4 +1,4 @@
-# Roland V-80HD — Companion Module v1.0.4
+# Roland V-80HD — Companion Module v1.0.5
 
 Tested on a Roland V-80HD with firmware v1.20.201. Every action and feedback has been tested on hardware.
 
