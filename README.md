@@ -37,6 +37,10 @@ Repeated wrong passwords trigger the device's lockout, which rejects even the ri
 clears. The module never retries a rejected password: it stops and shows the reason. Wait for a
 lockout to clear, then disable and re-enable the connection.
 
+**One controller at a time.** The V-80HD accepts a single LAN control session. While Roland RCS or
+another controller holds it, the module waits, and it connects within a few seconds of that
+controller disconnecting.
+
 ---
 
 ## Good to know

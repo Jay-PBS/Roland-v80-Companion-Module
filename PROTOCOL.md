@@ -93,8 +93,11 @@ sent about 3 s apart, each on a fresh connection (firmware v1.20.201):
 - the fourth drew a re-prompt after about 1 s.
 
 The correct password was accepted immediately afterwards. **Four wrong attempts in about 10 s did not
-trip the lockout.** **Observed**, once, from the module's log. The raw replies were not captured, so
-whether the silent attempts were prompted, and whether a late verdict would have come, is open.
+trip the lockout.** Three more wrong attempts that afternoon, each about a minute apart, all drew
+`Authentication error` at once, and the correct password worked straight after each one. **Observed**
+from the module's log. The raw replies were not captured, so whether the silent attempts were
+prompted, and whether a late verdict would have come, is open. So is the number of attempts that
+does trip the lockout.
 
 **The design consequence:** treat "password sent, then silence" as a failed login. A client that
 rebuilds the connection on that silence answers the next prompt with the same wrong password, over

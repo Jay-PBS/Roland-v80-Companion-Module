@@ -11,7 +11,8 @@ out. Tags exist for `v0.4.0`, `v0.6.5` and `v0.8.5`, which are the states worth 
 ### 1.0.4 — an unanswered password stops the module
 
 **The version resubmitted to Bitfocus.** It carries everything in 1.0.2 and 1.0.3 below, plus one fix
-from the 1.0.3 hardware test.
+from the 1.0.3 hardware test. **Hardware-tested 2026-09-26:** each wrong password made exactly one
+attempt and stopped, the correct password connected at once, and a preset and capture sweep passed.
 
 - **A password that gets no answer is treated as wrong.** In testing, some wrong passwords drew no
   reply at all. After 6 seconds of that silence, the module used to reconnect, and the new
