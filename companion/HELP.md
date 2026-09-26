@@ -146,8 +146,8 @@ closes the screen again by itself, so there is nothing to drive by hand.
 **The target slot is overwritten without confirmation.** There is no undo.
 
 **The button returns straight away.** The still is written in about a second, and the capture screen
-then clears itself roughly seven seconds later with nothing further from you. Nothing to wait on, and
-no button to press on the unit.
+then clears itself roughly seven seconds later with nothing further from you. There is no button to
+press on the unit.
 
 That seven-second wait is deliberate and cannot be shortened. Capture mode leaves its screen up on
 the monitor, and the unit needs far longer than its own "capture done" reply suggests before it will
@@ -201,6 +201,15 @@ The following states are polled and drive feedbacks:
 - Audio mute state (per input channel, main bus, AUX 1 bus, AUX 2 bus)
 - Transition type (Mix or Wipe)
 - Fade To Black – fade in progress, and Fade To Black – engaged
+- Wipe pattern and wipe direction
+- Test pattern active
+- Tally state per input (HDMI 1 to 4, SDI 1 to 4)
+- Stream & Record active, and the specific state (Stopped, Starting, Running, Stopping)
+
+One feedback is not polled: **Image Capture – wait** shows WAIT ! when a capture press is ignored
+because the previous capture is still finishing. See Image Capture above.
+
+### Fade To Black feedbacks
 
 **Use _engaged_ for an FTB button.** It lights for as long as the output is black, however that
 happened — from Companion, the V-80's panel, or the Roland RCS software. _Fade in progress_ lights
@@ -208,23 +217,17 @@ only during the one-second transition, which is why a button using it alone appe
 then go dark while the output is still black.
 
 The FTB preset in the Transitions category carries both, so a button dropped from it shows the
-transition and then stays lit. **A button built before this will not update itself** — presets are
-copied when dropped rather than linked, so add the _engaged_ feedback by hand or drop a fresh one.
+transition and then stays lit. Buttons built from an older preset do not update themselves —
+presets are copied when dropped rather than linked — so add the _engaged_ feedback by hand or drop a
+fresh one.
 
-- Wipe pattern and wipe direction
-- Test pattern active
-- Tally state per input (HDMI 1 to 4, SDI 1 to 4)
-- Stream & Record active, and the specific state (Stopped, Starting, Running, Stopping)
-- Image Capture – wait: shows WAIT ! when a capture press is ignored because the previous capture is still finishing
+### Stream & Record state
 
-Stream & Record state is polled with everything else. The device reports it on `030800`, but a
-packet capture on 2026-09-04 showed it pushes that status only to the Roland RCS session and never
-to ours, so the module asks for it on every cycle. The value still comes from the device's own
-report rather than from what the module sent, so the feedback stays correct whether the stream was
-started from Companion, the front panel or RCS.
-
-Fade To Black, wipe pattern, wipe direction and AUX Linked PGM feedbacks were added in 0.6.0.
-Tally feedbacks were added in 0.6.3, and Stream & Record state in 0.6.4.
+Stream & Record state is polled with everything else. The device reports it on `030800`, but it
+pushes that status only to the Roland RCS session, never to this one, so the module asks for it on
+every cycle. The value still comes from the device's own report rather than from what the module
+sent, so the feedback stays correct whether the stream was started from Companion, the front panel
+or RCS.
 
 ### AUX Linked PGM
 
@@ -301,7 +304,7 @@ The following variables are available for use in button labels and expressions:
 | stream_record       | Stream & Record active (ON/OFF)        |
 | stream_record_state | Stopped, Starting, Running or Stopping |
 
-Per-channel audio mute variables, added in 0.6.0. Each reports ON or OFF:
+Per-channel audio mute variables. Each reports ON or OFF:
 
 | Variable                         | Channel        |
 | -------------------------------- | -------------- |
@@ -315,7 +318,7 @@ Per-channel audio mute variables, added in 0.6.0. Each reports ON or OFF:
 | mute_sdi_in_1 to mute_sdi_in_4   | SDI In 1 to 4  |
 | mute_video_player                | Video Player   |
 
-Per-input freeze variables, added in 0.6.0. Each reports ON or OFF:
+Per-input freeze variables. Each reports ON or OFF:
 
 | Variable                       | Input       |
 | ------------------------------ | ----------- |
@@ -352,6 +355,6 @@ Module reports a device auth lockout — the V-80HD has locked out after repeate
 
 Feedbacks not updating — allow a few seconds rather than half a second, since the device does not answer every poll. If feedbacks remain static after that, disable and re-enable the connection.
 
-AUX routing not responding as expected — confirm AUX Linked PGM is set to Off for independent AUX control.
+AUX routing not responding as expected — AUX Linked PGM is probably overriding it. Under Auto Link, the next CUT or AUTO puts AUX back to following PGM. For AUX selections that stick, set the mode to Manual Link or Off. See AUX Linked PGM above.
 
 PinP appearing on the wrong output — use the AUX Layer – PinP & Key actions to control PinP on the AUX bus independently. The PinP PGM Toggle action affects the main program output layer only.

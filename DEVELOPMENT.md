@@ -45,6 +45,31 @@ That is fine. The hook only formats staged files and auto-fixes lint — a stric
 and nothing depends on it. Run `yarn husky` once if you want it; skip it if you would rather nothing
 rewrote files during a commit.
 
+## Releasing
+
+This repository is where development happens. The released module lives at
+[bitfocus/companion-module-roland-v80hd](https://github.com/bitfocus/companion-module-roland-v80hd),
+and Bitfocus build and publish from there. The steps, per companion.free's "Releasing your module":
+
+1. Bump `version` in `package.json`, and the version in `README.md` and `companion/HELP.md`'s title.
+   Add the `CHANGELOG.md` entry. A version that was built and tested but not released stays in the
+   changelog, marked as a test build. Never reuse its number.
+2. `yarn preflight`, then test the `.tgz` on a V-80HD.
+3. Merge to `main` and tag it: `git tag -a vX.Y.Z -m "…"`. Push `main` and the tag to this
+   repository.
+4. `git fetch bitfocus`, then **diff `.github/` against `bitfocus/main`** before pushing there. Their
+   `companion-module-checks.yaml` must survive: the developer portal reads its run as the version's
+   prechecks. It is guarded to run only on the Bitfocus repository, and must never be deleted here.
+5. Push `main` and the tag to Bitfocus. Wait for **Companion Module Checks** to go green there.
+6. Submit the version in the Bitfocus developer portal.
+
+**Test builds may carry verbose TX/RX logging; releases never do.** PROTOCOL.md §11.1 has how to add
+it and the check to run before tagging.
+
+**Untracking a file deletes it from disk on merge.** Git removes a file from the working tree when it
+applies a change that stops tracking it. Copy anything you want to keep, such as a reference PDF,
+somewhere safe before merging such a change.
+
 ## Preset text size
 
 Presets set `size` in the legacy point scale, but Companion's layered-button editor shows Text Size

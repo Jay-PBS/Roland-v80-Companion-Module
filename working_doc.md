@@ -4,7 +4,7 @@ Live working notes: **open items only**.
 
 Once something is done and verified on hardware, delete it from this file. Anything worth keeping permanently belongs in [README.md](README.md) (project-facing, kept short), [CHANGELOG.md](CHANGELOG.md), [DEVELOPMENT.md](DEVELOPMENT.md) or [companion/HELP.md](companion/HELP.md) (user-facing), not here. This file is not a changelog and holds no logs — the changelog lives in [CHANGELOG.md](CHANGELOG.md).
 
-Last reviewed: 2026-09-26 · Working version: 1.0.5 (branch `fix/1.0.5`)
+Last reviewed: 2026-09-26 · Working version: 1.0.5 (on `main`, tagged `v1.0.5`)
 
 ---
 
@@ -17,23 +17,17 @@ Last reviewed: 2026-09-26 · Working version: 1.0.5 (branch `fix/1.0.5`)
 | `yarn lint`          | Passing — clean, 0 errors                                  |
 | `prettier --check .` | Passing                                                    |
 | `yarn package`       | Passing — `roland-v80hd-1.0.5.tgz` (untracked, local only) |
-| GitHub Actions       | Node CI green on `main`; check `fix/1.0.5`                 |
+| GitHub Actions       | Node CI — check the run for `v1.0.5` on `main`             |
 | `yarn preflight`     | Passing — the pre-release gate                             |
 
 ---
 
 ## Open — needs hardware
 
-**1.0.5 smoke test — `TESTING-NEXT.md`.** 1.0.4 passed its gate on 2026-09-26, and is merged to
-`main` and tagged `v1.0.4` in this repo only. Its test showed the "Enable debug logging" checkbox
-never produced visible output on Companion 5. By Jay's decision, 1.0.5 removes it and the verbose
-logging. PROTOCOL.md §11.1 has the steps to re-add it for test builds only.
+**Nothing outstanding for 1.0.5.** It passed its hardware smoke test on 2026-09-26.
 
-**1.0.5 is the one to submit.** It is built on branch `fix/1.0.5`, and needs the short D1–D4 smoke
-test. Then merge to `main`, tag `v1.0.5`, push to origin, and push to Bitfocus with Jay's explicit
-yes. Then resubmit.
-
-Open, not blocking: **Q2**, what the switcher sends after a wrong password (packet capture).
+Open, not blocking: **Q2** in `TESTING-NEXT.md`, what the switcher sends after a wrong password. It
+needs a packet capture, since module debug output no longer exists (PROTOCOL.md §11.1).
 
 **Protocol:** Fade To Black was the last open protocol question and it was answered
 2026-09-16: the engaged state is in no address, and `QFTB;` from Roland's mnemonic command set reads
@@ -42,19 +36,6 @@ it directly. Confirmed on hardware both ways — `FTB:OFF;` clear, `FTB:ON;` eng
 **The finding that generalises:** the two command languages work on one connection. Several things
 recorded as blocked on a multi-byte decoder — audio levels, metering, source names — have plain-ASCII
 equivalents in the mnemonic set. Worth a look before anyone writes that decoder. `PROTOCOL.md` §10.1.
-
-## Hardware — 0.9.0 to 0.9.2
-
-**Passed on hardware 2026-09-25:** the renamed actions, including Sync state now, the feedback default
-style, every face at 23.3, the new face text and the bus mute colours. Stream & Record was already
-confirmed and only its display name changed.
-
-The black bus mute text replaced #990000 in 1.0.0 and reads clearly — confirmed on 1.0.1.
-
-**Also verified on hardware, through 0.8.13:** Fade To Black including the engaged state and
-panel tracking, the Split relabel, the readable raw echo, the FTB fade colour, and the on-button
-detail blocks. A split button from before the Vertical/Horizontal rename and a raw-command button
-from an older version both still fire — confirmed 2026-09-25.
 
 ## Open — resubmitting to Bitfocus
 
@@ -66,15 +47,15 @@ followed:
 - three hardware rounds (1.0.2, 1.0.3, 1.0.4), with the fixes each one found;
 - 1.0.5, which removes the debug checkbox.
 
-**Nothing has gone to Bitfocus yet.** `main` holds 1.0.4, tagged `v1.0.4`, in this repo only.
-`fix/1.0.5` is on top of it. The Roland PDF is untracked and still on disk.
+**`main` holds 1.0.5, tagged `v1.0.5`, pushed to this repo only. Nothing has gone to Bitfocus
+yet.** The Roland PDF is untracked and still on disk.
 
 **Next, in order:**
 
-1. ~~The D1–D4 smoke test~~ — **passed 2026-09-26.**
-2. Merge `fix/1.0.5` into `main`, tag `v1.0.5`, and push to origin. With Jay's explicit yes, push
-   `main` and the tag to Bitfocus, and wait for the module checks to go green.
-3. Jay submits v1.0.5 in the portal, with a reply listing the changes.
+1. With Jay's explicit yes, push `main` and `v1.0.5` (not `v1.0.4`) to Bitfocus, and wait for
+   Companion Module Checks to go green there.
+2. Jay submits v1.0.5 in the portal, with a reply listing the changes.
+3. Delete the merged branches (`fix/1.0.2-review`, `fix/1.0.5`, `docs/1.0.5`) if Jay agrees.
 
 **Sync state now stays for this release**, by decision (2026-09-26). It is mostly redundant with
 polling always on, but removing an action breaks buttons that use it. Revisit in 1.1.
@@ -107,12 +88,10 @@ for its own sake rather than a fix for anything an operator would have seen.
 **The 0.9 tidy-up is finished.** Bitfocus's two Dependabot bumps were merged in on 2026-09-25, so
 this repo is level with upstream.
 
-**1.0.1 was returned by the review on 2026-09-26.** 1.0.2 replaces it; see "Open — 1.0.2" above.
-Once approved, a version is live for Companion 4.0+.
+**1.0.1 was returned by the review on 2026-09-26.** 1.0.5 replaces it; see "Open — resubmitting to
+Bitfocus" above. Once approved, a version is live for Companion 4.0+.
 
-**Every future release:** bump `package.json`, `yarn preflight`, tag `vX.Y.Z`, push `main` and the tag
-to both remotes (`git fetch bitfocus` first), then Submit Version in the developer portal. Process
-per companion.free, "Releasing your module"
+**Every future release** follows the steps in `DEVELOPMENT.md`, "Releasing".
 
 **Old builds live outside the repo.** Every `.tgz` before the current one, and `TESING NOTES.xlsx`,
 live in `C:\GitHub\v80hd-builds\`. Only the build under test sits in the repo root; move the previous
@@ -175,10 +154,10 @@ one, and never was.
 `companion/manifest.json` and `package.json` both point at `bitfocus/companion-module-roland-v80hd`,
 which is where issues with released versions go. **Issues stay on in this repository, by decision
 (2026-09-25):** after 1.0, people testing development builds report here. `CONTRIBUTING.md` and the
-README say so — released version to Bitfocus, development build here. The issue chooser in
-`.github/ISSUE_TEMPLATE/config.yml` still leads with the Bitfocus link, and its text says issues do
-not belong here; revisit it when development testing starts, remembering it travels upstream with
-the code.
+README say so — released version to Bitfocus, development build here. The issue chooser,
+`.github/ISSUE_TEMPLATE/config.yml`, was made to agree on 2026-09-26. It used to say issues don't
+belong here, and on the Bitfocus repo it linked to itself. Now it offers the bug and feature forms on
+both repos, and links only to Companion's own issues.
 
 `yarn preflight` (`format` → `lint:fix` → `build` → `package`) remains the local pre-release gate.
 
