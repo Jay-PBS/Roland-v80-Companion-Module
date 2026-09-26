@@ -16,15 +16,19 @@ Last reviewed: 2026-09-26 · Working version: 1.0.2 (branch `fix/1.0.2-review`)
 | `yarn build`         | Passing                                                    |
 | `yarn lint`          | Passing — clean, 0 errors                                  |
 | `prettier --check .` | Passing                                                    |
-| `yarn package`       | Passing — `roland-v80hd-1.0.1.tgz` (untracked, local only) |
-| GitHub Actions       | Passing — Node CI, green on `main`                         |
+| `yarn package`       | Passing — `roland-v80hd-1.0.2.tgz` (untracked, local only) |
+| GitHub Actions       | Node CI green on `main`; check `fix/1.0.2-review`          |
 | `yarn preflight`     | Passing — the pre-release gate                             |
 
 ---
 
 ## Open — needs hardware
 
-**Nothing outstanding.** Fade To Black was the last open protocol question and it was answered
+**1.0.2 retest — `TESTING-NEXT.md`.** `roland-v80hd-1.0.2.tgz` was built 2026-09-26 from
+`fix/1.0.2-review` @ `0e4176d`. The login and lockout gate comes first. Its G3a and G4a answer the
+one question no review could: what the device does after a rejected password or a lockout.
+
+**Protocol:** Fade To Black was the last open protocol question and it was answered
 2026-09-16: the engaged state is in no address, and `QFTB;` from Roland's mnemonic command set reads
 it directly. Confirmed on hardware both ways — `FTB:OFF;` clear, `FTB:ON;` engaged.
 
@@ -52,8 +56,9 @@ reviews followed, one of them independent. Both are in `CODE_REVIEW.md`, and its
 compared" section holds the combined list.
 
 **All 11 items are done on branch `fix/1.0.2-review`**, one commit each, with the version at
-1.0.2. The Roland PDF is untracked and still on disk. Nothing is merged, tagged, built or tested
-on hardware, and nothing has gone to Bitfocus.
+1.0.2. The Roland PDF is untracked and still on disk. **Built 2026-09-26**
+(`roland-v80hd-1.0.2.tgz`). Not yet merged, tagged or tested on hardware, and nothing has gone to
+Bitfocus.
 
 **Both ultrareviews are done (2026-09-26, free runs 1 and 2 of 3).**
 
@@ -61,13 +66,13 @@ on hardware, and nothing has gone to Bitfocus.
 - **The whole module:** two nits and no bugs, both deferred to 1.1. They are the AUX layer lookup
   written out five times and the hex formatting written out six times.
 
-Raw findings and the assessment are in `CODE_REVIEW.md`, Reviews 3 and 4. The temporary local
-branches `review/full-module` and `review/base` can be deleted.
+Raw findings and the assessment are in `CODE_REVIEW.md`, Reviews 3 and 4.
 
 **Next, in order:**
 
-1. BUILD GO, then the hardware checks in `CODE_REVIEW.md` Review 1 §4, plus a deliberate lockout.
-2. Merge, tag `v1.0.2`, and resubmit, with a portal reply listing the changes.
+1. The hardware retest in `TESTING-NEXT.md`, login and lockout gate first.
+2. Merge `fix/1.0.2-review` into `main`, tag `v1.0.2`, push to both remotes, and resubmit in the
+   portal with a reply listing the changes.
 
 **Queued for 1.1:**
 
@@ -97,10 +102,8 @@ for its own sake rather than a fix for anything an operator would have seen.
 **The 0.9 tidy-up is finished.** Bitfocus's two Dependabot bumps were merged in on 2026-09-25, so
 this repo is level with upstream.
 
-**1.0.1 submitted for review — 2026-09-25.** Submitted in the Bitfocus Developer Portal after the
-module checks passed on Bitfocus. `v1.0.0` reached Bitfocus without its checks workflow; 1.0.1
-restores it with identical module code. Pending volunteer review — feedback arrives in the portal,
-and once approved it is live for Companion 4.0+.
+**1.0.1 was returned by the review on 2026-09-26.** 1.0.2 replaces it; see "Open — 1.0.2" above.
+Once approved, a version is live for Companion 4.0+.
 
 **Every future release:** bump `package.json`, `yarn preflight`, tag `vX.Y.Z`, push `main` and the tag
 to both remotes (`git fetch bitfocus` first), then Submit Version in the developer portal. Process
