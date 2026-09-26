@@ -9,7 +9,6 @@ export interface ModuleConfig {
 	// declared so a connection whose upgrade has not run can still authenticate - see the
 	// password getter in api.ts.
 	password?: string
-	polling: boolean
 	debug: boolean
 	showAdvanced: boolean
 }
@@ -30,13 +29,6 @@ export function GetConfigFields(): SomeCompanionConfigField[] {
 		{ type: 'textinput', id: 'host', label: 'Device IP address', width: 8, default: '192.168.0.1' },
 		{ type: 'number', id: 'port', label: 'Port', width: 4, default: 8023, min: 1, max: 65535 },
 		{ type: 'secret-text', id: 'password', label: 'Network password (must be set on device)', width: 8, default: '' },
-		{
-			type: 'checkbox',
-			id: 'polling',
-			label: 'Enable polling (required — turning it off leaves about half the feedbacks stale, see Help)',
-			width: 12,
-			default: true,
-		},
 		{ type: 'checkbox', id: 'debug', label: 'Enable debug logging (verbose TX/RX)', width: 6, default: false },
 		{
 			type: 'checkbox',

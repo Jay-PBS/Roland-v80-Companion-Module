@@ -305,9 +305,9 @@ export class V80Api {
 		if (!this.tcp || this.authFailed) return
 		const now = Date.now()
 		if (this.isConnected && this.isAuthenticated) {
-			// Nudge the device if quiet, then give up. With polling on, replies arrive every
-			// 500ms so neither branch is ever reached; with polling off the 1.5s nudge draws a
-			// reply that resets the clock. Only a genuinely dead link reaches 4s.
+			// Nudge the device if quiet, then give up. Poll replies normally arrive every 500ms,
+			// so neither branch is reached; if they stop, the 1.5s nudge draws a reply that
+			// resets the clock. Only a genuinely dead link reaches 4s.
 			// Detection was 8s on a 2.5s tick (worst case 10.5s), which tested as too slow.
 			if (now - this.lastRxTime > 1500) this.sendCmd(this.rqh('001500', '000001'))
 			if (now - this.lastRxTime > 4000) this.forceReconnect('No response from device for 4s')
@@ -807,7 +807,7 @@ export class V80Api {
 	}
 
 	private startPolling(): void {
-		if (!this.self.config.polling || this.pollingTimer) return
+		if (this.pollingTimer) return
 		this.pollingTimer = setInterval(() => {
 			if (this.isConnected) this.requestCoreState()
 		}, POLL_INTERVAL_MS)

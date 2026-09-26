@@ -9,8 +9,7 @@ Tested on a Roland V-80HD with firmware v1.20.201. Every action and feedback has
 1. On the V-80HD, navigate to Menu, Network, LAN Setup and note the IP address.
 2. A network password must be configured on the device before LAN control will function. This is set via Menu, Network, Network Password on the unit itself.
 3. In Companion, enter the device IP address, port 8023, and the password configured on the device.
-4. Leave polling enabled. It is what keeps feedbacks in sync — see Network Behaviour for what turning it off costs.
-5. Enable Allow advanced actions if you need the raw LAN command action. The action is always listed, but it refuses to send and logs a warning unless this is ticked.
+4. Enable Allow advanced actions if you need the raw LAN command action. The action is always listed, but it refuses to send and logs a warning unless this is ticked.
 
 ---
 
@@ -22,7 +21,7 @@ State polling is fixed at 500ms, and each address is requested individually — 
 
 In practice this is invisible for steady states — sources, mutes, on-air flags — because the next reading corrects anything missed. It matters for brief events: a one-second fade can pass entirely between two readings of the same address.
 
-**Turning polling off does more than add lag.** Polling is almost the only thing that reads state back from the device. Some actions update their own feedback locally when pressed — the mutes, the splits, PinP and DSK on air, freeze, test patterns, the AUX layer modes — and those keep working from Companion. The Program source still updates, about every 1.5 seconds, because the connection watchdog reads it to check the link is alive. Everything else has nothing to update it: PVW and AUX source selection, PinP and DSK sources, PinP geometry, AUX link follow, tally, and Stream & Record all freeze at whatever they last showed, and nothing else done on the front panel or in RCS is seen. **Utility – Sync state now** reads everything once on demand. Disable polling only if you need the network traffic gone and can accept roughly half the feedbacks going stale.
+**Polling is always on.** It is the only way the module reads state back from the device, which pushes nothing unprompted, so there is no setting to turn it off. **Utility – Sync state now** reads everything once, immediately, without waiting for the next poll.
 
 A connection watchdog runs every second and recovers the link automatically:
 
@@ -338,7 +337,7 @@ Module shows as disconnected — check the IP address, confirm port 8023, and en
 
 Module reports a device auth lockout — the V-80HD has locked out after repeated failed password attempts and will reject even a correct password until it clears. Confirm the password matches the one set on the device, then wait before retrying.
 
-Feedbacks not updating — confirm polling is enabled, then allow a few seconds rather than half a second, since the device does not answer every poll. If feedbacks remain static after that, disable and re-enable the connection.
+Feedbacks not updating — allow a few seconds rather than half a second, since the device does not answer every poll. If feedbacks remain static after that, disable and re-enable the connection.
 
 AUX routing not responding as expected — confirm AUX Linked PGM is set to Off for independent AUX control.
 

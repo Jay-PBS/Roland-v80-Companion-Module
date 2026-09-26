@@ -373,7 +373,8 @@ R/W, polled. **Confirmed.** `001403` unused.
 
 R/W, polled. **Confirmed.** `001500` doubles as the module's watchdog nudge — a cheap read with a
 guaranteed reply. A side effect: with polling off, the Program source still tracks the panel,
-about every 1.5 s, while nothing else does. **Observed** 2026-09-25.
+about every 1.5 s, while nothing else does. **Observed** 2026-09-25, before 1.0.2 removed the option
+to turn polling off.
 
 ### 4.8 Audio
 
@@ -820,9 +821,10 @@ lit on a tally button — briefly telling them something false about what is on 
   device changes this on its own — selecting an AUX source by hand breaks the link, a transition or
   a re-press restores it — so assuming a write stuck would make the feedback lie about a value the
   device may have overridden. Read it back. See §4.9.
-- **With polling disabled**, the optimistic half keeps working from the client and the non-optimistic
+- **Without polling**, the optimistic half keeps working from the client and the non-optimistic
   half freezes permanently at whatever it last showed. Nothing corrects it. That is the real cost of
-  turning polling off, and it is larger than "feedbacks lag a bit".
+  not polling, and it is larger than "feedbacks lag a bit". It is why this module removed its option
+  to switch polling off in 1.0.2.
 
 ### 7.5 What the device pushes to you: nothing
 
