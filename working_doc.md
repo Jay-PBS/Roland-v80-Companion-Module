@@ -24,17 +24,15 @@ Last reviewed: 2026-09-26 · Working version: 1.0.4 (branch `fix/1.0.2-review`)
 
 ## Open — needs hardware
 
-**1.0.4 test — `TESTING-NEXT.md`.** Three hardware rounds so far, all on 2026-09-26:
+**1.0.4 passed its hardware gate on 2026-09-26.** It was the third round, after 1.0.2 and 1.0.3.
+Nothing is needed for the release.
 
-- **1.0.2 passed**, and found the capture freeze and the slow reconnect.
-- **1.0.3 fixed both, and passed.** It also showed that some wrong passwords get no reply. On that
-  silence the module reconnected and resent the password every ~6 s.
-- **1.0.4 stops instead.**
+Two questions stay open in `TESTING-NEXT.md`, not blocking:
 
-**1.0.4 is the one to submit.** It needs BUILD GO, then the short gate in the sheet: one wrong
-password, and only one attempt in 30 s. The sheet's Q1 and Q2 are the two open questions (where
-module debug output shows, and what the switcher sends after a wrong password). They are for
-PROTOCOL.md and don't hold up the release.
+- **Q1:** module debug output never shows, even with the option on and Debug ticked on the Log
+  page. As things stand, the "Enable debug logging" checkbox shows the user nothing. Worth
+  settling in 1.1.
+- **Q2:** what the switcher sends after a wrong password.
 
 **Protocol:** Fade To Black was the last open protocol question and it was answered
 2026-09-16: the engaged state is in no address, and `QFTB;` from Roland's mnemonic command set reads
