@@ -1,4 +1,4 @@
-# Roland V-80HD — Companion Module v1.0.1
+# Roland V-80HD — Companion Module v1.0.4
 
 Tested on a Roland V-80HD with firmware v1.20.201. Every action and feedback has been tested on hardware.
 
@@ -8,9 +8,8 @@ Tested on a Roland V-80HD with firmware v1.20.201. Every action and feedback has
 
 1. On the V-80HD, navigate to Menu, Network, LAN Setup and note the IP address.
 2. A network password must be configured on the device before LAN control will function. This is set via Menu, Network, Network Password on the unit itself.
-3. In Companion, enter the device IP address, port 8023, and the password configured on the device.
-4. Leave polling enabled. It is what keeps feedbacks in sync — see Network Behaviour for what turning it off costs.
-5. Enable Allow advanced actions if you need the raw LAN command action. The action is always listed, but it refuses to send and logs a warning unless this is ticked.
+3. In Companion, enter the device IP address, port 8023, and the password configured on the device. The module will not connect until the password is filled in.
+4. Enable Allow advanced actions if you need the raw LAN command action. The action is always listed, but it refuses to send and logs a warning unless this is ticked.
 
 ---
 
@@ -22,17 +21,18 @@ State polling is fixed at 500ms, and each address is requested individually — 
 
 In practice this is invisible for steady states — sources, mutes, on-air flags — because the next reading corrects anything missed. It matters for brief events: a one-second fade can pass entirely between two readings of the same address.
 
-**Turning polling off does more than add lag.** Polling is almost the only thing that reads state back from the device. Some actions update their own feedback locally when pressed — the mutes, the splits, PinP and DSK on air, freeze, test patterns, the AUX layer modes — and those keep working from Companion. The Program source still updates, about every 1.5 seconds, because the connection watchdog reads it to check the link is alive. Everything else has nothing to update it: PVW and AUX source selection, PinP and DSK sources, PinP geometry, AUX link follow, tally, and Stream & Record all freeze at whatever they last showed, and nothing else done on the front panel or in RCS is seen. **Utility – Sync state now** reads everything once on demand. Disable polling only if you need the network traffic gone and can accept roughly half the feedbacks going stale.
+**Polling is always on.** It is the only way the module reads state back from the device, which pushes nothing unprompted, so there is no setting to turn it off. **Utility – Sync state now** reads everything once, immediately, without waiting for the next poll.
 
 A connection watchdog runs every second and recovers the link automatically:
 
 - No data received for 4s while connected — the connection is rebuilt
-- Authentication stalled for 6s — authentication is retried
-- Socket unreachable for 12s — the socket is recycled
+- No password prompt within 6s — the connection is retried. This is what happens while another controller, such as Roland RCS, holds the unit's only control session
+- No answer to the password within 6s — treated as a rejected password: the module stops rather than sending it again
+- Socket unreachable for 6s — the socket is recycled, so the link returns within a few seconds of the network coming back
 
 This covers silent network loss, where the socket remains open but the device is no longer reachable. If the module still does not reconnect, disable and re-enable it in Companion.
 
-The V-80HD applies a brute-force lockout after repeated failed password attempts, and will reject even the correct password while that lockout is active. The module detects this and reports "Device auth lockout — wait and retry" rather than continuing to retry. Wait for the device to clear the lockout before reconnecting.
+The V-80HD applies a brute-force lockout after repeated failed password attempts, and will reject even the correct password while that lockout is active. So the module never retries a password on its own. If the device rejects the password or reports the lockout, the module closes the connection and shows the reason in the connection status. It stays stopped until you save the connection config, or disable and re-enable the connection. After a lockout, wait for the device to clear it first.
 
 ---
 
@@ -153,8 +153,16 @@ That seven-second wait is deliberate and cannot be shortened. Capture mode leave
 the monitor, and the unit needs far longer than its own "capture done" reply suggests before it will
 accept the press that dismisses it. Shorter waits were tried and broke the capture outright.
 
-Do not fire two captures less than 7 seconds apart, or the first one's dismissal can land on the
-second one's screen.
+**One capture at a time, 10 seconds apart.** A second capture sent while the first is still finishing
+can freeze the V-80HD in capture mode, and only a power cycle recovers it. So for 10 seconds after a
+capture starts, any further capture press is ignored — nothing is sent to the unit — and a warning is
+logged. The **Image Capture – wait** feedback shows **WAIT !** on the button when that happens, until
+the 10 seconds are up. The Image Capture presets carry it already; add it by hand to capture buttons
+built with an earlier version.
+
+If the connection drops or the connection config is saved while a capture is running, the module
+stops the capture rather than pressing buttons on the new connection, and logs a warning. Check the
+still, and close the capture screen on the unit if it was left open **before capturing again**.
 
 ### Utility
 
@@ -168,10 +176,11 @@ There is a matching preset in its own **Advanced** preset category. It ships wit
 string, so fill the command in on the button after dropping it on a page. It is kept in a category
 of its own so it is not picked up by accident while browsing the ordinary presets.
 
-Several actions work this way now. The action list shows a single short line, and the fuller note
-or warning appears once the action is on a button, above its options — Send raw LAN command,
-Capture Image to Still, Stream & Record Start and Stop, Test Pattern, and the two AUX Linked PGM
-actions.
+Several actions carry a fuller note or warning that appears once the action is on a button, above
+its options — Send raw LAN command, Capture Image to Still, Stream & Record Start and Stop, Test
+Pattern, and the two AUX Linked PGM actions. The ones that can do something you cannot take back —
+Send raw LAN command, Capture Image to Still, and Stream & Record Start and Stop — also show a
+one-line warning in the action list, before you pick them.
 
 ---
 
@@ -206,6 +215,7 @@ copied when dropped rather than linked, so add the _engaged_ feedback by hand or
 - Test pattern active
 - Tally state per input (HDMI 1 to 4, SDI 1 to 4)
 - Stream & Record active, and the specific state (Stopped, Starting, Running, Stopping)
+- Image Capture – wait: shows WAIT ! when a capture press is ignored because the previous capture is still finishing
 
 Stream & Record state is polled with everything else. The device reports it on `030800`, but a
 packet capture on 2026-09-04 showed it pushes that status only to the Roland RCS session and never
@@ -336,9 +346,11 @@ Variables are accessed as $(instance_label:variable_id), for example $(v80hd:pro
 
 Module shows as disconnected — check the IP address, confirm port 8023, and ensure a network password has been set on the device via Menu, Network, Network Password.
 
-Module reports a device auth lockout — the V-80HD has locked out after repeated failed password attempts and will reject even a correct password until it clears. Confirm the password matches the one set on the device, then wait before retrying.
+Module reports authentication failed — the device rejected the password. Correct it in the connection config and save; the module does not retry a rejected password by itself.
 
-Feedbacks not updating — confirm polling is enabled, then allow a few seconds rather than half a second, since the device does not answer every poll. If feedbacks remain static after that, disable and re-enable the connection.
+Module reports a device auth lockout — the V-80HD has locked out after repeated failed password attempts and will reject even a correct password until it clears. Confirm the password matches the one set on the device, wait for the lockout to clear, then disable and re-enable the connection.
+
+Feedbacks not updating — allow a few seconds rather than half a second, since the device does not answer every poll. If feedbacks remain static after that, disable and re-enable the connection.
 
 AUX routing not responding as expected — confirm AUX Linked PGM is set to Off for independent AUX control.
 

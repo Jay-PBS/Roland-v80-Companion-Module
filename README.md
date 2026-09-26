@@ -7,7 +7,7 @@ Bitfocus Companion module for the Roland V-80HD Direct Streaming Video Switcher,
 
 Developed and maintained by Purple Badger Solutions — projects@purplebadgersolutions.co.uk
 
-**Version 1.0.1.** Every feature is tested on a V-80HD (firmware v1.20.201).
+**Version 1.0.4.** Every feature is tested on a V-80HD (firmware v1.20.201).
 
 ---
 
@@ -34,7 +34,12 @@ The full list of actions, feedbacks and variables is in [companion/HELP.md](comp
 3. In Companion, add the connection with that IP, port **8023** and the same password.
 
 Repeated wrong passwords trigger the device's lockout, which rejects even the right password until it
-clears. The module reports "Device auth lockout — wait and retry"; wait before reconnecting.
+clears. The module never retries a rejected password: it stops and shows the reason. Wait for a
+lockout to clear, then disable and re-enable the connection.
+
+**One controller at a time.** The V-80HD accepts a single LAN control session. While Roland RCS or
+another controller holds it, the module waits, and it connects within a few seconds of that
+controller disconnecting.
 
 ---
 

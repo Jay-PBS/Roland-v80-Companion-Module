@@ -84,6 +84,25 @@ it rejects the correct password too. **Confirmed.**
 
 Once locked out, the only remedy is to stop and wait. **Confirmed.**
 
+**A wrong password is not always answered the same way.** On 2026-09-26, four wrong passwords were
+sent about 3 s apart, each on a fresh connection (firmware v1.20.201):
+
+- the first drew `Authentication error` at once;
+- the next two drew **no reply within 3 s**, and the connection was replaced before anything
+  arrived;
+- the fourth drew a re-prompt after about 1 s.
+
+The correct password was accepted immediately afterwards. **Four wrong attempts in about 10 s did not
+trip the lockout.** Three more wrong attempts that afternoon, each about a minute apart, all drew
+`Authentication error` at once, and the correct password worked straight after each one. **Observed**
+from the module's log. The raw replies were not captured, so whether the silent attempts were
+prompted, and whether a late verdict would have come, is open. So is the number of attempts that
+does trip the lockout.
+
+**The design consequence:** treat "password sent, then silence" as a failed login. A client that
+rebuilds the connection on that silence answers the next prompt with the same wrong password, over
+and over. The module stops after 6 s of silence following its password.
+
 ### 1.3 Three things worth designing around
 
 **The authentication window is under 100 ms.** Too short to press a button inside by hand. Two test
@@ -115,8 +134,9 @@ The thresholds the module settled on, after the first set tested as too slow:
 | ------------------------------------- | --------- | ------------------------------------------------ |
 | Connected, authenticated, quiet       | 1.5 s     | Send a single `RQH:001500,000001;` as a nudge    |
 | Connected, authenticated, still quiet | 4 s       | Tear down and rebuild the connection             |
-| Connected, never authenticated        | 6 s       | Rebuild — covers the ignored-second-session case |
-| Not connected                         | 12 s      | Recycle the socket                               |
+| Connected, never prompted             | 6 s       | Rebuild — covers the ignored-second-session case |
+| Connected, password sent, no answer   | 6 s       | Stop — a failed login, never resend              |
+| Not connected                         | 6 s       | Recycle the socket                               |
 
 Checked on a **1 s** tick. **Confirmed.**
 
@@ -124,7 +144,10 @@ The original values were 8 s / 4 s / 10 s / 20 s on a 2.5 s tick, which gave a w
 to notice a dead link. That was reported as too slow on hardware and halved. **Confirmed.**
 
 One Windows-specific note: a connect attempt to an unreachable host takes about **21 s** to time
-out, so recycling the socket every 12 s keeps attempts fresh rather than stacking timers.
+out, so recycling the socket keeps attempts fresh rather than stacking timers. The module recycled
+every 12 s until 1.0.3. After a cable pull, the link then took up to 12 s to return once the cable
+was back. **Observed** 2026-09-26. It now recycles every 6 s, which still leaves room for the
+Windows connect retry at about 3 s.
 
 ---
 
@@ -373,7 +396,8 @@ R/W, polled. **Confirmed.** `001403` unused.
 
 R/W, polled. **Confirmed.** `001500` doubles as the module's watchdog nudge — a cheap read with a
 guaranteed reply. A side effect: with polling off, the Program source still tracks the panel,
-about every 1.5 s, while nothing else does. **Observed** 2026-09-25.
+about every 1.5 s, while nothing else does. **Observed** 2026-09-25, before 1.0.2 removed the option
+to turn polling off.
 
 ### 4.8 Audio
 
@@ -698,8 +722,14 @@ this took four attempts to establish:
 > This is exactly what made 1200 ms and 7000 ms behave identically on hardware while both were
 > broken.
 
-> **Do not fire two captures less than 7 seconds apart**, or the first close lands on the second
-> capture's screen.
+> **Never start a capture while the previous one is still finishing.** On 2026-09-26 a second
+> capture sent too soon after the first **froze the V-80HD in capture mode, and only a hard power
+> cycle recovered it** (firmware v1.20.201). The first capture's close had been skipped because the
+> connection was rebuilt mid-capture, so the unit was very likely still inside the first capture.
+> **Observed**, once. How long "too soon" is has not been measured. The module now refuses any
+> capture within 10 s of the previous one starting: about 1.3 s of commands, the 7 s wait and the
+> close, with margin. Allow at least that. Even without a freeze, a second capture inside 7 s
+> would take the first one's close on its own screen.
 
 **The capture screen does not block the unit's other menus.** Open a menu while a capture runs and
 the menu stays up with the capture visibly continuing behind it. The two ignore each other. That is
@@ -820,9 +850,10 @@ lit on a tally button — briefly telling them something false about what is on 
   device changes this on its own — selecting an AUX source by hand breaks the link, a transition or
   a re-press restores it — so assuming a write stuck would make the feedback lie about a value the
   device may have overridden. Read it back. See §4.9.
-- **With polling disabled**, the optimistic half keeps working from the client and the non-optimistic
+- **Without polling**, the optimistic half keeps working from the client and the non-optimistic
   half freezes permanently at whatever it last showed. Nothing corrects it. That is the real cost of
-  turning polling off, and it is larger than "feedbacks lag a bit".
+  not polling, and it is larger than "feedbacks lag a bit". It is why this module removed its option
+  to switch polling off in 1.0.2.
 
 ### 7.5 What the device pushes to you: nothing
 

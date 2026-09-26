@@ -358,6 +358,18 @@ export function UpdateFeedbacks(self: ModuleInstance): void {
 			],
 			callback: (fb) => self.streamRecordState === Number(fb.options.state),
 		},
+		// Lights only when a capture press was turned away by the capture lock - see CAPTURE_LOCK_MS
+		// - and stays lit until the lock ends. Not lit for the whole lock on purpose: it answers
+		// "why did nothing happen?" for the press that did nothing.
+		capture_wait: {
+			name: 'Image Capture – wait',
+			description:
+				'Shows WAIT ! when a capture is pressed within 10 seconds of the last one starting. That press is ignored: a second capture sent too soon can freeze the V-80HD.',
+			type: 'boolean',
+			defaultStyle: { bgcolor: AMBER_BRIGHT, color: BLACK, text: 'WAIT !' },
+			options: [],
+			callback: () => self.captureRefused,
+		},
 		test_pattern_active: {
 			name: 'Test Pattern – active',
 			type: 'boolean',

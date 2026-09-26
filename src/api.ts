@@ -20,6 +20,17 @@ export const SRC_INPUT16 = 0x38
 // while the screen is shut opens it. Never send it ungated.
 const CAPTURE_MODE_SW = '0B002A'
 
+// How long after a capture starts before another one may. A second capture sent while the first
+// was still finishing froze a V-80HD in capture mode on 2026-09-26, and only a power cycle
+// recovered it. A capture's commands take about 1.3s and the screen closes at about 8.3s, so
+// 10s leaves margin. The lock lives on ModuleInstance, not here, so a config save or reconnect
+// mid-capture - which builds a new V80Api - cannot reset it.
+export const CAPTURE_LOCK_MS = 10000
+
+// Shown when the device refuses the password. The module does not retry on its own - see
+// stopAfterAuthFailure - so the status says what the user has to do.
+const AUTH_FAILED_STATUS = 'Authentication failed – check the password, then save the config'
+
 // The eight physical inputs in panel order. Canonical: the freeze and tally address maps, the
 // freeze and tally dropdowns, the capture source list and the freeze and tally presets all key
 // off this one list. `short` is the button-label form used by the presets.
@@ -215,17 +226,33 @@ export class V80Api {
 	// raw command's reply is visible without the debug flag - see cmdRaw.
 	private rawEchoUntil = 0
 	private debounceTimer?: NodeJS.Timeout
-	private authTimer?: NodeJS.Timeout
 	private watchdogTimer?: NodeJS.Timeout
 	private authSent = false
-	private authFailed = false
 	private isConnected = false
 	private isAuthenticated = false
 	private lastRxTime = 0
 	private cycleStartTime = 0
+	// Connection messages already logged during the current outage - see logOncePerOutage.
+	private outageMessages = new Set<string>()
+	// Bumped whenever the connection to the device ends: destroyTcp(), a socket error, or
+	// TCPHelper reporting any status but Ok, which covers its own reconnects as well as ours.
+	// The capture sequence checks it after every wait - see waitSameSession.
+	private session = 0
 
 	constructor(self: ModuleInstance) {
 		this.self = self
+	}
+
+	// A connection problem repeats for as long as it lasts. A switcher that is switched off fails
+	// every reconnect attempt, and one held by the Roland RCS software ignores this session and
+	// stalls every rebuild, indefinitely. Logged every time, that was an error every 2s and a
+	// warning every 6-12s until it came back. The connection status already shows the outage
+	// continuously, so each distinct message is logged once at its own level and repeats go to
+	// debug. The set clears once a session authenticates, so the next outage is reported afresh.
+	private logOncePerOutage(level: 'info' | 'warn' | 'error', message: string): void {
+		const repeat = this.outageMessages.has(message)
+		this.outageMessages.add(message)
+		this.self.log(repeat ? 'debug' : level, message)
 	}
 
 	// The password lives in the secrets store from 0.7.0 on. The config fallback covers a
@@ -235,9 +262,23 @@ export class V80Api {
 		return (this.self.secrets?.password || this.self.config.password || '').trim()
 	}
 
+	// Trimmed, because a pasted address often carries a trailing space, and the connection error
+	// that produces does not point at the cause.
+	private get host(): string {
+		return (this.self.config.host ?? '').trim()
+	}
+
 	public initTcp(): void {
-		if (!this.self.config.host || !this.self.config.port) {
+		if (!this.host || !this.self.config.port) {
 			this.self.updateStatus(InstanceStatus.BadConfig, 'Missing host/port')
+			return
+		}
+		// The V-80HD accepts no LAN control until a network password is set on the unit (PROTOCOL.md
+		// §1.1), so without one there is nothing to connect to. Connecting anyway used to mark the
+		// session authenticated at once and poll straight into the device's password prompt - 65
+		// lines every 500ms, each a candidate failed attempt towards the lockout.
+		if (!this.password) {
+			this.self.updateStatus(InstanceStatus.BadConfig, 'Enter the network password set on the device')
 			return
 		}
 		this.self.updateStatus(InstanceStatus.Connecting)
@@ -245,41 +286,40 @@ export class V80Api {
 		this.isAuthenticated = false
 		this.rxBuffer = ''
 		this.cycleStartTime = Date.now()
-		this.tcp = new TCPHelper(this.self.config.host, this.self.config.port, { reconnect: true })
+		this.tcp = new TCPHelper(this.host, this.self.config.port, { reconnect: true })
 		this.tcp.on('status_change', (status, message) => {
 			this.self.updateStatus(status, message)
 			if (status !== InstanceStatus.Ok) {
+				this.session++
 				this.isConnected = false
 				this.isAuthenticated = false
 				this.stopPolling()
 			}
 		})
 		this.tcp.on('error', (err) => {
-			this.self.log('error', `TCP error: ${err.message}`)
+			this.logOncePerOutage('error', `TCP error: ${err.message}`)
+			this.session++
 			this.isConnected = false
 			this.stopPolling()
 		})
 		this.tcp.on('connect', () => {
-			this.self.log('info', `Connected to ${this.self.config.host}:${this.self.config.port}`)
+			this.logOncePerOutage('info', `Connected to ${this.host}:${this.self.config.port}`)
 			this.isConnected = true
 			this.rxBuffer = ''
 			this.authSent = false
 			this.isAuthenticated = false
 			this.lastRxTime = Date.now()
 			this.cycleStartTime = Date.now()
-			const pw = this.password
-			if (pw) {
-				this.self.updateStatus(InstanceStatus.Connecting, 'Authenticating')
-				// The device prompts "Enter password:" ~10ms after connect. Wait for it so the
-				// password is only sent once — sending it unprompted too leaves a stray line the
-				// device parses as a command (observed ERR:0 on the wire). Fallback covers
-				// firmware that opens the session without prompting.
-				this.authTimer = setTimeout(() => {
-					if (!this.authSent && this.isConnected) this.sendPassword()
-				}, 1500)
-			} else {
-				this.onAuthenticated()
-			}
+			this.self.updateStatus(InstanceStatus.Connecting, 'Authenticating')
+			// The device prompts "Enter password:" ~10ms after connect, and the password is sent
+			// only in answer to it - see onPasswordPrompt. Sent unprompted, it is a stray line the
+			// device parses as a command (observed ERR:0 on the wire, PROTOCOL.md §1.2).
+			//
+			// There used to be a 1.5s fallback that sent it anyway, for firmware that never
+			// prompts. No V-80HD firmware is known to do that, and the fallback had a failure of
+			// its own: a prompt arriving after it was read as a rejection of a correct password.
+			// If no prompt comes at all - the device ignores a second control session - the
+			// watchdog's authentication-stalled check rebuilds the connection.
 		})
 		this.tcp.on('data', (data: Buffer) => this.handleIncoming(data))
 		this.startWatchdog()
@@ -302,40 +342,65 @@ export class V80Api {
 	}
 
 	private watchdogTick(): void {
-		if (!this.tcp || this.authFailed) return
+		if (!this.tcp) return
 		const now = Date.now()
 		if (this.isConnected && this.isAuthenticated) {
-			// Nudge the device if quiet, then give up. With polling on, replies arrive every
-			// 500ms so neither branch is ever reached; with polling off the 1.5s nudge draws a
-			// reply that resets the clock. Only a genuinely dead link reaches 4s.
+			// Nudge the device if quiet, then give up. Poll replies normally arrive every 500ms,
+			// so neither branch is reached; if they stop, the 1.5s nudge draws a reply that
+			// resets the clock. Only a genuinely dead link reaches 4s.
 			// Detection was 8s on a 2.5s tick (worst case 10.5s), which tested as too slow.
 			if (now - this.lastRxTime > 1500) this.sendCmd(this.rqh('001500', '000001'))
 			if (now - this.lastRxTime > 4000) this.forceReconnect('No response from device for 4s')
 		} else if (this.isConnected) {
-			// TCP is up but auth never completed — e.g. the device silently ignores a second
-			// control session (observed: it accepts the connection and sends nothing at all).
-			// A fresh connection is the only way to retry.
-			if (now - this.lastRxTime > 6000) this.forceReconnect('Authentication stalled')
+			// TCP is up but login never completed, and that is two different silences.
+			//
+			// Never prompted (authSent false): the device ignores a second control session, for
+			// example while RCS holds it - it accepts the connection and sends nothing at all. A
+			// fresh connection is the only way to retry, and it sends nothing until prompted.
+			//
+			// Prompted, answered, then silence (authSent true): the password went unanswered.
+			// Rebuilding here used to answer the next prompt with the same password - one repeat
+			// every ~6s, the loop stopAfterAuthFailure exists to prevent. The 2026-09-26 hardware
+			// test saw wrong passwords draw no reply for 3s+, so treat it as a failed login.
+			if (now - this.lastRxTime > 6000) {
+				if (this.authSent) {
+					this.stopAfterAuthFailure(
+						'Authentication failed – no answer to the password within 6s',
+						'No answer to the password – check it, then save the config',
+					)
+				} else {
+					this.forceReconnect('Authentication stalled')
+				}
+			}
 		} else {
 			// Not connected: TCPHelper retries every 2s, but a connect attempt to an
 			// unreachable host takes ~21s to time out on Windows. Recycling the socket every
-			// 12s keeps attempts fresh without stacking timers.
-			if (now - Math.max(this.lastRxTime, this.cycleStartTime) > 12000) {
+			// 6s keeps attempts fresh without stacking timers.
+			//
+			// Was 12s until 1.0.3. Hardware test 2026-09-26: after a cable pull the link took up
+			// to 12s to come back once the cable was restored, because a hung attempt waited out
+			// the full cycle. 6s is safe because this branch only runs while no TCP connection
+			// exists: faster attempts reach nothing, and nothing is ever sent to a switcher that
+			// is up. Windows resends a connect after ~3s, so each cycle still makes two tries.
+			if (now - Math.max(this.lastRxTime, this.cycleStartTime) > 6000) {
 				this.forceReconnect('Still unreachable – retrying with a fresh connection')
 			}
 		}
 	}
 
 	private forceReconnect(reason: string): void {
-		this.self.log('warn', `Reconnecting: ${reason}`)
+		this.logOncePerOutage('warn', `Reconnecting: ${reason}`)
 		this.destroyTcp()
 		this.initTcp()
 	}
 
-	public destroyTcp(): void {
+	// `pushState` is false only from destroy(): the module is being removed, so there is nothing
+	// left to update, and teardown should not be doing work. A reconnect or a config save still
+	// pushes, so a fade flag cleared below reaches the buttons.
+	public destroyTcp(pushState = true): void {
+		this.session++
 		this.stopPolling()
 		this.stopDebounce()
-		this.stopAuthTimer()
 		this.stopWatchdog()
 		try {
 			this.tcp?.destroy()
@@ -360,14 +425,24 @@ export class V80Api {
 		// last known value is more accurate than discarding it. Companion shows the connection
 		// is down separately. It is re-read from QFTB within a cycle of reconnecting anyway.
 		this.self.ftbFading = false
-		this.self.changedState()
+		if (pushState) this.self.changedState()
 	}
 
-	private stopAuthTimer(): void {
-		if (this.authTimer) {
-			clearTimeout(this.authTimer)
-			this.authTimer = undefined
-		}
+	// A failed login ends this connection for good. Retrying cannot succeed - the password is the
+	// one the device just refused - and every attempt counts towards the brute-force lockout, which
+	// then refuses the correct password too (PROTOCOL.md §1.2). So close the socket, which also
+	// stops the watchdog and TCPHelper's own reconnect, and stay closed. A retry comes from the
+	// user: saving the config or re-enabling the connection builds a fresh V80Api.
+	//
+	// Before this, a failed login only stopped the watchdog. TCPHelper still reconnected after any
+	// socket drop, and the new session answered the next prompt with the same wrong password.
+	//
+	// The status is set after destroyTcp() so nothing overwrites it. TCPHelper.destroy() removes
+	// its listeners without emitting a status of its own.
+	private stopAfterAuthFailure(logMessage: string, status: string): void {
+		this.self.log('error', logMessage)
+		this.destroyTcp()
+		this.self.updateStatus(InstanceStatus.ConnectionFailure, status)
 	}
 
 	private sendPassword(): void {
@@ -376,22 +451,15 @@ export class V80Api {
 	}
 
 	private onPasswordPrompt(): void {
-		this.stopAuthTimer()
 		if (this.authSent) {
 			// Re-prompt after we already answered means the password was rejected. Do not
 			// resend — answering every prompt with the same password loops until the device
 			// locks out ("Wait a moment"), which then rejects even correct passwords.
-			this.self.log('error', 'Authentication failed – device rejected the password')
-			this.authFailed = true
-			this.stopPolling()
-			this.self.updateStatus(InstanceStatus.ConnectionFailure, 'Authentication failed – check password')
+			this.stopAfterAuthFailure('Authentication failed – device rejected the password', AUTH_FAILED_STATUS)
 			return
 		}
-		const pw = this.password
-		if (!pw) {
-			this.self.updateStatus(InstanceStatus.BadConfig, 'Device requires a password but none is configured')
-			return
-		}
+		// No empty-password branch: initTcp() refuses to connect without one, and the password
+		// cannot change on this instance - a config save builds a new V80Api.
 		this.sendPassword()
 	}
 
@@ -476,18 +544,19 @@ export class V80Api {
 			return
 		}
 		if (/^Authentication error/i.test(line)) {
-			this.self.log('error', 'Authentication failed')
-			this.authFailed = true
-			this.isConnected = false
-			this.stopPolling()
-			this.self.updateStatus(InstanceStatus.ConnectionFailure, 'Authentication failed')
+			this.stopAfterAuthFailure('Authentication failed', AUTH_FAILED_STATUS)
 			return
 		}
 		if (/^Wait a moment/i.test(line)) {
 			// Device brute-force lockout — it will reject even the correct password until it
-			// clears. Surface it instead of silently retrying.
-			this.self.log('error', 'Device auth lockout active ("Wait a moment") – pause before retrying')
-			this.self.updateStatus(InstanceStatus.ConnectionFailure, 'Device auth lockout – wait and retry')
+			// clears, and "the only remedy is to stop and wait" (PROTOCOL.md §1.2). This used to
+			// set the status and carry on, so six seconds later the watchdog rebuilt the
+			// connection and answered the next prompt with the password again, for as long as the
+			// lockout lasted.
+			this.stopAfterAuthFailure(
+				'Device auth lockout active ("Wait a moment") – wait for it to clear, then disable and re-enable the connection',
+				'Device auth lockout – wait, then disable and re-enable the connection',
+			)
 			return
 		}
 		if (/^Welcome to /i.test(line)) {
@@ -502,16 +571,14 @@ export class V80Api {
 	}
 
 	private onAuthenticated(): void {
-		// Idempotency guard. Three paths reach here - the no-password branch in initTcp, the
-		// "Welcome to" banner and the "VER:" line - and the device sends both banner lines in
-		// one exchange, so without this the full 64-command requestCoreState() burst goes out
-		// twice back to back and "Connection ready" is logged twice. Safe because
-		// isAuthenticated is reset to false at every point a connection ends or restarts, so a
-		// genuine re-authentication after a drop is never blocked.
+		// Idempotency guard. Two paths reach here - the "Welcome to" banner and the "VER:"
+		// line - and the device sends both in one exchange, so without this the full 64-command
+		// requestCoreState() burst goes out twice back to back and "Connection ready" is logged
+		// twice. Safe because isAuthenticated is reset to false at every point a connection ends
+		// or restarts, so a genuine re-authentication after a drop is never blocked.
 		if (this.isAuthenticated) return
-		this.stopAuthTimer()
 		this.isAuthenticated = true
-		this.authFailed = false
+		this.outageMessages.clear()
 		this.self.log('info', 'Connection ready – requesting initial state')
 		this.self.updateStatus(InstanceStatus.Ok)
 		this.requestCoreState()
@@ -807,7 +874,7 @@ export class V80Api {
 	}
 
 	private startPolling(): void {
-		if (!this.self.config.polling || this.pollingTimer) return
+		if (this.pollingTimer) return
 		this.pollingTimer = setInterval(() => {
 			if (this.isConnected) this.requestCoreState()
 		}, POLL_INTERVAL_MS)
@@ -898,9 +965,15 @@ export class V80Api {
 	// certainly a no-op in 0.8.1 and 0.8.2 - which matches 1200ms and 7000ms behaving
 	// identically on hardware. One press was not enough either, so the post-capture screen
 	// is evidently not the same single toggle RCS drives when idle.
-	public async cmdExitCaptureFunction(): Promise<void> {
+	//
+	// Gated on the connection instead: `session` is the one the capture ran on, and the second
+	// press is skipped if that connection has ended in the 300ms between them.
+	public async cmdExitCaptureFunction(session: number): Promise<void> {
 		this.cmdToggleCaptureMode()
-		await this.delay(300)
+		if (!(await this.waitSameSession(300, session))) {
+			this.captureScreenMayBeOpen()
+			return
+		}
 		this.cmdToggleCaptureMode()
 	}
 	public cmdSetTransitionType(t: 'mix' | 'wipe'): void {
@@ -1227,6 +1300,29 @@ export class V80Api {
 		return new Promise((resolve) => setTimeout(resolve, ms))
 	}
 
+	// Waits, then reports whether the connection that was current when the wait began still is.
+	// The capture sequence runs for about 8.5s in all, and a step that wakes after a disconnect,
+	// a reconnect or a config change must not carry on: the device session it was driving has
+	// gone. Worse, [CAPTURE IMAGE] is a toggle, so pressing it blind on a new session could
+	// open the capture screen on the live multiview instead of closing it. Stopping leaves at
+	// worst a capture screen up, which the log says to close on the unit.
+	private async waitSameSession(ms: number, session: number): Promise<boolean> {
+		await this.delay(ms)
+		return session === this.session
+	}
+	private captureStopped(stillSlot: number): void {
+		this.self.log(
+			'warn',
+			`Capture to Still ${stillSlot} stopped - the connection dropped part-way. Check the still, and close the capture screen on the unit if it is open.`,
+		)
+	}
+	private captureScreenMayBeOpen(): void {
+		this.self.log(
+			'warn',
+			'Capture screen not closed - the connection dropped first. Close it on the unit if it is still open.',
+		)
+	}
+
 	// Capture a live input into a still memory slot.
 	//
 	// Sequence confirmed 2026-09-04 by capturing the Roland RCS software over six captures
@@ -1247,17 +1343,45 @@ export class V80Api {
 			this.self.log('warn', `Unknown capture source: ${sourceKey}`)
 			return
 		}
+		// Refused rather than queued while the previous capture is still finishing - see
+		// CAPTURE_LOCK_MS. The press does nothing on the wire, and the capture_wait feedback
+		// shows WAIT ! on the button until the lock ends.
+		const lockedFor = this.self.captureLockedUntil - Date.now()
+		if (lockedFor > 0) {
+			this.self.log(
+				'warn',
+				`Capture ignored - the previous capture is still finishing. Try again in ${Math.ceil(lockedFor / 1000)}s.`,
+			)
+			this.self.refuseCapture()
+			return
+		}
+		// Without a session every command below would be dropped one by one, each with its own
+		// warning, and the lock would start for a capture that never happened.
+		if (!this.isAuthenticated) {
+			this.self.log('warn', 'Capture not started - not connected to the device')
+			return
+		}
+		this.self.startCaptureLock()
 		const slotHex = this.hb(Math.max(0, Math.min(31, Math.round(stillSlot) - 1)))
+		const session = this.session
 
-		this.sendCmd(this.dth('0A0501', slotHex))
-		await this.delay(250)
-		this.sendCmd(this.dth('0A0504', '03'))
-		// The device needs roughly 560ms to answer 04 (ready) after arming. Waiting longer
-		// than observed rather than racing it, since a premature execute is silent.
-		await this.delay(800)
-		this.sendCmd(this.dth('0A0500', this.hb(srcByte)))
-		await this.delay(250)
-		this.sendCmd(this.dth('0A0504', '07'))
+		// Each step is a command and the wait after it. Every wait checks the connection is still
+		// the one the capture started on - see waitSameSession.
+		const steps: [cmd: string, waitMs: number][] = [
+			[this.dth('0A0501', slotHex), 250], // select still slot
+			// The device needs roughly 560ms to answer 04 (ready) after arming. Waiting longer
+			// than observed rather than racing it, since a premature execute is silent.
+			[this.dth('0A0504', '03'), 800], // arm
+			[this.dth('0A0500', this.hb(srcByte)), 250], // select source
+		]
+		for (const [cmd, waitMs] of steps) {
+			this.sendCmd(cmd)
+			if (!(await this.waitSameSession(waitMs, session))) {
+				this.captureStopped(stillSlot)
+				return
+			}
+		}
+		this.sendCmd(this.dth('0A0504', '07')) // execute
 		this.self.log('info', `Capture requested: Still ${stillSlot} <- ${sourceKey}`)
 		// Capture mode leaves its screen up on the monitor, so dismiss it once the still is
 		// written - but not a moment before. The device needs far longer than its own
@@ -1272,25 +1396,27 @@ export class V80Api {
 		// away, in about 1.3s, and the dismissal finishes on its own. Device behaviour is
 		// unchanged; only the promise boundary moved.
 		//
-		// The close is cmdExitCaptureFunction, which is deliberately ungated - see the comment
-		// on it. One consequence of the long wait: starting a second capture inside 7s means
-		// the first close can land on the second capture's screen. Firing captures that fast is
-		// not a real workflow, and the action description says so.
-		void this.dismissCaptureScreen()
+		// The close is cmdExitCaptureFunction, which is deliberately ungated on the screen state -
+		// see the comment on it - but is skipped if the connection ends during the wait. A second
+		// capture cannot start inside that wait: the capture lock covers it with margin.
+		void this.dismissCaptureScreen(session)
 	}
 
 	// Split out of cmdCaptureImage so the action can resolve without waiting on it. Nothing
 	// awaits this, so it has to swallow nothing: any failure is logged here or it is invisible.
-	private async dismissCaptureScreen(): Promise<void> {
+	private async dismissCaptureScreen(session: number): Promise<void> {
 		try {
-			await this.delay(7000)
+			if (!(await this.waitSameSession(7000, session))) {
+				this.captureScreenMayBeOpen()
+				return
+			}
 			// Logged so a hardware run shows whether this fired and what the device thought the
 			// screen was doing, without needing another packet capture.
 			this.self.log(
 				'info',
 				`Exiting capture function (screen reported ${this.self.captureModeOpen ? 'open' : 'closed'})`,
 			)
-			await this.cmdExitCaptureFunction()
+			await this.cmdExitCaptureFunction(session)
 		} catch (err) {
 			this.self.log('warn', `Capture screen dismissal failed: ${err instanceof Error ? err.message : String(err)}`)
 		}

@@ -20,8 +20,9 @@ const STREAM_RECORD_WARNING =
 	"On the V-80HD livestreaming, video recording and audio recording share one trigger and cannot be started separately. Whichever of Live Streaming, Video Rec and Audio Rec are enabled in the unit's menu will start, so this WILL begin a livestream — including to YouTube, Facebook or Twitch — if Live Streaming is on. Check Stream&Record settings on the device before assigning this to a button."
 
 // Start and Stop share one warning, and it is the one piece of action text doing real safety
-// work - firing Start can put a stream on air. The short description keeps that risk visible in
-// the browse list; this carries the full explanation onto the button.
+// work - firing Start can put a stream on air. Each action's short `description` keeps that risk
+// visible in the browse list; this carries the full explanation onto the button. Until 1.0.2 the
+// descriptions were missing, so this comment described something the browse list did not show.
 const STREAM_RECORD_INFO = {
 	id: 'info',
 	type: 'static-text' as const,
@@ -443,24 +444,27 @@ export function UpdateActions(self: ModuleInstance): void {
 
 		stream_record_start: {
 			name: 'Stream & Record – Start',
+			description: 'Can start a livestream, not just a recording.',
 			options: [STREAM_RECORD_INFO],
 			callback: async () => self.api.cmdStreamRecordStart(),
 		},
 		stream_record_stop: {
 			name: 'Stream & Record – Stop',
+			description: 'Stops livestreaming and recording together.',
 			options: [STREAM_RECORD_INFO],
 			callback: async () => self.api.cmdStreamRecordStop(),
 		},
 
 		capture_image: {
 			name: 'Capture Image to Still',
+			description: 'Overwrites the still slot without asking.',
 			options: [
 				{
 					id: 'info',
 					type: 'static-text',
 					label: 'Note',
 					value:
-						'Takes about 10 seconds and overwrites the slot without asking. Do not fire two captures less than 7 seconds apart, or the first screen close can land on the second capture.',
+						'Takes about 10 seconds and overwrites the slot without asking. Further capture presses are ignored for 10 seconds from the start of a capture, because a second capture sent too soon can freeze the V-80HD. Add the Image Capture – wait feedback to show WAIT ! when that happens.',
 				},
 				{ id: 'slot', type: 'number', label: 'Still slot', default: 1, min: 1, max: 32 },
 				{

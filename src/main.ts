@@ -14,6 +14,7 @@ import {
 	WIPE_TYPE_NAMES,
 	WIPE_DIRECTION_NAMES,
 	AUX_LINK_MODE_NAMES,
+	CAPTURE_LOCK_MS,
 } from './api.js'
 
 export class ModuleInstance extends InstanceBase<ModuleConfig, ModuleSecrets> {
@@ -79,6 +80,12 @@ export class ModuleInstance extends InstanceBase<ModuleConfig, ModuleSecrets> {
 	// It is kept for the one line that reads it: the diagnostic log in dismissCaptureScreen,
 	// which records what the device thought the screen was doing without needing a capture.
 	public captureModeOpen = false
+	// Image capture lock - see CAPTURE_LOCK_MS. Kept here rather than on the api so a config save
+	// or reconnect mid-capture, which builds a new V80Api, cannot reset it. captureRefused is
+	// set by a press the lock turned away, and drives the capture_wait feedback until it ends.
+	public captureLockedUntil = 0
+	public captureRefused = false
+	private captureLockTimer?: NodeJS.Timeout
 	// Stream & Record. streamRecordState is the raw 030800 byte the device pushes:
 	// 02 stopped, 03 stopping, 04 starting, 05 running. Defaults to stopped.
 	public streamRecordState = 0x02
@@ -93,7 +100,8 @@ export class ModuleInstance extends InstanceBase<ModuleConfig, ModuleSecrets> {
 	}
 
 	// The api is built before the definitions are registered, because the action callbacks
-	// reach through to it directly and `api` is declared with a definite assignment.
+	// reach through to it directly and `api` is declared with a definite assignment. Teardown
+	// still uses `?.`, so a destroy that arrives before init has finished cannot throw.
 	async init(config: ModuleConfig, _isFirstInit: boolean, secrets: ModuleSecrets): Promise<void> {
 		this.config = config
 		this.secrets = secrets ?? { password: '' }
@@ -102,12 +110,14 @@ export class ModuleInstance extends InstanceBase<ModuleConfig, ModuleSecrets> {
 		this.api.initTcp()
 	}
 	async destroy(): Promise<void> {
-		this.api.destroyTcp()
+		// false: no state push on the way out - see destroyTcp.
+		this.api?.destroyTcp(false)
+		clearTimeout(this.captureLockTimer)
 	}
 	async configUpdated(config: ModuleConfig, secrets: ModuleSecrets): Promise<void> {
 		this.config = config
 		this.secrets = secrets ?? { password: '' }
-		this.api.destroyTcp()
+		this.api?.destroyTcp()
 		this.api = new V80Api(this)
 		this.setupModule()
 		this.api.initTcp()
@@ -138,6 +148,23 @@ export class ModuleInstance extends InstanceBase<ModuleConfig, ModuleSecrets> {
 	public changedState(): void {
 		this.updateAllVariables()
 		this.checkFeedbacks()
+	}
+
+	public startCaptureLock(): void {
+		this.captureLockedUntil = Date.now() + CAPTURE_LOCK_MS
+		clearTimeout(this.captureLockTimer)
+		this.captureLockTimer = setTimeout(() => {
+			this.captureLockTimer = undefined
+			if (this.captureRefused) {
+				this.captureRefused = false
+				this.checkFeedbacks('capture_wait')
+			}
+		}, CAPTURE_LOCK_MS)
+	}
+	public refuseCapture(): void {
+		if (this.captureRefused) return
+		this.captureRefused = true
+		this.checkFeedbacks('capture_wait')
 	}
 
 	public updateAllVariables(): void {
