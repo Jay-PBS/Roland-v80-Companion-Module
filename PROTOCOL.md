@@ -84,6 +84,22 @@ it rejects the correct password too. **Confirmed.**
 
 Once locked out, the only remedy is to stop and wait. **Confirmed.**
 
+**A wrong password is not always answered the same way.** On 2026-09-26, four wrong passwords were
+sent about 3 s apart, each on a fresh connection (firmware v1.20.201):
+
+- the first drew `Authentication error` at once;
+- the next two drew **no reply within 3 s**, and the connection was replaced before anything
+  arrived;
+- the fourth drew a re-prompt after about 1 s.
+
+The correct password was accepted immediately afterwards. **Four wrong attempts in about 10 s did not
+trip the lockout.** **Observed**, once, from the module's log. The raw replies were not captured, so
+whether the silent attempts were prompted, and whether a late verdict would have come, is open.
+
+**The design consequence:** treat "password sent, then silence" as a failed login. A client that
+rebuilds the connection on that silence answers the next prompt with the same wrong password, over
+and over. The module stops after 6 s of silence following its password.
+
 ### 1.3 Three things worth designing around
 
 **The authentication window is under 100 ms.** Too short to press a button inside by hand. Two test
@@ -115,7 +131,8 @@ The thresholds the module settled on, after the first set tested as too slow:
 | ------------------------------------- | --------- | ------------------------------------------------ |
 | Connected, authenticated, quiet       | 1.5 s     | Send a single `RQH:001500,000001;` as a nudge    |
 | Connected, authenticated, still quiet | 4 s       | Tear down and rebuild the connection             |
-| Connected, never authenticated        | 6 s       | Rebuild — covers the ignored-second-session case |
+| Connected, never prompted             | 6 s       | Rebuild — covers the ignored-second-session case |
+| Connected, password sent, no answer   | 6 s       | Stop — a failed login, never resend              |
 | Not connected                         | 6 s       | Recycle the socket                               |
 
 Checked on a **1 s** tick. **Confirmed.**

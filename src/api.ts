@@ -352,10 +352,26 @@ export class V80Api {
 			if (now - this.lastRxTime > 1500) this.sendCmd(this.rqh('001500', '000001'))
 			if (now - this.lastRxTime > 4000) this.forceReconnect('No response from device for 4s')
 		} else if (this.isConnected) {
-			// TCP is up but auth never completed — e.g. the device silently ignores a second
-			// control session (observed: it accepts the connection and sends nothing at all).
-			// A fresh connection is the only way to retry.
-			if (now - this.lastRxTime > 6000) this.forceReconnect('Authentication stalled')
+			// TCP is up but login never completed, and that is two different silences.
+			//
+			// Never prompted (authSent false): the device ignores a second control session, for
+			// example while RCS holds it - it accepts the connection and sends nothing at all. A
+			// fresh connection is the only way to retry, and it sends nothing until prompted.
+			//
+			// Prompted, answered, then silence (authSent true): the password went unanswered.
+			// Rebuilding here used to answer the next prompt with the same password - one repeat
+			// every ~6s, the loop stopAfterAuthFailure exists to prevent. The 2026-09-26 hardware
+			// test saw wrong passwords draw no reply for 3s+, so treat it as a failed login.
+			if (now - this.lastRxTime > 6000) {
+				if (this.authSent) {
+					this.stopAfterAuthFailure(
+						'Authentication failed – no answer to the password within 6s',
+						'No answer to the password – check it, then save the config',
+					)
+				} else {
+					this.forceReconnect('Authentication stalled')
+				}
+			}
 		} else {
 			// Not connected: TCPHelper retries every 2s, but a connect attempt to an
 			// unreachable host takes ~21s to time out on Windows. Recycling the socket every
