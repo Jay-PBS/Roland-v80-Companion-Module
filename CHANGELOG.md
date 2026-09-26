@@ -8,6 +8,47 @@ Not every version below is a commit. Only 0.4.0, 0.6.0, 0.6.5, 0.7.0, 0.8.2, 0.8
 went straight to hardware, so their entries record what changed rather than something you can check
 out. Tags exist for `v0.4.0`, `v0.6.5` and `v0.8.5`, which are the states worth returning to.
 
+### 1.0.2 — Bitfocus review fixes
+
+The two changes the Bitfocus review of 1.0.1 asked for, plus what two further code reviews found
+before resubmitting. No action, feedback, variable or preset ids changed, so existing buttons
+carry straight over.
+
+**Asked for by the review:**
+
+- **Polling is always on.** The **Enable polling** checkbox is gone. Its label called polling
+  required while still letting you turn it off, and with it off most feedbacks never updated.
+  Connections that had it switched off start polling after the update, and no settings need
+  changing.
+- **Teardown no longer assumes the connection object exists.** `destroy()` and a config change
+  both guard it again, so a shutdown that arrives before startup has finished cannot throw.
+
+**Login and lockout:**
+
+- **No connection without a password.** With the password field blank — the default for a new
+  connection — the module used to act as though it had logged in and poll straight into the
+  device's password prompt, which risked tripping the lockout. It now waits for the password and
+  says so in the connection status.
+- **A rejected password or a lockout stops the module.** It used to keep trying: during a lockout
+  it sent the password again every few seconds, and a rejected password was re-sent after any
+  reconnect. It now closes the connection and shows why. Save the config, or disable and re-enable
+  the connection, to try again.
+- **The password is only sent when the device asks for it.** A fallback that sent it unprompted
+  after 1.5 seconds is gone.
+
+**Everything else:**
+
+- **Quieter log while the switcher is off.** A connection problem is logged once, not every few
+  seconds for as long as it lasts.
+- **The IP address field starts blank and is checked.** The V-80HD takes its address from DHCP, so
+  the old 192.168.0.1 default was not its address. Stray spaces are ignored. Existing connections
+  keep their saved address.
+- **Image capture stops if the connection drops part-way,** rather than pressing the capture button
+  on the new connection, and the log says what to check.
+- **Stream & Record and Capture Image warn in the action list,** before you pick them, not only once
+  they are on a button.
+- **Roland's LAN/RS-232 command PDF is no longer in the repository.** It is Roland's own download.
+
 ### 1.0.1 — Bitfocus module checks restored
 
 **No change to the module itself** — the code is identical to 1.0.0. Pushing 1.0.0 to the released
