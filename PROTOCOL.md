@@ -116,7 +116,7 @@ The thresholds the module settled on, after the first set tested as too slow:
 | Connected, authenticated, quiet       | 1.5 s     | Send a single `RQH:001500,000001;` as a nudge    |
 | Connected, authenticated, still quiet | 4 s       | Tear down and rebuild the connection             |
 | Connected, never authenticated        | 6 s       | Rebuild — covers the ignored-second-session case |
-| Not connected                         | 12 s      | Recycle the socket                               |
+| Not connected                         | 6 s       | Recycle the socket                               |
 
 Checked on a **1 s** tick. **Confirmed.**
 
@@ -124,7 +124,10 @@ The original values were 8 s / 4 s / 10 s / 20 s on a 2.5 s tick, which gave a w
 to notice a dead link. That was reported as too slow on hardware and halved. **Confirmed.**
 
 One Windows-specific note: a connect attempt to an unreachable host takes about **21 s** to time
-out, so recycling the socket every 12 s keeps attempts fresh rather than stacking timers.
+out, so recycling the socket keeps attempts fresh rather than stacking timers. The module recycled
+every 12 s until 1.0.3. After a cable pull, the link then took up to 12 s to return once the cable
+was back. **Observed** 2026-09-26. It now recycles every 6 s, which still leaves room for the
+Windows connect retry at about 3 s.
 
 ---
 

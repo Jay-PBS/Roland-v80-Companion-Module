@@ -27,7 +27,7 @@ A connection watchdog runs every second and recovers the link automatically:
 
 - No data received for 4s while connected — the connection is rebuilt
 - Authentication stalled for 6s — authentication is retried
-- Socket unreachable for 12s — the socket is recycled
+- Socket unreachable for 6s — the socket is recycled, so the link returns within a few seconds of the network coming back
 
 This covers silent network loss, where the socket remains open but the device is no longer reachable. If the module still does not reconnect, disable and re-enable it in Companion.
 

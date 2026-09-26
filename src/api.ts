@@ -359,8 +359,14 @@ export class V80Api {
 		} else {
 			// Not connected: TCPHelper retries every 2s, but a connect attempt to an
 			// unreachable host takes ~21s to time out on Windows. Recycling the socket every
-			// 12s keeps attempts fresh without stacking timers.
-			if (now - Math.max(this.lastRxTime, this.cycleStartTime) > 12000) {
+			// 6s keeps attempts fresh without stacking timers.
+			//
+			// Was 12s until 1.0.3. Hardware test 2026-09-26: after a cable pull the link took up
+			// to 12s to come back once the cable was restored, because a hung attempt waited out
+			// the full cycle. 6s is safe because this branch only runs while no TCP connection
+			// exists: faster attempts reach nothing, and nothing is ever sent to a switcher that
+			// is up. Windows resends a connect after ~3s, so each cycle still makes two tries.
+			if (now - Math.max(this.lastRxTime, this.cycleStartTime) > 6000) {
 				this.forceReconnect('Still unreachable – retrying with a fresh connection')
 			}
 		}
