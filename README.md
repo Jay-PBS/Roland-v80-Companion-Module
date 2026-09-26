@@ -7,7 +7,7 @@ Bitfocus Companion module for the Roland V-80HD Direct Streaming Video Switcher,
 
 Developed and maintained by Purple Badger Solutions — projects@purplebadgersolutions.co.uk
 
-**Version 1.0.2.** Every feature is tested on a V-80HD (firmware v1.20.201).
+**Version 1.0.3.** Every feature is tested on a V-80HD (firmware v1.20.201).
 
 ---
 
