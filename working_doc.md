@@ -4,7 +4,7 @@ Live working notes: **open items only**.
 
 Once something is done and verified on hardware, delete it from this file. Anything worth keeping permanently belongs in [README.md](README.md) (project-facing, kept short), [CHANGELOG.md](CHANGELOG.md), [DEVELOPMENT.md](DEVELOPMENT.md) or [companion/HELP.md](companion/HELP.md) (user-facing), not here. This file is not a changelog and holds no logs — the changelog lives in [CHANGELOG.md](CHANGELOG.md).
 
-Last reviewed: 2026-09-26 · Working version: 1.0.4 (branch `fix/1.0.2-review`)
+Last reviewed: 2026-09-26 · Working version: 1.0.5 (branch `fix/1.0.5`)
 
 ---
 
@@ -16,23 +16,24 @@ Last reviewed: 2026-09-26 · Working version: 1.0.4 (branch `fix/1.0.2-review`)
 | `yarn build`         | Passing                                                    |
 | `yarn lint`          | Passing — clean, 0 errors                                  |
 | `prettier --check .` | Passing                                                    |
-| `yarn package`       | Passing — `roland-v80hd-1.0.4.tgz` (untracked, local only) |
-| GitHub Actions       | Node CI green on `main`; check `fix/1.0.2-review`          |
+| `yarn package`       | Passing — `roland-v80hd-1.0.5.tgz` (untracked, local only) |
+| GitHub Actions       | Node CI green on `main`; check `fix/1.0.5`                 |
 | `yarn preflight`     | Passing — the pre-release gate                             |
 
 ---
 
 ## Open — needs hardware
 
-**1.0.4 passed its hardware gate on 2026-09-26.** It was the third round, after 1.0.2 and 1.0.3.
-Nothing is needed for the release.
+**1.0.5 smoke test — `TESTING-NEXT.md`.** 1.0.4 passed its gate on 2026-09-26, and is merged to
+`main` and tagged `v1.0.4` in this repo only. Its test showed the "Enable debug logging" checkbox
+never produced visible output on Companion 5. By Jay's decision, 1.0.5 removes it and the verbose
+logging. PROTOCOL.md §11.1 has the steps to re-add it for test builds only.
 
-Two questions stay open in `TESTING-NEXT.md`, not blocking:
+**1.0.5 is the one to submit.** It is built on branch `fix/1.0.5`, and needs the short D1–D4 smoke
+test. Then merge to `main`, tag `v1.0.5`, push to origin, and push to Bitfocus with Jay's explicit
+yes. Then resubmit.
 
-- **Q1:** module debug output never shows, even with the option on and Debug ticked on the Log
-  page. As things stand, the "Enable debug logging" checkbox shows the user nothing. Worth
-  settling in 1.1.
-- **Q2:** what the switcher sends after a wrong password.
+Open, not blocking: **Q2**, what the switcher sends after a wrong password (packet capture).
 
 **Protocol:** Fade To Black was the last open protocol question and it was answered
 2026-09-16: the engaged state is in no address, and `QFTB;` from Roland's mnemonic command set reads
@@ -55,30 +56,25 @@ panel tracking, the Split relabel, the readable raw echo, the FTB fade colour, a
 detail blocks. A split button from before the Vertical/Horizontal rename and a raw-command button
 from an older version both still fire — confirmed 2026-09-25.
 
-## Open — 1.0.2, Bitfocus review fixes
+## Open — resubmitting to Bitfocus
 
-**1.0.1 was returned by the Bitfocus review on 2026-09-26** with two required changes. Two code
-reviews followed, one of them independent. Both are in `CODE_REVIEW.md`, and its "Two reviews
-compared" section holds the combined list.
+**1.0.1 was returned by the Bitfocus review on 2026-09-26** with two required changes. What
+followed:
 
-**All 11 items are done on branch `fix/1.0.2-review`**, one commit each, with the version at
-1.0.2. The Roland PDF is untracked and still on disk. Hardware testing added the capture lock
-and the 6 s reconnect (1.0.3), and the stop on an unanswered password (1.0.4), so **the submitted
-version is 1.0.4**. Not yet merged or tagged, and nothing has gone to Bitfocus.
+- four code reviews, two local and two ultrareview (free runs 1 and 2 of 3), all in
+  `CODE_REVIEW.md`;
+- three hardware rounds (1.0.2, 1.0.3, 1.0.4), with the fixes each one found;
+- 1.0.5, which removes the debug checkbox.
 
-**Both ultrareviews are done (2026-09-26, free runs 1 and 2 of 3).**
-
-- **The branch diff:** one nit, fixed in `b11ae37`.
-- **The whole module:** two nits and no bugs, both deferred to 1.1. They are the AUX layer lookup
-  written out five times and the hex formatting written out six times.
-
-Raw findings and the assessment are in `CODE_REVIEW.md`, Reviews 3 and 4.
+**Nothing has gone to Bitfocus yet.** `main` holds 1.0.4, tagged `v1.0.4`, in this repo only.
+`fix/1.0.5` is on top of it. The Roland PDF is untracked and still on disk.
 
 **Next, in order:**
 
-1. BUILD GO for 1.0.4, then the P1–P3 gate in `TESTING-NEXT.md`.
-2. Merge `fix/1.0.2-review` into `main`, tag `v1.0.4`, push to origin and, with Jay's explicit
-   yes, to Bitfocus. Then resubmit in the portal with a reply listing the changes.
+1. The D1–D4 smoke test of `roland-v80hd-1.0.5.tgz`.
+2. Merge `fix/1.0.5` into `main`, tag `v1.0.5`, and push to origin. With Jay's explicit yes, push
+   `main` and the tag to Bitfocus, and wait for the module checks to go green.
+3. Jay submits v1.0.5 in the portal, with a reply listing the changes.
 
 **Sync state now stays for this release**, by decision (2026-09-26). It is mostly redundant with
 polling always on, but removing an action breaks buttons that use it. Revisit in 1.1.
