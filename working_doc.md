@@ -55,13 +55,28 @@ compared" section holds the combined list.
 1.0.2. The Roland PDF is untracked and still on disk. Nothing is merged, tagged, built or tested
 on hardware, and nothing has gone to Bitfocus.
 
+**Both ultrareviews are done (2026-09-26, free runs 1 and 2 of 3).**
+
+- **The branch diff:** one nit, fixed in `b11ae37`.
+- **The whole module:** two nits and no bugs, both deferred to 1.1. They are the AUX layer lookup
+  written out five times and the hex formatting written out six times.
+
+Raw findings and the assessment are in `CODE_REVIEW.md`, Reviews 3 and 4. The temporary local
+branches `review/full-module` and `review/base` can be deleted.
+
 **Next, in order:**
 
-1. Jay runs `/code-review ultra` on the branch, using a free run. Check that the dialog shows
-   about a dozen files and a few hundred lines.
-2. Verify its findings and fix what's real.
-3. BUILD GO, then the hardware checks in `CODE_REVIEW.md` Review 1 §4, plus a deliberate lockout.
-4. Merge, tag `v1.0.2`, and resubmit, with a portal reply listing the changes.
+1. BUILD GO, then the hardware checks in `CODE_REVIEW.md` Review 1 §4, plus a deliberate lockout.
+2. Merge, tag `v1.0.2`, and resubmit, with a portal reply listing the changes.
+
+**Queued for 1.1:**
+
+- only send state that changed, with the debounce fix;
+- one table for the AUX layer state (R4-1);
+- use `hb()` for the hex formatting (R4-2);
+- the `NAN` guard;
+- remove `captureModeOpen`;
+- the HELP.md tidy-up.
 
 ## Open — needs a decision
 
