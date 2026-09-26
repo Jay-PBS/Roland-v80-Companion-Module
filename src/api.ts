@@ -223,7 +223,7 @@ export class V80Api {
 	private rxBuffer = ''
 	private pollingTimer?: NodeJS.Timeout
 	// Set by cmdRaw. While this is in the future, incoming data is echoed at info level so a
-	// raw command's reply is visible without the debug flag - see cmdRaw.
+	// raw command's reply is visible in Companion's log - see cmdRaw.
 	private rawEchoUntil = 0
 	private debounceTimer?: NodeJS.Timeout
 	private watchdogTimer?: NodeJS.Timeout
@@ -489,12 +489,12 @@ export class V80Api {
 				.join('')
 			this.self.log('info', `Raw RX [${data.length}b]: ${readable}`)
 		}
-		if (this.self.config.debug) {
-			this.self.log(
-				'debug',
-				`RX RAW [${data.length}b]: ${[...data].map((b) => b.toString(16).padStart(2, '0')).join(' ')}`,
-			)
-		}
+		// No verbose TX/RX logging in released builds. There was an "Enable debug logging" checkbox
+		// that logged every segment, frame and value at debug level, until 1.0.5. Companion 5
+		// showed none of it, so the checkbox visibly did nothing, and locked on it would have been
+		// 200+ lines a second for nobody. Diagnosis goes through the raw LAN command's info-level
+		// echo above, or a packet capture. To put it back for a test build - never a release -
+		// follow PROTOCOL.md §11.1, which lists every site it used.
 		this.rxBuffer += data.toString('binary')
 
 		// The prompt has no terminator (";" or newline), so it must be matched on the raw
@@ -523,7 +523,6 @@ export class V80Api {
 				.trim()
 			this.rxBuffer = this.rxBuffer.slice(cutPos + 1)
 			if (!part) continue
-			if (this.self.config.debug) this.self.log('debug', `RX ${useSemi ? 'FRAME' : 'LINE'}: ${part}`)
 			if (useSemi) this.parseFrame(part)
 			else this.handleTextLine(part)
 		}
@@ -602,10 +601,7 @@ export class V80Api {
 			return
 		}
 		const m = /^DTH:([0-9A-Fa-f]{6}),([0-9A-Fa-f]*)$/i.exec(frame)
-		if (!m) {
-			if (this.self.config.debug) this.self.log('debug', `UNMATCHED: ${frame}`)
-			return
-		}
+		if (!m) return
 		this.parseDth(m[1].toUpperCase(), m[2].toUpperCase())
 	}
 
@@ -623,14 +619,12 @@ export class V80Api {
 	private onFtbState(state: string): void {
 		if (state === 'ON') this.self.ftbEngaged = true
 		else if (state === 'OFF') this.self.ftbEngaged = false
-		if (this.self.config.debug) this.self.log('debug', `FTB state: ${state}`)
 		this.scheduleDebounce()
 	}
 
 	private parseDth(addr: string, hex: string): void {
 		if (!hex || hex.length < 2) return
 		const val = parseInt(hex.slice(0, 2), 16)
-		if (this.self.config.debug) this.self.log('debug', `DTH ${addr}=${val}`)
 		switch (addr) {
 			case '001500':
 				this.self.programSource = val
@@ -716,7 +710,6 @@ export class V80Api {
 			case '0A0504':
 				if (val === 0x00 || val === 0x01) this.self.captureModeOpen = val === 0x01
 				if (val === 0x08) this.self.log('info', 'Image capture complete')
-				else if (this.self.config.debug) this.self.log('debug', `Capture state ${val}`)
 				break
 			case '012103':
 				this.self.mainBusMute = val === 1
@@ -867,7 +860,6 @@ export class V80Api {
 	// answering, rather than assuming it accepts an arbitrary number per packet.
 	private sendCmdBatch(cmds: string[]): void {
 		if (!this.tcp || cmds.length === 0) return
-		if (this.self.config.debug) this.self.log('debug', `TX POLL: ${cmds.length} commands`)
 		for (const cmd of cmds) {
 			this.tcp.send(cmd + '\r\n').catch((err: Error) => this.self.log('debug', `TX failed: ${err.message}`))
 		}
@@ -905,7 +897,6 @@ export class V80Api {
 			this.self.log('warn', `Not authenticated yet - command dropped: ${cmd}`)
 			return
 		}
-		if (this.self.config.debug) this.self.log('debug', `TX: ${cmd}`)
 		this.tcp
 			.send(cmd.endsWith('\r\n') ? cmd : cmd + '\r\n')
 			.catch((err: Error) => this.self.log('debug', `TX failed: ${err.message}`))

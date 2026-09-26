@@ -1178,6 +1178,65 @@ limitations" were documented for months and every one was a dead read path (§8.
 **Confirm on hardware, and write down the firmware version.** Everything marked **Confirmed** here
 was exercised against a V-80HD on **v1.20.201**.
 
+### 11.1 Verbose TX/RX logging — for test builds only
+
+**Released builds have no verbose logging, by decision (2026-09-26, 1.0.5).** Until then an "Enable
+debug logging (verbose TX/RX)" checkbox logged every segment, frame and value. It was removed
+because:
+
+- **Companion showed none of it.** It logged at `debug` level, and on Companion 5.0.5 nothing
+  appeared on the Log page with Debug ticked, nor in Companion's log files, which hold `info` and
+  above only. So the checkbox visibly did nothing — the same fault the Bitfocus review found in the
+  polling checkbox.
+- **Locked on, it would be about 200 lines a second.** That is each poll's 65 requests, roughly 40
+  replies and their `ACK` frames, twice a second, for as long as the connection is up, all of it
+  crossing IPC to Companion.
+
+**Re-add it for a test build when a fault needs the wire, and take it out before release.**
+
+1. Put one constant at the top of `src/api.ts`, **`false` in anything tagged for release**:
+   ```ts
+   // Test builds only - see PROTOCOL.md §11.1. Never true in a tagged release.
+   const VERBOSE_TX_RX = false
+   ```
+   A build-time constant, not a config field. A user-facing switch is what failed.
+2. Log at **`info`**, not `debug`, or Companion will not show it. Use a helper so it is one line at
+   each site:
+   ```ts
+   private trace(message: string): void {
+   	if (VERBOSE_TX_RX) this.self.log('info', message)
+   }
+   ```
+3. The sites, as they were in 1.0.4, by function:
+
+   | Where                                    | Line                                                                                          |
+   | ---------------------------------------- | --------------------------------------------------------------------------------------------- |
+   | `handleIncoming`, before buffering       | `RX RAW [${data.length}b]: <hex bytes, space-separated>` — every segment, with its byte count |
+   | `handleIncoming`, in the framing loop    | `RX FRAME: …` for `;`-terminated frames, `RX LINE: …` for newline-terminated text             |
+   | `parseFrame`, no `DTH` match             | `UNMATCHED: ${frame}`                                                                         |
+   | `onFtbState`                             | `FTB state: ${state}`                                                                         |
+   | `parseDth`, after parsing the value      | `DTH ${addr}=${val}`                                                                          |
+   | `parseDth`, `0A0504` other than `08`     | `Capture state ${val}`                                                                        |
+   | `sendCmdBatch`, before the loop          | `TX POLL: ${cmds.length} commands`                                                            |
+   | `sendCmd`, after the authentication gate | `TX: ${cmd}`                                                                                  |
+
+   **Never log in `sendPassword`.** The password goes out there, and it must not reach a log.
+
+4. For a readable `RX RAW`, reuse the raw-command echo's rendering in `handleIncoming` (`<STX>`,
+   `<LF>`, printable ASCII) rather than plain hex.
+5. **To trace one exchange without the flood,** narrow it rather than logging everything:
+   - skip `TX POLL` and the polled `DTH` lines;
+   - or log only for a few seconds after a trigger, the way `rawEchoUntil` does for the raw command.
+
+**Before tagging a release:** `VERBOSE_TX_RX` is `false`, or better, removed. `grep -n VERBOSE_TX_RX src`
+should find nothing, or only the `false`.
+
+**For one exchange, the tools that already ship are enough:**
+
+- the **raw LAN command** echoes its reply at `info`, with the byte count (it settled the
+  block-read question, §8.6);
+- a **packet capture** shows both directions, and every finding in this document came from one.
+
 ---
 
 ## Contributing
