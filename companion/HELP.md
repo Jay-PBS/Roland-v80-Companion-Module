@@ -1,4 +1,4 @@
-# Roland V-80HD — Companion Module v1.0.3
+# Roland V-80HD — Companion Module v1.0.4
 
 Tested on a Roland V-80HD with firmware v1.20.201. Every action and feedback has been tested on hardware.
 
@@ -158,7 +158,7 @@ can freeze the V-80HD in capture mode, and only a power cycle recovers it. So fo
 capture starts, any further capture press is ignored — nothing is sent to the unit — and a warning is
 logged. The **Image Capture – wait** feedback shows **WAIT !** on the button when that happens, until
 the 10 seconds are up. The Image Capture presets carry it already; add it by hand to capture buttons
-built before 1.0.3.
+built with an earlier version.
 
 If the connection drops or the connection config is saved while a capture is running, the module
 stops the capture rather than pressing buttons on the new connection, and logs a warning. Check the

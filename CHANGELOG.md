@@ -8,10 +8,23 @@ Not every version below is a commit. Only 0.4.0, 0.6.0, 0.6.5, 0.7.0, 0.8.2, 0.8
 went straight to hardware, so their entries record what changed rather than something you can check
 out. Tags exist for `v0.4.0`, `v0.6.5` and `v0.8.5`, which are the states worth returning to.
 
-### 1.0.3 — capture lock and faster reconnect
+### 1.0.4 — an unanswered password stops the module
 
-**The version resubmitted to Bitfocus.** It carries everything in 1.0.2 below, plus two fixes from
-the 1.0.2 hardware test. No existing ids changed; one feedback is new.
+**The version resubmitted to Bitfocus.** It carries everything in 1.0.2 and 1.0.3 below, plus one fix
+from the 1.0.3 hardware test.
+
+- **A password that gets no answer is treated as wrong.** In testing, some wrong passwords drew no
+  reply at all. After 6 seconds of that silence, the module used to reconnect, and the new
+  connection sent the same password again, repeating every few seconds, which risks the device's
+  lockout. It now stops and says "No answer to the password – check it, then save the config". A
+  switcher that never asks for the password at all — as when Roland RCS holds its only control
+  session — is still retried, as before.
+
+### 1.0.3 — capture lock and faster reconnect (test build, not released)
+
+**Built and tested on hardware on 2026-09-26, never submitted.** Its changes ship in 1.0.4. The capture
+lock, the WAIT ! feedback and the faster reconnect all passed. The same test found the unanswered-
+password case that 1.0.4 fixes. No existing ids changed; one feedback is new.
 
 - **Image capture is locked for 10 seconds after one starts.** In testing, a second capture sent while
   the first was still finishing **froze the V-80HD in capture mode**, and only a power cycle
@@ -26,7 +39,7 @@ the 1.0.2 hardware test. No existing ids changed; one feedback is new.
 
 ### 1.0.2 — Bitfocus review fixes (test build, not released)
 
-**Built and tested on hardware on 2026-09-26, never submitted.** Its changes ship in 1.0.3. The test
+**Built and tested on hardware on 2026-09-26, never submitted.** Its changes ship in 1.0.4. The test
 passed the login, lockout-stop, config, logging and lifecycle checks, and found the capture freeze
 that 1.0.3 fixes.
 
