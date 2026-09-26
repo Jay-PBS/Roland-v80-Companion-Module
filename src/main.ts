@@ -103,7 +103,8 @@ export class ModuleInstance extends InstanceBase<ModuleConfig, ModuleSecrets> {
 		this.api.initTcp()
 	}
 	async destroy(): Promise<void> {
-		this.api?.destroyTcp()
+		// false: no state push on the way out - see destroyTcp.
+		this.api?.destroyTcp(false)
 	}
 	async configUpdated(config: ModuleConfig, secrets: ModuleSecrets): Promise<void> {
 		this.config = config

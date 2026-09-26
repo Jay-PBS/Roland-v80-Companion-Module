@@ -365,7 +365,10 @@ export class V80Api {
 		this.initTcp()
 	}
 
-	public destroyTcp(): void {
+	// `pushState` is false only from destroy(): the module is being removed, so there is nothing
+	// left to update, and teardown should not be doing work. A reconnect or a config save still
+	// pushes, so a fade flag cleared below reaches the buttons.
+	public destroyTcp(pushState = true): void {
 		this.session++
 		this.stopPolling()
 		this.stopDebounce()
@@ -393,7 +396,7 @@ export class V80Api {
 		// last known value is more accurate than discarding it. Companion shows the connection
 		// is down separately. It is re-read from QFTB within a cycle of reconnecting anyway.
 		this.self.ftbFading = false
-		this.self.changedState()
+		if (pushState) this.self.changedState()
 	}
 
 	// A failed login ends this connection for good. Retrying cannot succeed - the password is the
